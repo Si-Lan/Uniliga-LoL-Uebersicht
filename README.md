@@ -62,6 +62,7 @@ Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun
 >     * (patch)/img/item  
 >     * (patch)/img/spell  
 >     * img/perk-images
+>   * (Patch 13.8.1 ist als Beispiel schon in /ddragon)
 >
 > * Und hier können die Patches nachgeschaut werden:  
 >   * https://ddragon.leagueoflegends.com/api/versions.json
