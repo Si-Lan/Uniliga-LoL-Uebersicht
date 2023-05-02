@@ -1,0 +1,79 @@
+.button {
+	padding: 15px 25px;
+	margin-top: 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	background-color: #2b2b2b;
+	color: #fff;
+	font-size: 14px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+	transition: background-color 0.2s linear;
+}
+.button:hover {
+	background-color: #363636;
+}
+input[type=submit] {
+	padding: 10px 25px;
+	border-radius: 6px;
+	border-style: none;
+	cursor: pointer;
+	background-color: #2b2b2b;
+	color: #fff;
+	font-size: 14px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+	transition: background-color 0.2s linear;
+}
+input[type=submit]:hover {
+	background-color: #363636;
+}
+input[type=password] {
+	position: relative;
+	width: 100%;
+	font-size: 15px;
+	height: 35px;
+	text-align: center;
+	color: #fff;
+	background: #323232;
+	border-width: 1px;
+	border-color: transparent transparent #9a9a9a transparent;
+	border-radius: 6px;
+	transition: border-bottom-color 0.1s, border-bottom-width 0.1s, background-color 0.2s linear;
+	box-sizing: border-box;
+}
+input[type=password]:focus {
+	outline: none;
+	border-style: solid;
+	border-color: #303030 #303030 #9a9a9a #303030;
+	background-color: #1e1e1e;
+}
+input[type=password]::placeholder {
+	color: #9a9a9a;
+}
+label::after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 2px;
+	left: 50%;
+	bottom:0;
+	background-color: cornflowerblue;
+	transition: all ease-in-out .2s;
+	border-radius: 0 0 100px 100px;
+}
+label:focus-within::after {
+	width: 100%;
+	left: 0;
+}
+label {
+	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+}

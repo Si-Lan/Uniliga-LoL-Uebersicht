@@ -1,0 +1,7 @@
+RewriteEngine On
+# Hier eigene Domain einfügen
+RewriteCond %{HTTP_REFERER} !^http?://localhost/
+RewriteRule ^(content-add-ajax.php|scrapeToor-ajax.php|scrapeToornament.php)$ - [L,F]
+<Files .htaccess>
+  Require all denied
+</Files>

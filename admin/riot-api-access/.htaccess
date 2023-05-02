@@ -1,0 +1,4 @@
+RewriteEngine On
+# Hier eigene Domain einfügen
+RewriteCond %{HTTP_REFERER} !^http?://localhost/
+RewriteRule ^(RGAPI-info.php|get-RGAPI-data.php|get-RGAPI-AJAX.php|AJAX-Functions.php)$ - [L,F]

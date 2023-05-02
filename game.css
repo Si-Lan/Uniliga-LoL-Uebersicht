@@ -1,0 +1,410 @@
+:root {
+	--game-sec-bg: #262626;
+	--game-team-hover: #313131;
+}
+body.light {
+	--game-sec-bg: #d3d3d3;
+	--game-team-hover: #d9d9d9;
+}
+div.game-details {
+	display: flex;
+	flex-direction: column;
+	border-color: #404040;
+	border-style: solid;
+	border-width: 2px;
+	max-width: 1150px;
+	box-sizing: border-box;
+	border-radius: 15px;
+	overflow: hidden;
+	margin: 0 30px;
+	width: -moz-available;
+	/*noinspection CssInvalidPropertyValue*/
+	width: -webkit-fill-available;
+	min-width: 975px;
+	background-color: var(--main-bg-color);
+}
+div.game-details div {
+	display: flex;
+}
+div.game-details a {
+	display: flex;
+}
+div.game-details div.game-row {
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	box-sizing: border-box;
+	border-color: #404040;
+	border-style: solid;
+	border-width: 0 0 2px 0;
+}
+div.game-row div.game-row-divider {
+	height: 100%;
+	width: 2px;
+	background-color: #404040;
+}
+
+div.game-row.teams {
+	font-size: 18px;
+}
+div.game-row.teams div {
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+div.game-row.teams a {
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+div.game-row.teams .team {
+	box-sizing: border-box;
+	height: 55px;
+	flex: 4;
+	transition: background-color 0.3s;
+}
+div.game-row.teams .team:hover {
+	background-color: var(--game-team-hover);
+}
+div.game-row.teams .team .name img {
+	border-radius: 6px;
+}
+div.game-row.teams .team.\31 {
+	padding-left: 10px;
+	flex: 4;
+}
+div.game-row.teams .team.\32 {
+	padding-right: 10px;
+	flex: 4;
+}
+div.game-row.teams .team.\32.current {
+	border-style: solid;
+	border-top-right-radius: 12px;
+	border-width: 3px 3px 0 0;
+}
+div.game-row.teams .team.\31.current {
+	border-style: solid;
+	border-top-left-radius: 12px;
+	border-width: 3px 0 0 3px;
+}
+div.game-row.teams .team.win.current {
+	border-color: #19a300;
+}
+div.game-row.teams .team.loss.current {
+	border-color: #d50000;
+}
+
+div.game-row.teams .team .name {
+	flex: 3;
+	gap: 10px;
+}
+div.game-row.teams .team .name img {
+	height: 40px;
+	aspect-ratio: 1/1;
+}
+div.game-row.teams .team .score {
+	flex: 1;
+}
+div.game-row.teams .time {
+	box-sizing: border-box;
+	height: 55px;
+	border: #404040 solid;
+	border-width: 0 2px;
+	flex: 1;
+	justify-content: center;
+}
+div.game-row.teams div.score.win {
+	color: #19a300;
+}
+div.game-row.teams div.score.loss {
+	color: #d50000;
+}
+
+div.game-details div.game-row.team-stats {
+	height: 35px;
+	background-color: var(--game-sec-bg);
+}
+div.game-row.team-stats div.stats-wrapper {
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 30px;
+}
+div.game-row.team-stats div.stats-wrapper span {
+	display: flex;
+	font-size: 14px;
+	align-items: center;
+	gap: 10px;
+}
+div.game-row.team-stats img.stats {
+	width: 20px;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+}
+div.game-row.team-stats img.stats.gold {
+	aspect-ratio: 9 / 7;
+	object-position: 0 100%;
+}
+
+div.game-details div.game-row.objectives {
+	height: 35px;
+	background-color: var(--game-sec-bg);
+}
+div.game-row.objectives div.obj-wrapper {
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+}
+div.game-row.objectives div.obj-wrapper span {
+	display: flex;
+	font-size: 14px;
+	align-items: center;
+	gap: 2px;
+}
+div.game-row.objectives img.obj {
+	width: 20px;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+}
+div.game-row.objectives img.obj-tower {
+	object-position: 0 0;
+}
+div.game-row.objectives img.obj-inhib {
+	object-position: 0 20%;
+}
+div.game-row.objectives img.obj-herald {
+	object-position: 0 40%;
+}
+div.game-row.objectives img.obj-dragon {
+	object-position: 0 60%;
+}
+div.game-row.objectives img.obj-baron {
+	object-position: 0 80%;
+}
+
+div.game-details div.game-row.summoners {
+	height: 72px;
+}
+div.game-row.summoners div.summoner {
+	flex: 1;
+	margin: 0 10px;
+	min-width: 464px;
+}
+div.game-row.summoners div.summoner.blue{
+	flex-direction: row;
+	margin-left: 10px;
+}
+div.game-row.summoners div.summoner.red{
+	flex-direction: row-reverse;
+	margin-right: 10px;
+}
+
+div.game-item.summoner {
+	gap: 10px;
+}
+div.game-item.summoner>div {
+	justify-content: center;
+	align-items: center;
+}
+div.game-item.summoner div.runes {
+	position: relative;
+	padding-right: 7px;
+}
+div.game-item.summoner img.keystone {
+	height: 30px;
+	aspect-ratio: 1/1;
+	box-sizing: border-box;
+	border: #9a9a9a solid 1px;
+	border-radius: 50%;
+	padding: 2px;
+}
+div.game-item.summoner img.sec-rune {
+	background-color: #262626;
+	position: absolute;
+	left: 20px;
+	top: 28px;
+	height: 18px;
+	aspect-ratio: 1/1;
+	box-sizing: border-box;
+	border: #9a9a9a solid 1px;
+	border-radius: 50%;
+	padding: 2px;
+}
+div.game-item.summoner div.summoner-spells {
+	flex-direction: column;
+	gap: 2px;
+}
+div.game-item.summoner img.summ-spell {
+	height: 22px;
+	width: 22px;
+}
+div.game-item.summoner div.champion {
+	position: relative;
+	padding-right: 7px;
+}
+div.game-item.summoner img.champ {
+	height: 50px;
+	width: 50px;
+}
+div.game-item.summoner div.champ-lvl {
+	color: #efefef;
+	justify-content: center;
+	font-size: 14px;
+	background-color: #262626;
+	position: absolute;
+	left: 35px;
+	top: 32px;
+	box-sizing: border-box;
+	border: #9a9a9a solid 1px;
+	border-radius: 50%;
+	padding: 3px;
+	overflow: hidden;
+	width: 24px;
+	aspect-ratio: 1/1;
+}
+div.game-item.summoner div.summoner-name {
+	display: flex;
+	flex-direction: column;
+	flex: 3;
+	text-align: center;
+	word-break: break-word;
+}
+/*
+div.game-item.summoner.blue div.summoner-name {
+	text-align: start;
+}
+div.game-item.summoner.red div.summoner-name {
+	text-align: end;
+}
+*/
+div.game-item.summoner div.summoner-name .summ-rank {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	color: #a7a7a7;
+}
+div.game-item.summoner div.player-stats {
+	flex: 1;
+	justify-content: center;
+	align-items: center;
+	white-space: nowrap;
+}
+div.player-stats div.player-stats-wrapper {
+	flex-direction: column;
+	text-align: center;
+}
+div.game-item.summoner.blue div.player-stats-wrapper {
+	padding-right: 10px;
+}
+div.game-item.summoner.red div.player-stats-wrapper {
+	padding-left: 10px;
+}
+div.player-stats-wrapper span.kills{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+}
+div.player-stats-wrapper span.CS {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 12px;
+	gap: 8px;
+}
+div.player-stats-wrapper span.gold {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 12px;
+	gap: 8px;
+}
+div.player-stats-wrapper img.kills {
+	object-fit: cover;
+	height: 16px;
+	aspect-ratio: 1/1;
+}
+div.player-stats-wrapper img.cs {
+	object-fit: cover;
+	object-position: 0 100%;
+	height: 10px;
+	aspect-ratio: 13/14;
+}
+div.player-stats-wrapper img.gold {
+	object-fit: cover;
+	object-position: 0 100%;
+	height: 10px;
+	aspect-ratio: 9/7;
+}
+div.game-item.summoner div.items {
+	flex: 1;
+}
+div.items div.items-wrapper {
+	display: grid;
+	align-items: center;
+	grid-gap: 4px;
+}
+div.items div.items-wrapper img {
+	height: 25px;
+	aspect-ratio: 1/1;
+}
+div.items div.items-wrapper img:last-child {
+	grid-column: 4;
+	grid-row: 1 / 3;
+}
+div.summoner.red div.items div.items-wrapper {
+	direction: rtl;
+}
+
+div.game-details div.game-row.bans {
+	height: 45px;
+	border-width: 0;
+	background-color: var(--game-sec-bg);
+}
+div.game-row.bans div.bans-wrapper {
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+}
+div.game-row.bans span {
+	display: flex;
+	position: relative;
+	align-items: center;
+}
+div.game-row.bans img {
+	height: 30px;
+	aspect-ratio: 1/1;
+	border-radius: 50%;
+}
+.gg-block {
+	box-sizing: border-box;
+	position: absolute;
+	left: 7px;
+	display: block;
+	transform: scale(1.9);
+	width: 16px;
+	height: 16px;
+	border: 1px solid #404040;
+	border-radius: 100%
+}
+.gg-block::before {
+	content: "";
+	display: block;
+	box-sizing: border-box;
+	position: absolute;
+	width: 12px;
+	height: 2px;
+	background: #404040;
+	border-radius: 5px;
+	transform: rotate(-45deg);
+	top: 6px;
+	left: 1px
+}
+
+img.rank-emblem-mini {
+	width: 20px;
+	height: 20px;
+}

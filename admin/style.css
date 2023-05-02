@@ -1,0 +1,290 @@
+body {
+    display:flex;
+    flex-direction:column;
+    align-items: center;
+    background-color: rgb(43, 43, 43);
+    margin: 0 10% 0 10%;
+}
+* {
+    font-family: "Arial","sans-serif";
+}
+h1 {
+    color: #e1e1e1;
+    text-align: center;
+}
+h2 {
+    color: #e1e1e1;
+    text-align: center;
+}
+a {
+    text-decoration: none;
+    color: #000;
+}
+#main-selection {
+    display: flex;
+    flex-direction: column;
+}
+#main-selection > input[type=number] {
+    width: auto;
+    text-align: center;
+    color: #000;
+    border-radius: 6px;
+    height: 30px;
+    box-sizing: border-box;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+.turnier-button-get{
+    color: black;
+    padding: 8px 70px 8px 70px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: limegreen;
+    font-size: 14px;
+    margin-top: 5px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: filter 0.2s linear;
+}
+.turnier-button-get:hover{
+    filter: brightness(75%);
+}
+div.get-result {
+    color: #e1e1e1;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    background: dimgray;
+    border-radius: 6px;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 0 15px 0;
+    transition: padding 0.2s linear, height 0.5s linear;
+}
+div.get-result.all-get-result {
+    height: 60vh;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    max-width: 650px;
+    align-self: center;
+    justify-self: center;
+}
+div.get-result.no-res {
+    height: 0;
+    padding: 0;
+    margin-bottom: 0;
+}
+div.all-get-result-content {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    align-items: baseline;
+    padding: 0 20px 0 20px;
+}
+div.turnier-get-result-content {
+    display: flex;
+    flex-direction: column;
+    align-items: baseline;
+    padding: 0 20px 0 20px;
+}
+div.clear-button {
+    border: 2px solid cadetblue;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    padding: 2px 10px 2px 10px;
+    margin-bottom: 5px;
+    width: fit-content;
+    align-self: center;
+    transition: filter 0.2s linear;
+}
+div.clear-button:hover {
+    filter: brightness(90%);
+}
+
+
+.turnier-select {
+    display: flex;
+    flex-direction: column;
+}
+div.refresh-button {
+    width: fit-content;
+    cursor: pointer;
+    background: cornflowerblue;
+    border-radius: 6px;
+    padding: 8px 20px 8px 20px;
+    font-size: 18px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.2s linear;
+}
+div.refresh-button:hover {
+    filter: brightness(75%);
+}
+div.turnier-button-wrap {
+    margin-top: 5px;
+    margin-bottom: 12px;
+}
+div.turnier-button {
+    color: black;
+    padding: 30px 25px;
+    border-radius: 6px 6px 0 0;
+    background: cornflowerblue;
+    font-size: 18px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.tbutton-act-wrap {
+    height: auto;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s linear;
+}
+.tbutton-act-wrap.open {
+    max-height: 545px;
+}
+.tbutton-act {
+    color: black;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: filter 0.2s linear;
+}
+.tbutton-act:hover {
+    filter: brightness(75%);
+}
+.tbutton-act.followed {
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+.tbutton-act.green {
+    background: limegreen;
+}
+.tbutton-act.dgreen {
+    background: yellowgreen;
+}
+.tbutton-act.orange {
+    background: darkorange;
+}
+.tbutton-act.lblue {
+    background: cornflowerblue;
+}
+.tbutton-act.green.followed {
+    border-bottom-color: forestgreen;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+.tbutton-act.orange.followed {
+    border-bottom-color: orangered;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+}
+.tbutton-act.loading-data {
+    cursor: default;
+}
+.tbutton-act.loading-data:hover {
+    filter: brightness(100%);
+}
+.tbutton-act img {
+    height: 25px;
+    width: 25px;
+}
+div.turnier-button-open {
+    background: royalblue;
+}
+div.tbutton-last {
+    border-radius: 0 0 6px 6px;
+}
+div.tbutton-act.close {
+    display: none;
+}
+div.tbutton-act.open {
+    display: flex;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: rgb(43,43,43);
+    color: #fff;
+    font-size: 16px;
+    font-weight: normal;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+
+.lds-dual-ring {
+    display: inline-block;
+    position: relative;
+    bottom: 11px;
+    right: 5px;
+    width: 14px;
+    height: 14px;
+}
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 16px;
+    height: 16px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 2px solid;
+    border-color: #000 transparent;
+    animation: lds-dual-ring 3s linear infinite;
+}
+@keyframes lds-dual-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.nav-menu-login {
+    color: grey;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+.nav-menu-login.logged-in {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+@media screen and (max-width: 1024px) {
+    .nav-menu-login {
+        position: static;
+        text-align: center;
+        margin-top: 10px;
+    }
+}

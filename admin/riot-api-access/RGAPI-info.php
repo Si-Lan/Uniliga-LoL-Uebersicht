@@ -1,0 +1,2 @@
+<?php
+$RGAPI_Key = "";
