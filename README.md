@@ -1,4 +1,11 @@
 # Uniliga-LoL-Übersicht
+## Webseite
+Meine Webseite, auf der dieses Projekt läuft findet ihr hier:  
+https://silence.lol/uniliga/
+
+## Unterstützung
+Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun  
+[![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?style=flat)](https://paypal.me/SimonlLang)
 
 ## Benötigt zum eigenen Aufsetzen:
 
