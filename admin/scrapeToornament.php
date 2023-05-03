@@ -77,7 +77,7 @@ function scrape_toornament_teams($toorID){
 						$returnArr["echo"] .= "<span style='color: yellow'>Daten sind unverändert<br></span>";
                     }else {
 						$returnArr["echo"] .= "<span style='font-size: 30px; color: orange'>neue Daten, Update:<br></span>";
-						$returnArr["echo"] .= "<pre>"; print_r($teamIDsDB[0],true); echo "<br>"; print_r([$id,$toorID,$teamname,$imgidN],true); echo "</pre>";
+						$returnArr["echo"] .= "<pre>". print_r($teamIDsDB[0],true)."<br>". print_r([$id,$toorID,$teamname,$imgidN],true). "</pre>";
                         $dbcn->query("UPDATE `teams` SET TeamName = '{$teamname}', imgID = {$imgid} WHERE TournamentID = {$toorID} AND TeamID = {$id}");
 						$returnArr["updates"]++;
                     }

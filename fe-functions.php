@@ -116,7 +116,7 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 	$opgg_logo_svg = file_get_contents(dirname(__FILE__)."/img/opgglogo.svg");
 	$group = $dbcn->query("SELECT * FROM `groups` WHERE GroupID = {$group_id}")->fetch_assoc();
 	$div = $dbcn->query("SELECT * FROM divisions WHERE DivID = {$group['DivID']}")->fetch_assoc();
-	$teams_from_groupDB = $dbcn->query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = {$group['GroupID']} ORDER BY `Rank`")->fetch_all(MYSQLI_ASSOC);
+	$teams_from_groupDB = $dbcn->query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = {$group['GroupID']} ORDER BY CASE WHEN `Rank`=0 THEN 1 else 0 end, `Rank`")->fetch_all(MYSQLI_ASSOC);
 
 	echo "<div class='standings'>";
 	if ($team_id == NULL) {

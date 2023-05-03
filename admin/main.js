@@ -119,6 +119,12 @@ function get_players(tournID) {
                         }
                     }
                 };
+                if ((i + 1) % 2 === 0) {
+                    console.log("---- Call #" + (i + 1));
+                    console.log("-- sleep --")
+                    await new Promise(r => setTimeout(r, 1000));
+                    console.log("-- slept --");
+                }
                 xmlhttp.open("GET", "scrapeToor-ajax.php?type=players&id="+tournID+"&teamid="+teams[i]["TeamID"]);
                 xmlhttp.send();
             }
@@ -356,10 +362,10 @@ function get_matches(tournID, all = true) {
                         }
                     }
                 };
-                if ((i + 1) % 50 === 0) {
+                if ((i + 1) % 2 === 0) {
                     console.log("---- Call #" + (i + 1));
                     console.log("-- sleep --")
-                    await new Promise(r => setTimeout(r, 15000));
+                    await new Promise(r => setTimeout(r, 1000));
                     console.log("-- slept --");
                 }
                 xmlhttp.open("GET", "scrapeToor-ajax.php?type=matches&Tid=" + tournID + "&Mid=" + matches[i]["MatchID"]);
