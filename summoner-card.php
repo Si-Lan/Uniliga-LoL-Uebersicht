@@ -8,8 +8,10 @@ function create_summonercard($player,$collapsed=FALSE){
 	$enc_summoner = urlencode($player['SummonerName']);
 	$player_tier = $player['rank_tier'];
 	$player_div = $player['rank_div'];
+	$player_LP = NULL;
 	if ($player_tier == "CHALLENGER" || $player_tier == "GRANDMASTER" || $player_tier == "MASTER") {
 		$player_div = "";
+		$player_LP = $player["leaguePoints"];
 	}
     echo "<div class='summoner-card-wrapper'>";
     echo "
@@ -28,10 +30,15 @@ function create_summonercard($player,$collapsed=FALSE){
 		if ($player_tier != NULL) {
 			$player_tier = strtolower($player_tier);
             $player_tier_cap = ucfirst($player_tier);
+			if ($player_LP != NULL) {
+				$player_LP = "(".$player_LP." LP)";
+			} else {
+				$player_LP = "";
+			}
 			echo "
 			<div class='card-rank'>
 				<img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$player_tier}.webp' alt='$player_tier_cap'>
-				$player_tier_cap $player_div
+				$player_tier_cap $player_div $player_LP
 			</div>";
 		}
 

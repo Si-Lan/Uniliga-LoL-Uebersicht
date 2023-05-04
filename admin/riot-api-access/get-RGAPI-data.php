@@ -316,7 +316,7 @@ function get_Rank_by_SummonerId($playerID) {
 	$content = file_get_contents("https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{$player['SummonerID']}", false,$context);
 
 	if ($content === FALSE) {
-		$returnArr["echo"] .= "<span style='color: orangered'>--could not get Games, request failed: {$http_response_header[0]}<br></span>";
+		$returnArr["echo"] .= "<span style='color: orangered'>--could not get Rank, request failed: {$http_response_header[0]}<br></span>";
 		return $returnArr;
 	}
 	if (str_contains($http_response_header[0], "200")) {
@@ -331,13 +331,15 @@ function get_Rank_by_SummonerId($playerID) {
 		if ($solo_ranked) {
 			$tier = $data['tier'];
 			$div = $data['rank'];
+			$league_points = $data['leaguePoints'];
 		} else {
 			$tier = "UNRANKED";
 			$div = NULL;
+			$league_points = NULL;
 		}
-		$returnArr["echo"] .= "<span style='color: limegreen'>--got Rank: $tier $div<br></span>";
+		$returnArr["echo"] .= "<span style='color: limegreen'>--got Rank: $tier $div ($league_points LP)<br></span>";
 
-		$dbcn->query("UPDATE players SET rank_tier = '{$tier}', rank_div = '{$div}' WHERE PlayerID = {$playerID}");
+		$dbcn->query("UPDATE players SET rank_tier = '{$tier}', rank_div = '{$div}', leaguePoints = {$league_points} WHERE PlayerID = {$playerID}");
 		$returnArr["echo"] .= "<span style='color: lawngreen'>---write Rank to DB<br></span>";
 		$returnArr["writes"]++;
 	} else {
