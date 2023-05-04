@@ -2,3 +2,6 @@
 /.vscode/
 /img/team_logos/
 /img/tournament_logos/
+/DB-info.php
+/admin/admin-pass.php
+/admin/riot-api-access/RGAPI-info.php
