@@ -11,7 +11,7 @@ Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun
 
 ### Festlegen von Zugangsdaten:
 * Zugangsdaten zur Datenbank in
-  * **DB-info.php**
+  * **DB-info.php** (*.template* entfernen)
   * ```
     <?php
     $dbservername = "Server-Name";
@@ -21,13 +21,13 @@ Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun
     $dbport = Datenbank-Port (NULL wenn nicht vorhanden);
     ```
 * Admin-Passwort in
-  * **admin/admin-pass.php**
+  * **admin/admin-pass.php** (*.template* entfernen)
   * ```
     <?php
     $RGAPI_Key = "Riot-API-Key"
     ```
 * Riot-API-Key in
-  * **admin/riot-api-access/RGAPI-info.php**
+  * **admin/riot-api-access/RGAPI-info.php** (*.template* entfernen)
   * ```
     <?php
     function get_admin_pass(): string {
