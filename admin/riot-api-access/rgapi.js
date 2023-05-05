@@ -581,7 +581,7 @@ function get_ranks(tournamentID) {
 			}
 		}
 	};
-	players_request.open("GET","/uniliga/ajax-functions/get-DB-AJAX.php?type=players-by-tournament&tournament="+tournamentID, true);
+	players_request.open("GET","/uniliga/ajax-functions/get-DB-AJAX.php?type=players-by-tournament-with-SummonerID&tournament="+tournamentID, true);
 	players_request.send();
 }
 

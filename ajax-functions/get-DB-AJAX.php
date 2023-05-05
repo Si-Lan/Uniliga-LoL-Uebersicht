@@ -77,9 +77,19 @@ if ($dbcn -> connect_error){
 		$players = $dbcn->query("SELECT * FROM players WHERE TeamID = $teamID AND PUUID IS NOT NULL")->fetch_all(MYSQLI_ASSOC);
 		echo json_encode($players);
 	}
+	if ($type == "players-by-team-with-SummonerID") {
+		$teamID = $_REQUEST["team"];
+		$players = $dbcn->query("SELECT * FROM players WHERE TeamID = $teamID AND SummonerID IS NOT NULL")->fetch_all(MYSQLI_ASSOC);
+		echo json_encode($players);
+	}
 	if ($type == "players-by-tournament") {
 		$tournamentID = $_REQUEST["tournament"];
 		$players = $dbcn->query("SELECT * FROM players WHERE TournamentID = $tournamentID")->fetch_all(MYSQLI_ASSOC);
+		echo json_encode($players);
+	}
+	if ($type == "players-by-tournament-with-SummonerID") {
+		$tournamentID = $_REQUEST["tournament"];
+		$players = $dbcn->query("SELECT * FROM players WHERE TournamentID = $tournamentID AND SummonerID IS NOT NULL ")->fetch_all(MYSQLI_ASSOC);
 		echo json_encode($players);
 	}
 
