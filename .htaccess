@@ -31,6 +31,9 @@ RewriteRule ^team/(.+)/stats$ /uniliga/team-statistics?team=$1 [NC,L]
 RewriteRule ^team$ /uniliga/team-details [NC,L]
 RewriteRule ^team/(.+)$ /uniliga/team-details?team=$1 [NC,L,QSA]
 
+## redirect players
+RewriteRule ^spieler$ /uniliga/player-page [NC,L]
+
 
 # enable opening php files without .php ending
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -310,6 +310,9 @@ function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=N
 	if ($type == "home") {
 		echo "<h1>Uniliga LoL - Übersicht</h1>";
 	}
+	if ($type == "players") {
+		echo "<h1>Uniliga LoL - Spieler</h1>";
+	}
 	if ($type == "tournament" || $type == "group" || $type == "team") {
 		echo "<h1>$tournament_name</h1>";
 		echo "<a href='$toor_tourn_url$tournament_id' target='_blank' class='toorlink'><div class='material-symbol'>$outlinkicon</div></a>";
