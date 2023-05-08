@@ -21,13 +21,13 @@ try {
 	if ($dbcn->connect_error) {
         echo "<title>Database Connection failed</title></head>Database Connection failed";
 	} else {
-        $tournamentDB = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = {$tournamentID}")->fetch_assoc();
-		$divisionsDB = $dbcn->query("SELECT * FROM divisions WHERE TournamentID = {$tournamentID} ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+        $tournamentDB = $dbcn->execute_query("SELECT * FROM tournaments WHERE TournamentID = ?",[$tournamentID])->fetch_assoc();
+		$divisionsDB = $dbcn->execute_query("SELECT * FROM divisions WHERE TournamentID = ? ORDER BY Number",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
         $groups_by_div = [];
         foreach ($divisionsDB as $division) {
-            $groups_by_div[$division['DivID']] = $dbcn->query("SELECT * FROM `groups` WHERE DivID={$division['DivID']}")->fetch_all(MYSQLI_ASSOC);
+            $groups_by_div[$division['DivID']] = $dbcn->execute_query("SELECT * FROM `groups` WHERE DivID = ?",[$division['DivID']])->fetch_all(MYSQLI_ASSOC);
 		}
-        $teams = $dbcn->query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID=$tournamentID ORDER BY avg_rank_num DESC")->fetch_all(MYSQLI_ASSOC);
+        $teams = $dbcn->execute_query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID = ? ORDER BY avg_rank_num DESC",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
 		echo "<title>Elo-Übersicht - Uniliga {$tournamentDB['Split']} 20{$tournamentDB['Season']} | Uniliga LoL - Übersicht</title>";
         ?>
 </head>
@@ -103,14 +103,14 @@ try {
             <div class='main-content$color'>";
 		if ($filtered == "liga") {
 			foreach ($divisionsDB as $division) {
-				$teams_of_div = $dbcn->query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID=$tournamentID AND d.DivID = {$division['DivID']} ORDER BY avg_rank_num DESC")->fetch_all(MYSQLI_ASSOC);
+				$teams_of_div = $dbcn->execute_query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID = ? AND d.DivID = ? ORDER BY avg_rank_num DESC",[$tournamentID,$division['DivID']])->fetch_all(MYSQLI_ASSOC);
 				generate_elo_list($dbcn,"div",$teams_of_div,$tournamentID,$division,NULL);
 			}
 		} elseif ($filtered == "gruppe") {
 			foreach ($divisionsDB as $division) {
-				$groups_of_div = $dbcn->query("SELECT * FROM `groups` WHERE DivID = {$division['DivID']} ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+				$groups_of_div = $dbcn->execute_query("SELECT * FROM `groups` WHERE DivID = ? ORDER BY Number",[$division['DivID']])->fetch_all(MYSQLI_ASSOC);
 				foreach ($groups_of_div as $group) {
-					$teams_of_group = $dbcn->query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID=$tournamentID AND g.GroupID = {$group['GroupID']} ORDER BY avg_rank_num DESC")->fetch_all(MYSQLI_ASSOC);
+					$teams_of_group = $dbcn->execute_query("SELECT teams.*, g.GroupID AS GroupID, d.DivID AS DivID, g.Number AS Group_Num, d.Number as Div_Num FROM teams JOIN teamsingroup on teams.TeamID = teamsingroup.TeamID JOIN `groups` g on g.GroupID = teamsingroup.GroupID JOIN divisions d on g.DivID = d.DivID WHERE d.TournamentID = ? AND g.GroupID = ? ORDER BY avg_rank_num DESC",[$tournamentID,$group['GroupID']])->fetch_all(MYSQLI_ASSOC);
 					generate_elo_list($dbcn,"group",$teams_of_group,$tournamentID,$division,$group);
 				}
 			}

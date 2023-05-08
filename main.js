@@ -220,7 +220,7 @@ onload = () => {
     let url = new URL(window.location.href);
     current_match_in_popup = url.searchParams.get('match');
 }
-async function popup_match(matchID,teamID) {
+async function popup_match(matchID,teamID=null) {
     event.preventDefault();
     let popup = $('.mh-popup');
     let popupbg = $('.mh-popup-bg');
@@ -264,10 +264,10 @@ async function popup_match(matchID,teamID) {
             }
             let team1score;
             let team2score;
-            if (data['match']['Winner'] === "1") {
+            if (data['match']['Winner'] === 1) {
                 team1score = "win";
                 team2score = "loss";
-            } else if (data['match']['Winner'] === "2") {
+            } else if (data['match']['Winner'] === 2) {
                 team1score = "loss";
                 team2score = "win";
             } else {
@@ -349,7 +349,8 @@ async function closex_popup_match() {
     popupbg.css("display","none");
 }
 $(document).ready(function () {
-    if ($('body').hasClass("team") || $('body').hasClass("group")) {
+    let body = $('body');
+    if (body.hasClass("team") || body.hasClass("group")) {
         window.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
                 closex_popup_match();
@@ -482,7 +483,8 @@ async function closex_popup_team() {
     popupbg.css("display","none");
 }
 $(document).ready(function () {
-    if ($('body').hasClass("teamlist") || $('body').hasClass("elo-overview")) {
+    let body = $('body');
+    if (body.hasClass("teamlist") || body.hasClass("elo-overview")) {
         window.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
                 closex_popup_team();
@@ -892,13 +894,14 @@ async function toggle_darkmode() {
     }
     let cookie_expiry = new Date();
     cookie_expiry.setFullYear(cookie_expiry.getFullYear()+1);
-    if ($('body').hasClass("light")) {
-        $('body').removeClass("light");
+    let body = $('body');
+    if (body.hasClass("light")) {
+        body.removeClass("light");
         await new Promise(r => setTimeout(r, 1));
         $('.settings-option.toggle-mode').html("<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 936q-150 0-255-105T120 576q0-135 79.5-229T408 226q41-8 56 14t-1 60q-9 23-14 47t-5 49q0 90 63 153t153 63q25 0 48.5-4.5T754 595q43-16 64 1.5t11 59.5q-27 121-121 200.5T480 936Zm0-60q109 0 190-67.5T771 650q-25 11-53.667 16.5Q688.667 672 660 672q-114.689 0-195.345-80.655Q384 510.689 384 396q0-24 5-51.5t18-62.5q-98 27-162.5 109.5T180 576q0 125 87.5 212.5T480 876Zm-4-297Z\"/></svg></div>");
         document.cookie = "lightmode=0; expires="+cookie_expiry+"; path=/"
     } else {
-        $('body').addClass("light");
+        body.addClass("light");
         await new Promise(r => setTimeout(r, 1));
         $('.settings-option.toggle-mode').html("<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M479.765 716Q538 716 579 675.235q41-40.764 41-99Q620 518 579.235 477q-40.764-41-99-41Q422 436 381 476.765q-41 40.764-41 99Q340 634 380.765 675q40.764 41 99 41Zm.235 60q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM70 606q-12.75 0-21.375-8.675Q40 588.649 40 575.825 40 563 48.625 554.5T70 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T170 606H70Zm720 0q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T790 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T890 606H790ZM479.825 296Q467 296 458.5 287.375T450 266V166q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 166v100q0 12.75-8.675 21.375-8.676 8.625-21.5 8.625Zm0 720q-12.825 0-21.325-8.62-8.5-8.63-8.5-21.38V886q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 886v100q0 12.75-8.675 21.38-8.676 8.62-21.5 8.62ZM240 378l-57-56q-9-9-8.629-21.603.37-12.604 8.526-21.5 8.896-8.897 21.5-8.897Q217 270 226 279l56 57q8 9 8 21t-8 20.5q-8 8.5-20.5 8.5t-21.5-8Zm494 495-56-57q-8-9-8-21.375T678.5 774q8.5-9 20.5-9t21 9l57 56q9 9 8.629 21.603-.37 12.604-8.526 21.5-8.896 8.897-21.5 8.897Q743 882 734 873Zm-56-495q-9-9-9-21t9-21l56-57q9-9 21.603-8.629 12.604.37 21.5 8.526 8.897 8.896 8.897 21.5Q786 313 777 322l-57 56q-8 8-20.364 8-12.363 0-21.636-8ZM182.897 873.103q-8.897-8.896-8.897-21.5Q174 839 183 830l57-56q8.8-9 20.9-9 12.1 0 20.709 9Q291 783 291 795t-9 21l-56 57q-9 9-21.603 8.629-12.604-.37-21.5-8.526ZM480 576Z\"/></svg></div>");
         document.cookie = "lightmode=1; expires="+cookie_expiry+"; path=/"
@@ -913,12 +916,13 @@ function toggle_admin_buttons() {
     event.preventDefault();
     let cookie_expiry = new Date();
     cookie_expiry.setFullYear(cookie_expiry.getFullYear()+1);
-    if ($('body').hasClass("admin_li")) {
-        $('body').removeClass("admin_li");
+    let body = $('body');
+    if (body.hasClass("admin_li")) {
+        body.removeClass("admin_li");
         $('.settings-option.toggle-admin-b-vis').html("Buttons<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480.118 726Q551 726 600.5 676.382q49.5-49.617 49.5-120.5Q650 485 600.382 435.5q-49.617-49.5-120.5-49.5Q409 386 359.5 435.618q-49.5 49.617-49.5 120.5Q310 627 359.618 676.5q49.617 49.5 120.5 49.5Zm-.353-58Q433 668 400.5 635.265q-32.5-32.736-32.5-79.5Q368 509 400.735 476.5q32.736-32.5 79.5-32.5Q527 444 559.5 476.735q32.5 32.736 32.5 79.5Q592 603 559.265 635.5q-32.736 32.5-79.5 32.5ZM480 856q-138 0-251.5-75T53.145 582.923Q50 578 48.5 570.826 47 563.652 47 556t1.5-14.826Q50 534 53.145 529.077 115 406 228.5 331T480 256q138 0 251.5 75t175.355 198.077Q910 534 911.5 541.174 913 548.348 913 556t-1.5 14.826q-1.5 7.174-4.645 12.097Q845 706 731.5 781T480 856Zm0-300Zm-.169 240Q601 796 702.5 730.5 804 665 857 556q-53-109-154.331-174.5-101.332-65.5-222.5-65.5Q359 316 257.5 381.5 156 447 102 556q54 109 155.331 174.5 101.332 65.5 222.5 65.5Z\"/></svg></div>");
         document.cookie = "admin_btns=0; expires="+cookie_expiry+"; path=/";
     } else {
-        $('body').addClass("admin_li");
+        body.addClass("admin_li");
         $('.settings-option.toggle-admin-b-vis').html("Buttons<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"m629 637-44-44q26-71-27-118t-115-24l-44-44q17-11 38-16t43-5q71 0 120.5 49.5T650 556q0 22-5.5 43.5T629 637Zm129 129-40-40q49-36 85.5-80.5T857 556q-50-111-150-175.5T490 316q-42 0-86 8t-69 19l-46-47q35-16 89.5-28T485 256q135 0 249 74t174 199q3 5 4 12t1 15q0 8-1 15.5t-4 12.5q-26 55-64 101t-86 81Zm36 204L648 827q-35 14-79 21.5t-89 7.5q-138 0-253-74T52 583q-3-6-4-12.5T47 556q0-8 1.5-15.5T52 528q21-45 53.5-87.5T182 360L77 255q-9-9-9-21t9-21q9-9 21.5-9t21.5 9l716 716q8 8 8 19.5t-8 20.5q-8 10-20.5 10t-21.5-9ZM223 402q-37 27-71.5 71T102 556q51 111 153.5 175.5T488 796q33 0 65-4t48-12l-64-64q-11 5-27 7.5t-30 2.5q-70 0-120-49t-50-121q0-15 2.5-30t7.5-27l-97-97Zm305 142Zm-116 58Z\"/></svg></div>");
         document.cookie = "admin_btns=1; expires="+cookie_expiry+"; path=/";
     }
@@ -926,10 +930,12 @@ function toggle_admin_buttons() {
 $(document).ready(function () {
     $('header .settings-button').on("click",open_settings_menu);
     $('header .settings-option.toggle-mode').on("click",toggle_darkmode);
+    let settings = $('.settings-menu');
+    let header = $('header');
     window.addEventListener("click", (event) => {
-        if ($('.settings-menu').hasClass('shown')) {
-            if (!$.contains($('header').get(0),$(event.target).get(0)) && event.target !== $('header')[0]) {
-                $('.settings-menu').removeClass('shown');
+        if (settings.hasClass('shown')) {
+            if (!$.contains(header.get(0),$(event.target).get(0)) && event.target !== header[0]) {
+                settings.removeClass('shown');
             }
         }
     });
