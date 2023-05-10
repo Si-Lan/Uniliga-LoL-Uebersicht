@@ -171,6 +171,14 @@ if ($dbcn -> connect_error){
 		echo $result;
 	}
 
+    if ($type == "players-autocomplete-names") {
+        $search_string = $_REQUEST['search'] ?? NULL;
+        $players = $dbcn->execute_query("SELECT * FROM players WHERE SummonerName LIKE '%$search_string%' OR PlayerName LIKE '%$search_string%'")->fetch_all(MYSQLI_ASSOC);
+        $result = json_encode($players);
+        $result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+        echo $result;
+    }
+
 	// counters
 	if ($type == "number-teams") {
 		$tournamentID = $_REQUEST["tournament"];

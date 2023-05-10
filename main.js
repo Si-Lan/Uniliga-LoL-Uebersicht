@@ -1033,3 +1033,41 @@ function expand_collapse_summonercard() {
 $(document).ready(function () {
     $('.player-cards a.exp_coll_sc').on("click",expand_collapse_summonercard);
 });
+
+let player_search_request = new XMLHttpRequest();
+function search_players() {
+    player_search_request.abort();
+
+    let searchbar = $('.search-wrapper .searchbar');
+    let input = $('input.search-players')[0];
+    let input_value = input.value.toUpperCase();
+    let ac = $('.search-wrapper .searchbar .autocomplete-items');
+
+    if (ac.length === 0) {
+        ac = $("<div class=\'autocomplete-items\'></div>");
+        searchbar.append(ac);
+    } else {
+        ac.empty();
+    }
+
+    if (input_value.length < 2) {
+        return;
+    }
+
+    player_search_request.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            let players = JSON.parse(this.responseText);
+            console.log(players)
+            for (let i = 0; i < players.length; i++) {
+                ac.append("<div>"+players[i]['PlayerName']+"<br>"+players[i]['SummonerName']+"</div>")
+            }
+        }
+    }
+    player_search_request.open("GET","ajax-functions/get-DB-AJAX.php?type=players-autocomplete-names&search="+input_value);
+    player_search_request.send();
+
+}
+
+$(document).ready(function () {
+    $('body.players .searchbar input').on("input",search_players);
+})
