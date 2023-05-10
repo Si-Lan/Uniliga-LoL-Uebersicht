@@ -69,7 +69,7 @@ create_header($dbcn,"home");
         if ($dbcn->connect_error) {
             echo "Database Connection failed : " . $dbcn->connect_error;
         } else {
-            $toornamentsRes = $dbcn->query("SELECT name, split, season, imgID, TournamentID FROM tournaments ORDER BY TournamentID DESC");
+            $toornamentsRes = $dbcn->execute_query("SELECT name, split, season, imgID, TournamentID FROM tournaments ORDER BY TournamentID DESC");
             $toornaments = $toornamentsRes->fetch_all(MYSQLI_ASSOC);
 
             echo "

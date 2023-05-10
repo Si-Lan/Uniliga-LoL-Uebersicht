@@ -50,8 +50,8 @@ try {
                 </body>";
 		    exit;
 	    }
-        $tournamentDB = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = {$tournamentID}")->fetch_assoc();
-        $divisionsDB = $dbcn->query("SELECT * FROM divisions WHERE TournamentID = {$tournamentID} ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+        $tournamentDB = $dbcn->execute_query("SELECT * FROM tournaments WHERE TournamentID = ?",[$tournamentID])->fetch_assoc();
+        $divisionsDB = $dbcn->execute_query("SELECT * FROM divisions WHERE TournamentID = ? ORDER BY Number",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
         if ($tournamentDB == NULL) {
 			echo "<title>Kein Turnier gefunden | Uniliga LoL - Übersicht</title></head>";
             echo "
@@ -93,7 +93,7 @@ try {
                           </div>";
 		        }
                 echo "<div class='divider'></div>";
-                $groupsDB = $dbcn->query("SELECT * FROM `groups` WHERE DivID = {$division['DivID']} ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+                $groupsDB = $dbcn->execute_query("SELECT * FROM `groups` WHERE DivID = ? ORDER BY Number",[$division['DivID']])->fetch_all(MYSQLI_ASSOC);
                 echo "<div class='groups'>";
                 foreach ($groupsDB as $group) {
                     if ($division["format"] === "Swiss") {

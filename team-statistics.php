@@ -26,21 +26,21 @@ $dbcn = new mysqli($dbservername, $dbusername, $dbpassword, $dbdatabase, $dbport
 if ($dbcn->connect_error) {
 	echo "<title>Database Connection failed</title></head>Database Connection failed";
 } else {
-	$team = $dbcn->query("SELECT * FROM teams WHERE TeamID = {$team_id}")->fetch_assoc();
+	$team = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$team_id])->fetch_assoc();
 ?>
 	<title><?php echo "{$team['TeamName']}" ?> - Statistiken | Uniliga LoL - Übersicht</title>
 </head>
 <body class="statistics<?php echo $lightmode?>">
 	<?php
-	$tournament = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = {$team["TournamentID"]}")->fetch_assoc();
+	$tournament = $dbcn->execute_query("SELECT * FROM tournaments WHERE TournamentID = ?",[$team["TournamentID"]])->fetch_assoc();
 	$tournament_id = $tournament['TournamentID'];
-	$team_in_group = $dbcn->query("SELECT * FROM teamsingroup WHERE TeamID = {$team_id}")->fetch_assoc();
-	$group = $dbcn->query("SELECT * FROM `groups` WHERE GroupID = {$team_in_group['GroupID']}")->fetch_assoc();
+	$team_in_group = $dbcn->execute_query("SELECT * FROM teamsingroup WHERE TeamID = ?",[$team_id])->fetch_assoc();
+	$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?",[$team_in_group['GroupID']])->fetch_assoc();
 	$group_id = $group['GroupID'];
-	$div = $dbcn->query("SELECT * FROM divisions WHERE DivID = {$group['DivID']}")->fetch_assoc();
+	$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?",[$group['DivID']])->fetch_assoc();
 	$div_id = $div['DivID'];
-    $teamstats = $dbcn->query("SELECT * FROM teamstats WHERE TeamID = $team_id")->fetch_assoc();
-    $players = $dbcn->query("SELECT * FROM players WHERE TeamID=$team_id")->fetch_all(MYSQLI_ASSOC);
+    $teamstats = $dbcn->execute_query("SELECT * FROM teamstats WHERE TeamID = ?",[$team_id])->fetch_assoc();
+    $players = $dbcn->execute_query("SELECT * FROM players WHERE TeamID = ?",[$team_id])->fetch_all(MYSQLI_ASSOC);
 
     $ddragon_dir = new DirectoryIterator(dirname(__FILE__)."/ddragon");
     $patches = [];

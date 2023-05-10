@@ -25,16 +25,16 @@ try {
     if ($dbcn->connect_error) {
         echo "<title>Database Connection failed</title></head>Database Connection failed";
     } else {
-        $tournamentDB = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = {$tournamentID}")->fetch_assoc();
-        $all_divsDB = $dbcn->query("SELECT * FROM divisions WHERE TournamentID = {$tournamentID} ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
-        $groupDB = $dbcn->query("SELECT * FROM `groups` WHERE GroupID = {$groupID} ORDER BY Number")->fetch_assoc();
-        $divisionsDB = $dbcn->query("SELECT * FROM divisions WHERE DivID = {$groupDB['DivID']}")->fetch_assoc();
-        $matches = $dbcn->query("SELECT * FROM matches WHERE GroupID = {$groupDB['GroupID']} ORDER BY round")->fetch_all(MYSQLI_ASSOC);
+        $tournamentDB = $dbcn->execute_query("SELECT * FROM tournaments WHERE TournamentID = ?",[$tournamentID])->fetch_assoc();
+        $all_divsDB = $dbcn->execute_query("SELECT * FROM divisions WHERE TournamentID = ? ORDER BY Number",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
+        $groupDB = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ? ORDER BY Number",[$groupID])->fetch_assoc();
+        $divisionsDB = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?",[$groupDB['DivID']])->fetch_assoc();
+        $matches = $dbcn->execute_query("SELECT * FROM matches WHERE GroupID = ? ORDER BY round",[$groupDB['GroupID']])->fetch_all(MYSQLI_ASSOC);
         $matches_grouped = [];
         foreach ($matches as $match) {
             $matches_grouped[$match['round']][] = $match;
         }
-        $teams_from_groupDB = $dbcn->query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = {$groupDB['GroupID']} ORDER BY `Rank`")->fetch_all(MYSQLI_ASSOC);
+        $teams_from_groupDB = $dbcn->execute_query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = ? ORDER BY `Rank`",[$groupDB['GroupID']])->fetch_all(MYSQLI_ASSOC);
         $teams_from_group = [];
         foreach ($teams_from_groupDB as $i=>$team_from_group) {
             $teams_from_group[$team_from_group['TeamID']] = array("TeamName"=>$team_from_group['TeamName'], "imgID"=>$team_from_group['imgID']);
@@ -104,10 +104,10 @@ try {
                 <div class='title'><h3>Spiele</h3></div>";
 		$curr_matchID = $_GET['match'] ?? NULL;
 		if ($curr_matchID != NULL) {
-			$curr_matchData = $dbcn->query("SELECT * FROM matches WHERE MatchID = $curr_matchID")->fetch_assoc();
-			$curr_games = $dbcn->query("SELECT * FROM games WHERE MatchID = $curr_matchID ORDER BY RiotMatchID")->fetch_all(MYSQLI_ASSOC);
-			$curr_team1 = $dbcn->query("SELECT * FROM teams WHERE TeamID = {$curr_matchData['Team1ID']}")->fetch_assoc();
-			$curr_team2 = $dbcn->query("SELECT * FROM teams WHERE TeamID = {$curr_matchData['Team2ID']}")->fetch_assoc();
+			$curr_matchData = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$curr_matchID])->fetch_assoc();
+			$curr_games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? ORDER BY RiotMatchID",[$curr_matchID])->fetch_all(MYSQLI_ASSOC);
+			$curr_team1 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$curr_matchData['Team1ID']])->fetch_assoc();
+			$curr_team2 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$curr_matchData['Team2ID']])->fetch_assoc();
 			echo "
                     <div class='mh-popup-bg' onclick='close_popup_match(event)' style='display: block; opacity: 1;'>
                         <div class='mh-popup'>

@@ -1,12 +1,12 @@
 <?php
 function create_game($dbcn,$gameID,$curr_team=NULL) {
-    $gameDB = $dbcn->query("SELECT * FROM games WHERE RiotMatchID = '{$gameID}'")->fetch_assoc();
+    $gameDB = $dbcn->execute_query("SELECT * FROM games WHERE RiotMatchID = ?",[$gameID])->fetch_assoc();
     $team_blue_ID = $gameDB['BlueTeamID'];
     $team_red_ID = $gameDB['RedTeamID'];
-    $team_blue = $dbcn->query("SELECT * FROM teams WHERE TeamID = $team_blue_ID")->fetch_assoc();
-    $team_red = $dbcn->query("SELECT * FROM teams WHERE TeamID = $team_red_ID")->fetch_assoc();
-    $players_blue_DB = $dbcn->query("SELECT SummonerName, rank_tier, rank_div, PUUID FROM players WHERE TeamID = {$team_blue['TeamID']}")->fetch_all(MYSQLI_ASSOC);
-	$players_red_DB = $dbcn->query("SELECT SummonerName, rank_tier, rank_div, PUUID FROM players WHERE TeamID = {$team_red['TeamID']}")->fetch_all(MYSQLI_ASSOC);
+    $team_blue = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$team_blue_ID])->fetch_assoc();
+    $team_red = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$team_red_ID])->fetch_assoc();
+    $players_blue_DB = $dbcn->execute_query("SELECT SummonerName, rank_tier, rank_div, PUUID FROM players WHERE TeamID = ?",[$team_blue['TeamID']])->fetch_all(MYSQLI_ASSOC);
+	$players_red_DB = $dbcn->execute_query("SELECT SummonerName, rank_tier, rank_div, PUUID FROM players WHERE TeamID = ?",[$team_red['TeamID']])->fetch_all(MYSQLI_ASSOC);
 
     $players_PUUID = [];
     $players = [];

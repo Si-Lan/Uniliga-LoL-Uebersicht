@@ -26,21 +26,20 @@ try {
 	if ($dbcn->connect_error) {
         echo "<title>Database Connection failed</title></head>Database Connection failed";
 	} else {
-		$tournamentRes = $dbcn->query("SELECT name, split, season, imgID, TournamentID FROM tournaments where TournamentID = $tournID")->fetch_all();
-		$tournament = $tournamentRes[0][0];
+		$tournamentRes = $dbcn->execute_query("SELECT name, split, season, imgID, TournamentID FROM tournaments where TournamentID = ?",[$tournID])->fetch_assoc();
 
-		$divRes = $dbcn->query("SELECT * FROM divisions WHERE TournamentID = $tournID ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+		$divRes = $dbcn->execute_query("SELECT * FROM divisions WHERE TournamentID = ? ORDER BY Number",[$tournID])->fetch_all(MYSQLI_ASSOC);
 		$divs = [];
 		$groups = [];
 		foreach ($divRes as $i=>$div) {
 			$divs[$div['DivID']] = $div['Number'];
-			$groupRes = $dbcn->query("SELECT * FROM `groups` WHERE DivID = {$div['DivID']}")->fetch_all(MYSQLI_ASSOC);
+			$groupRes = $dbcn->execute_query("SELECT * FROM `groups` WHERE DivID = ?",[$div['DivID']])->fetch_all(MYSQLI_ASSOC);
 			foreach ($groupRes as $j=>$group) {
 				$groups[$group['GroupID']] = $group['Number'];
 			}
 		}
 
-        echo "<title>Team-Liste - Uniliga {$tournamentRes[0][1]} 20{$tournamentRes[0][2]} | Uniliga LoL - Übersicht</title>";
+        echo "<title>Team-Liste - Uniliga {$tournamentRes["split"]} 20{$tournamentRes["season"]} | Uniliga LoL - Übersicht</title>";
         ?>
 </head>
 <?php
@@ -91,7 +90,7 @@ try {
                     <select name='Gruppen' class='groups' onchange='filter_teams_list_group(this.value)'>
                         <option value='all' $groupallClass>Alle Gruppen</option>";
         if (isset($filteredDivID)) {
-            $groups_filteredDiv = $dbcn->query("SELECT * FROM `groups` WHERE DivID = $filteredDivID ORDER BY Number")->fetch_all(MYSQLI_ASSOC);
+            $groups_filteredDiv = $dbcn->execute_query("SELECT * FROM `groups` WHERE DivID = ? ORDER BY Number",[$filteredDivID])->fetch_all(MYSQLI_ASSOC);
             foreach ($groups_filteredDiv as $group) {
                 if (isset($filteredGroupID) && $filteredGroupID == $group['GroupID']) {
                     $groupClass = " selected='selected'";
@@ -114,7 +113,7 @@ try {
             </div>";
         echo "<div class='team-list $tournID'>";
         echo "<div class='no-search-res-text $tournID' style='display: none'>Kein Team gefunden!</div>";
-        $teams = $dbcn->query("SELECT T.TeamName, T.imgID, T.TeamID, TG.GroupID, G.DivID, T.org, T.avg_rank_tier, T.avg_rank_div FROM teams T LEFT JOIN teamsingroup TG ON TG.TeamID = T.TeamID LEFT JOIN `groups` G ON G.GroupID = TG.GroupID WHERE TournamentID = {$tournID} ORDER BY TeamName")->fetch_all();
+        $teams = $dbcn->execute_query("SELECT T.TeamName, T.imgID, T.TeamID, TG.GroupID, G.DivID, T.org, T.avg_rank_tier, T.avg_rank_div FROM teams T LEFT JOIN teamsingroup TG ON TG.TeamID = T.TeamID LEFT JOIN `groups` G ON G.GroupID = TG.GroupID WHERE TournamentID = ? ORDER BY TeamName",[$tournID])->fetch_all();
         for ($i_teams = 0; $i_teams < count($teams); $i_teams++) {
             $currTeam = $teams[$i_teams][0];
             $currTeamID = $teams[$i_teams][2];
@@ -126,7 +125,7 @@ try {
             $teaminfolink3 = "/info";
             $opgglink = "https://www.op.gg/multisearch/euw?summoners=";
 
-            $players = $dbcn->query("SELECT SummonerName FROM players WHERE TournamentID = $tournID AND TeamID = $currTeamID")->fetch_all();
+            $players = $dbcn->execute_query("SELECT SummonerName FROM players WHERE TournamentID = ? AND TeamID = ?",[$tournID,$currTeamID])->fetch_all();
             for ($i_opgg = 0; $i_opgg < count($players); $i_opgg++) {
                 if ($i_opgg != 0) {
                     $opgglink .= urlencode(",");
@@ -153,12 +152,12 @@ try {
                 $img_url = $local_img_path . $teams[$i_teams][1] . "/logo_small.webp";
             }
 
-            if (isset($filteredDivID) && $filteredDivID !== $currTeamDivID) {
+            if (isset($filteredDivID) && $filteredDivID != $currTeamDivID) {
                 $filterDClass = " filterD-off";
 			} else {
 				$filterDClass = "";
 			}
-			if (isset($filteredGroupID) && $filteredGroupID !== $currTeamGroupID) {
+			if (isset($filteredGroupID) && $filteredGroupID != $currTeamGroupID) {
 				$filterGClass = " filterG-off";
 			} else {
 				$filterGClass = "";

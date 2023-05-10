@@ -57,7 +57,7 @@ function generate_elo_list($dbcn,$view,$teams,$tournamentID,$division,$group) {
                         <a class='elo-list-after-header op-gg'><div class='svg-wrapper op-gg'></div></a>
                     </div>";
 	foreach ($teams as $team) {
-		$curr_players = $dbcn->query("SELECT * FROM players WHERE TournamentID = $tournamentID AND TeamID = {$team['TeamID']}")->fetch_all(MYSQLI_ASSOC);
+		$curr_players = $dbcn->execute_query("SELECT * FROM players WHERE TournamentID = ? AND TeamID = ?",[$tournamentID,$team['TeamID']])->fetch_all(MYSQLI_ASSOC);
 		$curr_opgglink = $opgg_url;
 		$color_class = "";
 		if ($view == "all") {
@@ -114,9 +114,9 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 	$opgg_url = "https://www.op.gg/multisearch/euw?summoners=";
 	$local_img_path = "img/team_logos/";
 	$opgg_logo_svg = file_get_contents(dirname(__FILE__)."/img/opgglogo.svg");
-	$group = $dbcn->query("SELECT * FROM `groups` WHERE GroupID = {$group_id}")->fetch_assoc();
-	$div = $dbcn->query("SELECT * FROM divisions WHERE DivID = {$group['DivID']}")->fetch_assoc();
-	$teams_from_groupDB = $dbcn->query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = {$group['GroupID']} ORDER BY CASE WHEN `Rank`=0 THEN 1 else 0 end, `Rank`")->fetch_all(MYSQLI_ASSOC);
+	$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?",[$group_id])->fetch_assoc();
+	$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?",[$group['DivID']])->fetch_assoc();
+	$teams_from_groupDB = $dbcn->execute_query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = ? ORDER BY CASE WHEN `Rank`=0 THEN 1 else 0 end, `Rank`",[$group['GroupID']])->fetch_all(MYSQLI_ASSOC);
 
 	echo "<div class='standings'>";
 	if ($team_id == NULL) {
@@ -137,7 +137,7 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
             </div>";
 	$last_rank = -1;
 	foreach ($teams_from_groupDB as $currteam) {
-		$curr_players = $dbcn->query("SELECT * FROM players WHERE TournamentID = {$tournament_id} AND TeamID = {$currteam['TeamID']}")->fetch_all(MYSQLI_ASSOC);
+		$curr_players = $dbcn->execute_query("SELECT * FROM players WHERE TournamentID = ? AND TeamID = ?",[$tournament_id,$currteam['TeamID']])->fetch_all(MYSQLI_ASSOC);
 		$curr_opgglink = $opgg_url;
 		foreach ($curr_players as $i_cop=>$curr_player) {
 			if ($i_cop != 0) {
@@ -190,8 +190,8 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 function create_matchbutton(mysqli $dbcn,$tournament_id,$group_id,$match_id,$team_id=NULL) {
 	$pageurl = $_SERVER['REQUEST_URI'];
 	$toor_tourn_url = "https://play.toornament.com/de/tournaments/";
-	$match = $dbcn->query("SELECT * FROM matches WHERE MatchID=$match_id")->fetch_assoc();
-	$teams_from_groupDB = $dbcn->query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = {$group_id} ORDER BY `Rank`")->fetch_all(MYSQLI_ASSOC);
+	$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID=?",[$match_id])->fetch_assoc();
+	$teams_from_groupDB = $dbcn->execute_query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = ? ORDER BY `Rank`",[$group_id])->fetch_all(MYSQLI_ASSOC);
 	$teams_from_group = [];
 	foreach ($teams_from_groupDB as $i=>$team_from_group) {
 		$teams_from_group[$team_from_group['TeamID']] = array("TeamName"=>$team_from_group['TeamName'], "imgID"=>$team_from_group['imgID']);
@@ -284,7 +284,7 @@ function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=N
 	$toor_tourn_url = "https://play.toornament.com/de/tournaments/";
 	$outlinkicon = file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg");
 	if ($tournament_id != NULL) {
-		$tournament = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = $tournament_id")->fetch_assoc();
+		$tournament = $dbcn->execute_query("SELECT * FROM tournaments WHERE TournamentID = ?",[$tournament_id])->fetch_assoc();
 		$t_name_clean = explode("League of Legends",$tournament['Name']);
 		if (count($t_name_clean)>1) {
 			$tournament_name = $t_name_clean[0].$t_name_clean[1];
@@ -375,8 +375,8 @@ function create_tournament_overview_nav_buttons($dbcn,$tournament_id,$active="",
             	</a>
             </div>";
 	if ($group_id != NULL && $active != "group") {
-		$group = $dbcn->query("SELECT * FROM `groups` WHERE GroupID = $group_id")->fetch_assoc();
-		$div = $dbcn->query("SELECT * FROM divisions WHERE DivID = {$group['DivID']}")->fetch_assoc();
+		$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?",[$group_id])->fetch_assoc();
+		$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?",[$group['DivID']])->fetch_assoc();
 		if ($div["format"] === "Swiss") {
 			$group_title = "Swiss-Gruppe";
 		} else {

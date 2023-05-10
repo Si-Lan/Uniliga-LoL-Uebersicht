@@ -10,7 +10,7 @@ if ($dbcn -> connect_error){
 } else {
 	if (isset($_GET['player'])) {
 		$player_id = $_GET['player'];
-		$player = $dbcn->query("SELECT * FROM players WHERE PlayerID=$player_id")->fetch_assoc();
+		$player = $dbcn->execute_query("SELECT * FROM players WHERE PlayerID = ?",[$player_id])->fetch_assoc();
 		create_summonercard($player);
 	}
 }
