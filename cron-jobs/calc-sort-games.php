@@ -21,7 +21,7 @@ if (!(isset($_GET['t']))) {
 $tournament_id = $_GET['t'];
 
 echo "<br>---- sort Games to Tournament-Matches <br>";
-$games = $dbcn->query("SELECT * FROM games WHERE TournamentID = $tournament_id AND MatchData IS NULL")->fetch_all(MYSQLI_ASSOC);
+$games = $dbcn->query("SELECT * FROM games WHERE TournamentID = $tournament_id AND MatchID IS NULL")->fetch_all(MYSQLI_ASSOC);
 $games_sorted = array("not"=>0,"is"=>0,"sorted"=>0,"nsorted"=>0);
 $percentage = 0;
 foreach ($games as $gindex=>$game) {
