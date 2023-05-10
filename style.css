@@ -389,6 +389,10 @@ input[type=text].search-teams-elo {
     font-size: 15px;
     height: 35px;
 }
+input[type=text].search-players {
+    font-size: 16px;
+    height: 40px;
+}
 div.search-wrapper {
     display: flex;
     justify-content: center;
@@ -443,6 +447,11 @@ span.searchbar input.search-teams-elo + div.material-symbol {
     width: 18px;
     height: 18px;
     font-size: 16px;
+}
+span.searchbar input.search-players + div.material-symbol {
+    width: 20px;
+    height: 20px;
+    font-size: 18px;
 }
 span.searchbar input {
     padding-right: 42px;
@@ -2352,6 +2361,20 @@ h2.round-title span.team.loss {
     .team-popup {
         overflow-x: auto;
     }
+}
+
+body.players div.main-content {
+    flex-direction: column;
+    align-items: center;
+}
+body.players div.search-wrapper {
+    width: clamp(280px,75%,700px);
+}
+body.players span.searchbar {
+    max-width: unset;
+}
+body.players input[type=text] {
+    max-width: unset;
 }
 
 
