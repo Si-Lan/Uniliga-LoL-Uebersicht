@@ -435,3 +435,53 @@ function populate_th($maintext,$tooltiptext,$init=false) {
 	}
 	return "<span class='tooltip'>$maintext<span class='tooltiptext'>$tooltiptext</span><div class='material-symbol sort-direction'>".$svg_code."</div></span>";
 }
+
+function create_player_overview_cards($dbcn,$search) {
+	$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE '%$search%' OR PlayerName LIKE '%$search%')")->fetch_all(MYSQLI_ASSOC);
+	$unique_players = array();
+	foreach ($puuids AS $puuid) {
+		$player_stats = $dbcn->query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = '".$puuid["PUUID"]."' ORDER BY tournaments.DateStart DESC")->fetch_all(MYSQLI_ASSOC);
+		$unique_players[] = $player_stats;
+	}
+	$player_cards = "";
+
+	foreach ($unique_players as $player) {
+		$player_cards .= "<div class='player-ov-card'>";
+		$player_names = array();
+		$summoner_names = array();
+		foreach ($player as $tourn_player) {
+			if (!in_array($tourn_player["PlayerName"],$player_names)) {
+				$player_names[] = $tourn_player["PlayerName"];
+			}
+			if (!in_array($tourn_player["SummonerName"],$summoner_names)) {
+				$summoner_names[] = $tourn_player["SummonerName"];
+			}
+		}
+		$player_cards .= "<span>".$player_names[0]."</span>";
+		if (count($player_names)>1) {
+			$player_cards .= "<span>(";
+			for ($i=1; $i < count($player_names); $i++) {
+				$player_cards .= $player_names[$i];
+				if (!($i == count($player_names)-1)) {
+					$player_cards .= ", ";
+				}
+			}
+			$player_cards .= ")</span>";
+		}
+		$player_cards .= "<div class='divider'></div>";
+		$player_cards .= "<span>".$summoner_names[0]."</span>";
+		if (count($summoner_names)>1) {
+			$player_cards .= "<span>(";
+			for ($i=1; $i < count($summoner_names); $i++) {
+				$player_cards .= $summoner_names[$i];
+				if (!($i == count($summoner_names)-1)) {
+					$player_cards .= ", ";
+				}
+			}
+			$player_cards .= ")</span>";
+		}
+		$player_cards .= "</div>";
+	}
+
+	echo $player_cards;
+}

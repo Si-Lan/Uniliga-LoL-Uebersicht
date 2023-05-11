@@ -2228,6 +2228,22 @@ a.button.write.loading-data:hover {
     border-color: var(--text-color) transparent;
     animation: lds-dual-ring 3s linear infinite;
 }
+.search-loading-indicator {
+    transition: opacity 200ms;
+    position: absolute;
+    right: 25px;
+}
+.search-loading-indicator:after {
+    content: " ";
+    display: block;
+    width: 15px;
+    height: 15px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 2px solid;
+    border-color: var(--text-color) transparent;
+    animation: lds-dual-ring 3s linear infinite;
+}
 
 body.match-history div.round-wrapper {
     display:flex;
@@ -2375,6 +2391,28 @@ body.players span.searchbar {
 }
 body.players input[type=text] {
     max-width: unset;
+}
+
+div.player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+div.player-ov-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--main-button-color);
+    box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+    border-radius: 6px;
+    transition: background-color 0.2s linear;
+    box-sizing: border-box;
+    padding: 14px 20px;
+}
+div.player-ov-card:hover {
+    background-color: var(--main-button-hover);
+}
+div.player-ov-card .divider {
+    margin: 5px 0;
 }
 
 

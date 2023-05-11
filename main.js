@@ -1041,34 +1041,27 @@ function search_players() {
     let searchbar = $('.search-wrapper .searchbar');
     let input = $('input.search-players')[0];
     let input_value = input.value.toUpperCase();
-    let ac = $('.search-wrapper .searchbar .autocomplete-items');
-
-    if (ac.length === 0) {
-        ac = $("<div class=\'autocomplete-items\'></div>");
-        searchbar.append(ac);
-    }
+    let player_list = $('.player-list');
+    let loading_indicator = $('.search-loading-indicator');
 
     if (input_value.length < 2) {
-        ac.empty();
+        loading_indicator.remove();
+        player_list.empty();
         return;
+
     }
+    if (loading_indicator.length > 0) {
+        loading_indicator.remove();
+    }
+    searchbar.append("<div class='search-loading-indicator'></div>");
 
     player_search_request.onreadystatechange = async function() {
         if (this.readyState === 4 && this.status === 200) {
-            let players = JSON.parse(this.responseText);
-            console.log(players);
-            ac.empty();
-            for (let i = 0; i < players.length; i++) {
-                let player_element = "<div>";
-                for (const player of players[i]) {
-                    player_element += player["PlayerName"]+"<br>"+player["SummonerName"]+"<br>";
-                }
-                player_element += "</div>";
-                ac.append(player_element);
-            }
+            $('.search-loading-indicator').remove();
+            player_list.html(this.responseText);
         }
     }
-    player_search_request.open("GET","ajax-functions/get-DB-AJAX.php?type=players-autocomplete-names-unique&search="+input_value);
+    player_search_request.open("GET","ajax-functions/player-overview-card-ajax.php?search="+input_value);
     player_search_request.send();
 
 }
