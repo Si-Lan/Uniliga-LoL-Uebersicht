@@ -1046,24 +1046,29 @@ function search_players() {
     if (ac.length === 0) {
         ac = $("<div class=\'autocomplete-items\'></div>");
         searchbar.append(ac);
-    } else {
-        ac.empty();
     }
 
     if (input_value.length < 2) {
+        ac.empty();
         return;
     }
 
     player_search_request.onreadystatechange = async function() {
         if (this.readyState === 4 && this.status === 200) {
             let players = JSON.parse(this.responseText);
-            console.log(players)
+            console.log(players);
+            ac.empty();
             for (let i = 0; i < players.length; i++) {
-                ac.append("<div>"+players[i]['PlayerName']+"<br>"+players[i]['SummonerName']+"</div>")
+                let player_element = "<div>";
+                for (const player of players[i]) {
+                    player_element += player["PlayerName"]+"<br>"+player["SummonerName"]+"<br>";
+                }
+                player_element += "</div>";
+                ac.append(player_element);
             }
         }
     }
-    player_search_request.open("GET","ajax-functions/get-DB-AJAX.php?type=players-autocomplete-names&search="+input_value);
+    player_search_request.open("GET","ajax-functions/get-DB-AJAX.php?type=players-autocomplete-names-unique&search="+input_value);
     player_search_request.send();
 
 }

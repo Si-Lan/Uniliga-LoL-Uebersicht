@@ -178,6 +178,18 @@ if ($dbcn -> connect_error){
         $result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
         echo $result;
     }
+	if ($type == "players-autocomplete-names-unique") {
+		$search_string = $_REQUEST['search'] ?? NULL;
+		$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE '%$search_string%' OR PlayerName LIKE '%$search_string%')")->fetch_all(MYSQLI_ASSOC);
+		$unique_players = array();
+		foreach ($puuids AS $puuid) {
+			$player_stats = $dbcn->query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = '".$puuid["PUUID"]."' ORDER BY tournaments.DateStart DESC")->fetch_all(MYSQLI_ASSOC);
+			$unique_players[] = $player_stats;
+		}
+		$result = json_encode($unique_players);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
 
 	// counters
 	if ($type == "number-teams") {
