@@ -45,22 +45,10 @@ echo "<div class='search-wrapper'>
                     <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
                 </span>
               </div>";
+echo "<div class='player-list'></div>";
 echo "</div>";
 
-$players = $dbcn->query("SELECT DISTINCT PUUID FROM players")->fetch_all(MYSQLI_ASSOC);
-/*
-foreach ($players as $player) {
-	$player_stats = $dbcn->query("SELECT SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = '".$player["PUUID"]."' ORDER BY tournaments.DateStart")->fetch_all(MYSQLI_ASSOC);
-	if (count($player_stats) == 0) {
-		continue;
-	}
-	echo "<h3>{$player_stats[0]['SummonerName']}</h3><br>";
-	foreach ($player_stats as $single_player) {
-		echo "<div>{$single_player['SummonerName']} von {$single_player['TeamName']} ({$single_player['Name']})</div><br>";
-	}
-	echo "<br>";
-}
-*/
+
 }
 } catch (Exception $e) {
 	echo "<title>Error</title></head>";
