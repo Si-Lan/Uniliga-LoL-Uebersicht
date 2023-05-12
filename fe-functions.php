@@ -437,16 +437,16 @@ function populate_th($maintext,$tooltiptext,$init=false) {
 }
 
 function create_player_overview_cards($dbcn,$search) {
-	$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE '%$search%' OR PlayerName LIKE '%$search%')")->fetch_all(MYSQLI_ASSOC);
+	$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE ? OR PlayerName LIKE ?)",["%".$search."%","%".$search."%"])->fetch_all(MYSQLI_ASSOC);
 	$unique_players = array();
 	foreach ($puuids AS $puuid) {
-		$player_stats = $dbcn->query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = '".$puuid["PUUID"]."' ORDER BY tournaments.DateStart DESC")->fetch_all(MYSQLI_ASSOC);
+		$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid["PUUID"]])->fetch_all(MYSQLI_ASSOC);
 		$unique_players[] = $player_stats;
 	}
 	$player_cards = "";
 
 	foreach ($unique_players as $player) {
-		$player_cards .= "<div class='player-ov-card'>";
+		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\")'>";
 		$player_names = array();
 		$summoner_names = array();
 		foreach ($player as $tourn_player) {
@@ -480,8 +480,15 @@ function create_player_overview_cards($dbcn,$search) {
 			}
 			$player_cards .= ")</span>";
 		}
-		$player_cards .= "</div>";
+		$player_cards .= "</a>";
 	}
 
 	echo $player_cards;
+}
+
+function create_player_overview($dbcn,$puuid) {
+	$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, teams.TeamID, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
+	foreach ($player_stats as $player) {
+		echo "<span>".$player["PlayerName"]." (".$player["SummonerName"].") von <a href='team/".$player["TeamID"]."'>".$player["TeamName"]."</a> in ".$player["Name"]."</span><br>";
+	}
 }
