@@ -45,6 +45,10 @@ echo "<div class='search-wrapper'>
                     <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
                 </span>
               </div>";
+echo "
+            <div class='player-popup-bg' onclick='close_popup_player(event)'>
+                <div class='player-popup'></div>
+            </div>";
 echo "<div class='player-list'></div>";
 echo "</div>";
 
