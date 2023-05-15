@@ -959,7 +959,7 @@ function scrape_toornament_matches($tournID,$matchID,$test=FALSE) {
     return $returnArr;
 }
 
-function scrape_toornament_playoffs($tournID,$divID) {
+function scrape_toornament_playoffs($tournID) {
 	global $dbservername, $dbusername, $dbpassword, $dbdatabase, $dbport;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
@@ -985,28 +985,30 @@ function scrape_toornament_playoffs($tournID,$divID) {
 		$divdivs = $html->find('div.structure-stage');
 
 		for ($i = 0; $i < count($divdivs); $i++) {
-			$divNum = $divdivs[$i]->find('div.title',0)->plaintext;
-			$divFormat = $divdivs[$i]->find('div.item',0)->plaintext;
-			if (str_contains($divNum, "Playoffs")) {
-				if(str_contains($divFormat,"Elimination")) {
-					if(str_contains($divFormat,"Single")) {
+			$title = $divdivs[$i]->find('div.title',0)->plaintext;
+			$format_container = $divdivs[$i]->find('div.item',0)->plaintext;
+			if (str_contains($title, "Playoffs")) {
+				if(str_contains($format_container,"Elimination")) {
+					if(str_contains($format_container,"Single")) {
 						$format = "Single Elimination";
-					} elseif (str_contains($divFormat,"Double")) {
+					} elseif (str_contains($format_container,"Double")) {
 						$format = "Double Elimination";
 					} else {
 						echo "<span style='color: orangered'>Division " . ($i+1) . " weder Double noch Single Elimination Format <br></span>";
 						continue;
 					}
 
-					$divID = explode('/', $divdivs[$i]->parentNode()->href)[5];
+					$playoffID = explode('/', $divdivs[$i]->parentNode()->href)[5];
 
-					$pos = strpos($divNum, "Liga");
-					if ($pos - 4 == "/") {
-						$divNum1 = substr($divNum, $pos - 5, 1);
-						$divNum2 = substr($divNum, $pos - 3, 1);
-					} elseif ($pos - 3 >= 0) {
-						$divNum1 = substr($divNum, $pos - 3, 1);
-						$divNum2 = 0;
+					$pos = strpos($title, "Liga");
+					if ($pos - 3 >= 0) {
+						if (substr($title, $pos - 4, 1) == "/") {
+							$num1 = substr($title, $pos - 5, 1);
+							$num2 = substr($title, $pos - 3, 1);
+						} else {
+							$num1 = substr($title, $pos - 3, 1);
+							$num2 = 0;
+						}
 					} else {
 						echo "<span style='color: orangered'>Liganame anders als erwartet, kann Nummer nicht lesen <br></span>";
 						continue;
@@ -1020,10 +1022,179 @@ function scrape_toornament_playoffs($tournID,$divID) {
 				echo "<span style='color: yellow'>Division " . ($i+1) . " sind keine Playoffs<br></span>";
 				continue;
 			}
+
+			$returnArr[] = [$playoffID, $num1, $num2];
+
+			echo "<span style='color: lightblue'>- Playoffs Liga $num1 $num2<br></span>";
+			echo "--- ID: $playoffID<br>";
+			echo "--- Format: $format<br>";
+
+			$divIDsDB = $dbcn->query("SELECT * FROM playoffs WHERE PlayoffID = {$playoffID} AND TournamentID = {$tournID}")->fetch_all();
+			if ($divIDsDB == NULL) {
+				echo "<span style='color: lawngreen'>- schreibe in DB<br></span>";
+				$divquery = "INSERT INTO playoffs (PlayoffID, TournamentID, Number1, Number2, format) VALUES ({$playoffID},{$tournID},{$num1},{$num2},'{$format}')";
+				$dbcn->query($divquery);
+			} else {
+				echo "<span style='color: orange'>Playoffs sind schon in DB<br></span>";
+				$newdata = [$playoffID,$tournID,$num1,$num2,$format];
+				if ($divIDsDB[0] == $newdata) {
+					echo "<span style='color: yellow'>Daten sind unverändert<br></span>";
+				} else {
+					echo "<span style='font-size: 30px; color: orange'>neue Daten, Update:<br></span>";
+					echo "<pre>".var_export($divIDsDB[0],true); echo "<br>".var_export($newdata,true)."</pre>";
+					$dbcn->query("UPDATE playoffs SET `Number1` = {$num1}, `Number2` = {$num2}, format = '{$format}' WHERE PlayoffID = {$playoffID} AND TournamentID = {$tournID}");
+				}
+			}
+
+			echo "<br>";
 		}
 
 	} else {
 		echo "<span style='color: red'>Fehler beim Aufrufen von Toornament <br></span>";
 	}
+	return $returnArr;
+}
+
+function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
+	$returnArr = array("return"=>0, "echo"=>"<span style='color: blue'>writing Matchups for Playoffs $playoffID :<br></span>", "writes"=>0, "changes"=>[0, []]);
+	global $dbservername, $dbusername, $dbpassword, $dbdatabase, $dbport;
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo "<span style='color: red'>Database Connection failed : " . $dbcn->connect_error . "<br></span>";
+		return [];
+	}
+	$tourn_check = $dbcn->query("SELECT TournamentID FROM tournaments WHERE TournamentID = {$tournID}")->fetch_assoc();
+	if ($tourn_check == NULL) {
+		echo "<span style='color: orangered'>angefragtes Turnier nicht in Datenbank<br></span>";
+		return [];
+	}
+	$playoff_check = $dbcn->query("SELECT * FROM playoffs WHERE PlayoffID = {$playoffID}")->fetch_assoc();
+	if ($playoff_check == NULL) {
+		echo "<span style='color: orangered'>angefragte Playoffs nicht in Datenbank<br></span>";
+		return [];
+	}
+
+	$toorURL1 = "https://play.toornament.com/en_GB/tournaments/";
+	$response = get_headers($toorURL1 . $tournID . "/stages/" . $playoffID . "/#structure");
+
+	if (str_contains($response[0],"200")) {
+		$results = [];
+		$html = file_get_html($toorURL1 . $tournID . "/stages/" . $playoffID . "/#structure");
+		if ($playoff_check["format"] == "Double Elimination") {
+			$brackets = $html->find("div.fullscreen_container div.grid-flex-cell", 0)->last_Child("div")->find("div",0);
+
+			$w_bracket = $brackets->children(1);
+			$l_bracket = $brackets->children(3);
+
+			$w_matchups = $w_bracket->find("div.bracket-nodes > div");
+			$l_matchups = $l_bracket->find("div.bracket-nodes > div");
+
+			foreach ($w_matchups as $m_i=>$w_matchup) {
+				$match = $w_matchup->find("a",0);
+				$matchinfo = [];
+				$matchinfo['matchID'] = explode("/", $match->href)[5];
+				$matchinfo['playoffID'] = $playoffID;
+				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
+				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
+				$matchinfo['team1ID'] = $team1ID;
+				$matchinfo['team2ID'] = $team2ID;
+				$style = $w_matchup->getAttribute("style");
+
+				$left = strpos($style,"left:");
+				$leftrem = strpos($style,"rem", $left);
+				$leftvalue = intval(substr($style,$left+6,($leftrem-($left+6))));
+
+				if ($leftvalue == 0) {
+					$matchinfo['round'] = 1;
+				} elseif ($leftvalue == 14) {
+					$matchinfo['round'] = 2;
+				} else {
+					$matchinfo['round'] = 0;
+				}
+
+				$matchinfo['bracket'] = "winner";
+
+				var_dump($matchinfo);
+				echo "<br>";
+			}
+			foreach ($l_matchups as $m_i=>$l_matchup) {
+				$match = $l_matchup->find("a",0);
+				$matchinfo = [];
+				$matchinfo['matchID'] = explode("/", $match->href)[5];
+				$matchinfo['playoffID'] = $playoffID;
+				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
+				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
+				$matchinfo['team1ID'] = $team1ID;
+				$matchinfo['team2ID'] = $team2ID;
+				$style = $l_matchup->getAttribute("style");
+
+				$left = strpos($style,"left:");
+				$leftrem = strpos($style,"rem", $left);
+				$leftvalue = intval(substr($style,$left+6,($leftrem-($left+6))));
+
+				if ($leftvalue == 0) {
+					$matchinfo['round'] = 1;
+				} elseif ($leftvalue == 14) {
+					$matchinfo['round'] = 2;
+				} elseif ($leftvalue == 28) {
+					$matchinfo['round'] = 3;
+				} else {
+					$matchinfo['round'] = 0;
+				}
+
+				$matchinfo['bracket'] = "loser";
+
+				var_dump($matchinfo);
+				echo "<br>";
+			}
+
+		} elseif ($playoff_check["format"] == "Single Elimination") {
+			$brackets = $html->find("div.fullscreen_container div.grid-flex-cell", 0)->last_Child("div")->find("div",0);
+
+			$bracket = $brackets->children(1);
+
+			$matchups = $bracket->find("div.bracket-nodes > div");
+
+			foreach ($matchups as $m_i=>$matchup) {
+				$match = $matchup->find("a",0);
+				$matchinfo = [];
+				$matchinfo['matchID'] = explode("/", $match->href)[5];
+				$matchinfo['playoffID'] = $playoffID;
+				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
+				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
+				$matchinfo['team1ID'] = $team1ID;
+				$matchinfo['team2ID'] = $team2ID;
+				$style = $matchup->getAttribute("style");
+
+				$left = strpos($style,"left:");
+				$leftrem = strpos($style,"rem", $left);
+				$leftvalue = intval(substr($style,$left+6,($leftrem-($left+6))));
+
+				if ($leftvalue == 0) {
+					$matchinfo['round'] = 1;
+				} elseif ($leftvalue == 14) {
+					$matchinfo['round'] = 2;
+				} elseif ($leftvalue == 28) {
+					$matchinfo['round'] = 3;
+				} else {
+					$matchinfo['round'] = 0;
+				}
+
+				$matchinfo['bracket'] = "loser";
+
+				var_dump($matchinfo);
+				echo "<br>";
+			}
+		}
+	} else {
+		$returnArr["echo"] .= "<span style='color: red'>Fehler beim Aufrufen von Toornament". "<br></span>";
+	}
+	$returnArr["echo"] .= "<br>";
 	return $returnArr;
 }
