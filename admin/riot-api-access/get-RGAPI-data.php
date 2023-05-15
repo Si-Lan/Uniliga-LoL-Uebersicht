@@ -339,7 +339,7 @@ function get_Rank_by_SummonerId($playerID) {
 		}
 		$returnArr["echo"] .= "<span style='color: limegreen'>--got Rank: $tier $div ($league_points LP)<br></span>";
 
-		$dbcn->query("UPDATE players SET rank_tier = '{$tier}', rank_div = '{$div}', leaguePoints = {$league_points} WHERE PlayerID = {$playerID}");
+		$dbcn->query("UPDATE players SET rank_tier = '{$tier}', rank_div = '{$div}', leaguePoints = '{$league_points}' WHERE PlayerID = {$playerID}");
 		$returnArr["echo"] .= "<span style='color: lawngreen'>---write Rank to DB<br></span>";
 		$returnArr["writes"]++;
 	} else {
