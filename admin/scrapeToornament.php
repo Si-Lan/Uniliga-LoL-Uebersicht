@@ -958,3 +958,72 @@ function scrape_toornament_matches($tournID,$matchID,$test=FALSE) {
     $returnArr["echo"] .= "<br>";
     return $returnArr;
 }
+
+function scrape_toornament_playoffs($tournID,$divID) {
+	global $dbservername, $dbusername, $dbpassword, $dbdatabase, $dbport;
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo "<span style='color: red'>Database Connection failed : " . $dbcn->connect_error . "<br></span>";
+		return [];
+	}
+	$tourn_check = $dbcn->query("SELECT TournamentID FROM tournaments WHERE TournamentID = {$tournID}")->fetch_all();
+	if ($tourn_check == NULL) {
+		echo "<span style='color: orangered'>angefragtes Turnier nicht in Datenbank<br></span>";
+		return [];
+	}
+
+	$returnArr = [];
+
+	echo "<span style='color: blue'>writing Playoffs:<br></span>";
+
+	$toorURL1 = "https://play.toornament.com/en_GB/tournaments/";
+
+	$response = get_headers($toorURL1 . $tournID . "/");
+
+	if (str_contains($response[0],"200")) {
+		$html = file_get_html($toorURL1 . $tournID . "/");
+		$divdivs = $html->find('div.structure-stage');
+
+		for ($i = 0; $i < count($divdivs); $i++) {
+			$divNum = $divdivs[$i]->find('div.title',0)->plaintext;
+			$divFormat = $divdivs[$i]->find('div.item',0)->plaintext;
+			if (str_contains($divNum, "Playoffs")) {
+				if(str_contains($divFormat,"Elimination")) {
+					if(str_contains($divFormat,"Single")) {
+						$format = "Single Elimination";
+					} elseif (str_contains($divFormat,"Double")) {
+						$format = "Double Elimination";
+					} else {
+						echo "<span style='color: orangered'>Division " . ($i+1) . " weder Double noch Single Elimination Format <br></span>";
+						continue;
+					}
+
+					$divID = explode('/', $divdivs[$i]->parentNode()->href)[5];
+
+					$pos = strpos($divNum, "Liga");
+					if ($pos - 4 == "/") {
+						$divNum1 = substr($divNum, $pos - 5, 1);
+						$divNum2 = substr($divNum, $pos - 3, 1);
+					} elseif ($pos - 3 >= 0) {
+						$divNum1 = substr($divNum, $pos - 3, 1);
+						$divNum2 = 0;
+					} else {
+						echo "<span style='color: orangered'>Liganame anders als erwartet, kann Nummer nicht lesen <br></span>";
+						continue;
+					}
+
+				} else {
+					echo "<span style='color: orangered'>Division " . ($i+1) . " hat kein Elimination Format <br></span>";
+					continue;
+				}
+			} else {
+				echo "<span style='color: yellow'>Division " . ($i+1) . " sind keine Playoffs<br></span>";
+				continue;
+			}
+		}
+
+	} else {
+		echo "<span style='color: red'>Fehler beim Aufrufen von Toornament <br></span>";
+	}
+	return $returnArr;
+}
