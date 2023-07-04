@@ -381,6 +381,97 @@ function get_matches(tournID, all = true) {
     xmlhttpM.send();
 }
 
+function get_playoffs(tournID) {
+    let currButton = $(".turnier-button-add-playoffs." + tournID);
+    if(!(currButton.hasClass('loading-data'))) {
+        $(".tbutton-act.get."+tournID).addClass('loading-data');
+        currButton.html("loading Data ...  Please Wait&nbsp<div class=\"lds-dual-ring\"></div>");
+        set_all_actions_onclick(tournID,0);
+    }
+    let xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function () {
+        if (this.readyState === 4 && this.status === 200) {
+            let result_container = $(".all-get-result."+tournID);
+            if (result_container.hasClass('no-res')) {
+                result_container.removeClass('no-res');
+            }
+            result_container.html("<div class='all-get-result-content'><div class='clear-button' onclick=\"clear_all_res_info('"+ tournID +"')\">clear</div></div>");
+            let container = $(".all-get-result." + tournID + " .all-get-result-content");
+            container.append(this.responseText);
+            let new_num = new XMLHttpRequest();
+            new_num.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status === 200) {
+                    let num = this.responseText;
+                    currButton.removeClass('loading-data');
+                    currButton.html("Get Playoffs &nbsp<i>("+num+" in DB)</i>");
+                    set_all_actions_onclick(tournID,1);
+                }
+            };
+            new_num.open("GET","../ajax-functions/get-DB-AJAX.php?type=number-playoffs&tournament="+tournID);
+            new_num.send();
+        }
+    };
+    xmlhttp.open("GET", "scrapeToor-ajax.php?type=playoffs&Tid=" + tournID, true);
+    xmlhttp.send();
+}
+
+function get_playoffs_matches(tournID) {
+    let currButton = $(".turnier-button-add-playoffs-matches." + tournID);
+    if(!(currButton.hasClass('loading-data'))) {
+        $(".tbutton-act.get."+tournID).addClass('loading-data');
+        currButton.html("loading Data ...  Please Wait&nbsp<div class=\"lds-dual-ring\"></div>");
+        set_all_actions_onclick(tournID,0);
+    }
+    let result_container = $(".all-get-result."+tournID);
+    result_container.html("<div class='all-get-result-content'><div class='clear-button' onclick=\"clear_all_res_info('"+ tournID +"')\">clear</div></div>");
+
+    let xmlhttpPlayoffs = new XMLHttpRequest();
+    xmlhttpPlayoffs.onreadystatechange = async function () {
+        if (this.readyState === 4 && this.status === 200) {
+
+            let playoffs = JSON.parse(this.responseText);
+            let loops_done = 0;
+
+            let max_loops = playoffs.length;
+            for (let i_p = 0; i_p < playoffs.length; i_p++) {
+                let xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = async function () {
+                    if (this.readyState === 4 && this.status === 200) {
+                        loops_done++;
+                        if (result_container.hasClass('no-res')) {
+                            result_container.removeClass('no-res');
+                        }
+                        let container = $(".all-get-result." + tournID + " .all-get-result-content");
+                        let result = JSON.parse(this.responseText);
+                        container.append(result[0]);
+                        if (loops_done >= max_loops) {
+                            let new_num = new XMLHttpRequest();
+                            new_num.onreadystatechange = function () {
+                                if (this.readyState === 4 && this.status === 200) {
+                                    let num = this.responseText;
+                                    $(".tbutton-act.get."+tournID).removeClass('loading-data');
+                                    currButton.html("Get Playoff-Matches &nbsp<i>(" + num + " in DB)</i>");
+                                    set_all_actions_onclick(tournID, 1);
+                                }
+                            };
+                            new_num.open("GET", "../ajax-functions/get-DB-AJAX.php?type=number-playoff-matches&tournament=" + tournID);
+                            new_num.send();
+                        }
+                    }
+                };
+                xmlhttp.open("GET", "scrapeToor-ajax.php?type=playoff-matchups&Tid="+tournID+"&Pid="+playoffs[i_p]["PlayoffID"], true);
+                xmlhttp.send();
+            }
+        }
+    };
+    xmlhttpPlayoffs.open("GET", "../ajax-functions/get-DB-ajax.php?type=playoffs&Tid="+tournID, true);
+    xmlhttpPlayoffs.send();
+}
+
+function get_playoffs_matches_details(tournID) {
+
+}
+
 function set_all_actions_onclick(tournID,set) {
     if (set === 1) {
         $(".turnier-button-add-teams."+tournID).attr("onClick","get_teams('"+tournID+"')");
@@ -393,6 +484,9 @@ function set_all_actions_onclick(tournID,set) {
         $(".turnier-button-add-matches-groups."+tournID).attr("onClick","get_matches_from_groups('"+tournID+"')");
         $(".turnier-button-add-matches."+tournID).attr("onClick","get_matches('"+tournID+"')");
         $(".turnier-button-add-matches-unplayed."+tournID).attr("onClick","get_matches('"+tournID+"', false)");
+        $(".turnier-button-add-playoffs."+tournID).attr("onClick","get_playoffs('"+tournID+"')");
+        $(".turnier-button-add-playoffs-matches."+tournID).attr("onClick","get_playoffs_matches('"+tournID+"')");
+        $(".turnier-button-add-playoffs-matches-details."+tournID).attr("onClick","get_playoffs_matches_details('"+tournID+"')");
     } else if (set === 0) {
         $(".tbutton-act.get."+tournID).attr("onClick","");
     }

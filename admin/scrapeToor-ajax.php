@@ -166,7 +166,7 @@ if ($type == "playoffs") {
 	$tournID = $_GET["Tid"];
 	$scrape_result = scrape_toornament_playoffs($tournID);
 
-	echo json_encode($scrape_result, JSON_UNESCAPED_SLASHES);
+	//echo json_encode($scrape_result, JSON_UNESCAPED_SLASHES);
 }
 
 if ($type == "playoff-matchups") {
@@ -174,8 +174,11 @@ if ($type == "playoff-matchups") {
 	$playoffID = $_GET["Pid"];
 	$scrape_result = scrape_toornament_matchups_from_playoffs($tournID,$playoffID);
 
-	echo $scrape_result["echo"];
-	//echo "<pre>".var_export($scrape_result,true)."</pre>";
-	//echo json_encode($scrape_result, JSON_UNESCAPED_SLASHES);
+	$returnArr = ["", 0, [0,[]]];
+	$returnArr[0] = $scrape_result["echo"];
+	$returnArr[1] = $scrape_result["writes"];
+	$returnArr[2] = $scrape_result["changes"];
+
+	echo json_encode($returnArr, JSON_UNESCAPED_SLASHES);
 }
 ?>

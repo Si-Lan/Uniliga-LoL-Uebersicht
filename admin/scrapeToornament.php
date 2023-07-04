@@ -1096,10 +1096,10 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 				$matchinfo['playoffID'] = $playoffID;
 				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
 				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
-				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
-				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
-				$matchinfo['team1ID'] = $team1ID;
-				$matchinfo['team2ID'] = $team2ID;
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc();
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc();
+				$matchinfo['team1ID'] = ($team1ID == NULL) ? NULL : $team1ID["TeamID"];
+				$matchinfo['team2ID'] = ($team2ID == NULL) ? NULL : $team2ID["TeamID"];
 				$style = $w_matchup->getAttribute("style");
 
 				$left = strpos($style,"left:");
@@ -1116,8 +1116,7 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 
 				$matchinfo['bracket'] = "winner";
 
-				var_dump($matchinfo);
-				echo "<br>";
+				$results[] = $matchinfo;
 			}
 			foreach ($l_matchups as $m_i=>$l_matchup) {
 				$match = $l_matchup->find("a",0);
@@ -1126,10 +1125,10 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 				$matchinfo['playoffID'] = $playoffID;
 				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
 				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
-				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
-				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
-				$matchinfo['team1ID'] = $team1ID;
-				$matchinfo['team2ID'] = $team2ID;
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc();
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc();
+				$matchinfo['team1ID'] = ($team1ID == NULL) ? NULL : $team1ID["TeamID"];
+				$matchinfo['team2ID'] = ($team2ID == NULL) ? NULL : $team2ID["TeamID"];
 				$style = $l_matchup->getAttribute("style");
 
 				$left = strpos($style,"left:");
@@ -1148,8 +1147,7 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 
 				$matchinfo['bracket'] = "loser";
 
-				var_dump($matchinfo);
-				echo "<br>";
+				$results[] = $matchinfo;
 			}
 
 		} elseif ($playoff_check["format"] == "Single Elimination") {
@@ -1166,10 +1164,10 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 				$matchinfo['playoffID'] = $playoffID;
 				$team1Name = trim($match->find("div.opponent-1 div.name", 0)->plaintext);
 				$team2Name = trim($match->find("div.opponent-2 div.name", 0)->plaintext);
-				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc()["TeamID"];
-				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc()["TeamID"];
-				$matchinfo['team1ID'] = $team1ID;
-				$matchinfo['team2ID'] = $team2ID;
+				$team1ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team1Name}'")->fetch_assoc();
+				$team2ID = $dbcn->query("SELECT TeamID FROM teams WHERE TournamentID = {$tournID} AND TeamName= '{$team2Name}'")->fetch_assoc();
+				$matchinfo['team1ID'] = ($team1ID == NULL) ? NULL : $team1ID["TeamID"];
+				$matchinfo['team2ID'] = ($team2ID == NULL) ? NULL : $team2ID["TeamID"];
 				$style = $matchup->getAttribute("style");
 
 				$left = strpos($style,"left:");
@@ -1188,8 +1186,28 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 
 				$matchinfo['bracket'] = "loser";
 
-				var_dump($matchinfo);
-				echo "<br>";
+				$results[] = $matchinfo;
+			}
+		}
+		foreach ($results as $result) {
+			$matchinDB = $dbcn->execute_query("SELECT MatchID, Team1ID, Team2ID, round, bracket FROM playoffmatches WHERE MatchID = ?",[$result["matchID"]])->fetch_row();
+			if ($matchinDB == NULL) {
+				//match not in Database
+				$returnArr["writes"]++;
+				$returnArr["echo"] .= "<span style='color: limegreen'>- schreibe in DB<br></span>";
+				//$dbcn->execute_query("INSERT INTO playoffmatches (MatchID, PlayoffID, Team1ID, Team2ID, round, bracket, played) VALUES (?, ?, ?, ?, ?, ?, ?)", [$result["matchID"], $playoffID, $result["team1ID"], $result["team2ID"], $result["round"], $result["bracket"], 0]);
+			} else {
+				// match already in Database
+				$returnArr["echo"] .= "<span style='color: orange'>Match ist schon in DB<br></span>";
+				$newdata = [$result["matchID"],$result["team1ID"],$result["team2ID"],$result["round"],$result["bracket"]];
+				if ($matchinDB == $newdata) {
+					$returnArr["echo"] .= "<span style='color: yellow'>Daten sind unverändert<br></span>";
+				} else {
+					$returnArr["echo"] .= "<span style='font-size: 30px; color: orange'>neue Daten, Update:<br></span>" . json_encode($matchinDB) . "<br>" . json_encode($newdata) . "<br>";
+					$returnArr["changes"][0]++;
+					$returnArr["changes"][1][] = [$matchinDB,$newdata];
+					//$dbcn->execute_query("UPDATE playoffmatches SET Team1ID = ?, Team2ID = ?, round = ?, bracket = ? WHERE MatchID = ? AND PlayoffID = ?", [$result["team1ID"],$result["team2ID"],$result["round"],$result["bracket"],$result["matchID"],$playoffID]);
+				}
 			}
 		}
 	} else {
@@ -1198,3 +1216,5 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 	$returnArr["echo"] .= "<br>";
 	return $returnArr;
 }
+
+scrape_toornament_matchups_from_playoffs("6510029359269781504", "6826842846261698560");

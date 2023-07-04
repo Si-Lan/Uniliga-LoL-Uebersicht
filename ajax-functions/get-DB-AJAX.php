@@ -64,6 +64,14 @@ if ($dbcn -> connect_error){
 		echo $result;
     }
 
+	if ($type == "playoffs") {
+		$tournID = $_REQUEST["Tid"];
+		$playoffs = $dbcn->execute_query("SELECT * FROM playoffs WHERE TournamentID = ?",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($playoffs);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
+
 	if ($type == "match") {
 		$matchID =$_REQUEST['Mid'];
 		$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$matchID])->fetch_assoc();
@@ -200,6 +208,16 @@ if ($dbcn -> connect_error){
 	if ($type == "number-matches") {
 		$tournamentID = $_REQUEST["tournament"];
 		$Num = $dbcn->execute_query("SELECT COUNT(matches.MatchID) FROM matches,`groups`,divisions WHERE divisions.TournamentID = ? AND `groups`.DivID = divisions.DivID AND matches.GroupID = `groups`.GroupID",[$tournamentID])->fetch_row()[0];
+		echo $Num;
+	}
+	if ($type == "number-playoffs") {
+		$tournamentID = $_REQUEST["tournament"];
+		$Num = $dbcn->execute_query("SELECT COUNT(playoffs.PlayoffID) FROM playoffs WHERE playoffs.TournamentID = ?",[$tournamentID])->fetch_row()[0];
+		echo $Num;
+	}
+	if ($type == "number-playoff-matches") {
+		$tournamentID = $_REQUEST["tournament"];
+		$Num = $dbcn->execute_query("SELECT COUNT(playoffmatches.PlayoffID) FROM playoffmatches,playoffs WHERE playoffs.TournamentID = ? AND playoffmatches.PlayoffID = playoffs.PlayoffID",[$tournamentID])->fetch_row()[0];
 		echo $Num;
 	}
 }
