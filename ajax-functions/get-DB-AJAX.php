@@ -170,14 +170,14 @@ if ($dbcn -> connect_error){
 	}
 	if ($type == "games-unassigned") {
 		$tournamentID = $_REQUEST["tournament"];
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE TournamentID = ? AND MatchID IS NULL AND (`UL-Game` IS NULL OR `UL-Game` = TRUE)",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE TournamentID = ? AND (MatchID IS NULL AND PLMatchID IS NULL ) AND (`UL-Game` IS NULL OR `UL-Game` = TRUE)",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
 		$result = json_encode($games);
 		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
 		echo $result;
 	}
 	if ($type == "games-by-match") {
 		$matchID = $_REQUEST['match'];
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ?",[$matchID])->fetch_all(MYSQLI_ASSOC);
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ?",[$matchID,$matchID])->fetch_all(MYSQLI_ASSOC);
 		$result = json_encode($games);
 		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
 		echo $result;

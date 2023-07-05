@@ -4,7 +4,7 @@ include(dirname(__DIR__)."/../DB-info.php");
 $RGAPI_Key = "";
 include(dirname(__DIR__).'/riot-api-access/RGAPI-info.php');
 
-error_reporting(0);
+//error_reporting(0);
 
 // sendet X Anfragen an Riot API (Summoner-V4)  (X = Anzahl Spieler im Team)
 function get_puuids_by_team($teamID, $all = FALSE) {
@@ -206,7 +206,7 @@ function assign_and_filter_game($RiotMatchID,$tournamentID) {
 	if ($BlueTeamID['TeamID'] == NULL) {
 		$returnArr["echo"] .= "<span style='color: orange'>-Blue Team is not a Team from Tournament<br></span>";
 		$returnArr["echo"] .= "<span style='color: lawngreen'>--write not UL-Game to DB<br></span>";
-        $returnArr["notUL"]++;
+		$returnArr["notUL"]++;
 		$dbcn->query("UPDATE games SET `UL-Game` = FALSE WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
 		return $returnArr;
 	} else {
@@ -219,7 +219,7 @@ function assign_and_filter_game($RiotMatchID,$tournamentID) {
 		$returnArr["echo"] .= "<span style='color: orange'>-Red Team is not a Team from Tournament<br></span>";
 		$returnArr["echo"] .= "<span style='color: lawngreen'>--write not an UL Game to DB<br></span>";
 		$returnArr["notUL"]++;
-        $dbcn->query("UPDATE games SET `UL-Game` = FALSE WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
+		$dbcn->query("UPDATE games SET `UL-Game` = FALSE WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
 		return $returnArr;
 	} else {
 		$RedTeamName = $dbcn->query("SELECT TeamName FROM teams WHERE TeamID = {$RedTeamID['TeamID']}")->fetch_assoc()['TeamName'];
@@ -230,15 +230,19 @@ function assign_and_filter_game($RiotMatchID,$tournamentID) {
 	$dbcn->query("UPDATE games SET `UL-Game` = TRUE WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
 	$returnArr["echo"] .= "<span style='color: limegreen'>-Game is from Tournament<br></span>";
 	$returnArr["echo"] .= "<span style='color: lawngreen'>--write UL-Game to DB<br></span>";
-    $returnArr["isUL"]++;
+	$returnArr["isUL"]++;
 
 	// check from which match the game is
 	$matchDB = $dbcn->query("SELECT * FROM matches WHERE (Team1ID = {$BlueTeamID['TeamID']} AND Team2ID = {$RedTeamID['TeamID']}) OR (Team1ID = {$RedTeamID['TeamID']} AND Team2ID = {$BlueTeamID['TeamID']})")->fetch_all(MYSQLI_ASSOC);
-	if (count($matchDB) == 0) {
+	$matchDBPlayoffs = $dbcn->query("SELECT * FROM playoffmatches WHERE (Team1ID = {$BlueTeamID['TeamID']} AND Team2ID = {$RedTeamID['TeamID']}) OR (Team1ID = {$RedTeamID['TeamID']} AND Team2ID = {$BlueTeamID['TeamID']})")->fetch_all(MYSQLI_ASSOC);
+	if (count($matchDB) == 0 && count($matchDBPlayoffs) == 0) {
 		$returnArr["echo"] .= "<span style='color: orange'>-!no fitting Match found<br></span>";
-        $returnArr["notsorted"]++;
-	} else {
-        // TO-DO: mit gespielter Zeit abstimmen, falls sich in playoffs wieder getroffen wird
+		$returnArr["notsorted"]++;
+	} elseif (count($matchDB) > 0 && count($matchDBPlayoffs) > 0) {
+		// TO-DO: wenn Teams in Groups und Playoffs treffen, prüfen an welchem Termin das Spiel näher war
+		$returnArr["echo"] .= "<span style='color: orange'>-Game has matches in Groups and Playoffs<br></span>";
+	} elseif (count($matchDB) > 0) {
+		// TO-DO: mit gespielter Zeit abstimmen, falls sich mehrfach getroffen wird
 		if (count($matchDB) > 1) {
 			$returnArr["echo"] .= "<span style='color: orange'>-!more than one Match fits to Teams, taking the first one!<br></span>";
 		}
@@ -246,7 +250,17 @@ function assign_and_filter_game($RiotMatchID,$tournamentID) {
 		$returnArr["echo"] .= "<span style='color: lightblue'>-Game is from Match $matchID<br></span>";
 		$returnArr["echo"] .= "<span style='color: lawngreen'>--write MatchID to DB<br></span>";
 		$returnArr["sorted"]++;
-        $dbcn->query("UPDATE games SET MatchID = $matchID WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
+		$dbcn->query("UPDATE games SET MatchID = $matchID WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
+	} else {
+		// TO-DO: wenn Teams in Playoffs mehrfach treffen, prüfen an welchem Termin das Spiel näher war
+		if (count($matchDBPlayoffs) > 1) {
+			$returnArr["echo"] .= "<span style='color: orange'>-!more than one Match fits to Teams, taking the first one!<br></span>";
+		}
+		$matchID = $matchDBPlayoffs[0]['MatchID'];
+		$returnArr["echo"] .= "<span style='color: lightblue'>-Game is from Playoff-Match $matchID<br></span>";
+		$returnArr["echo"] .= "<span style='color: lawngreen'>--write MatchID to DB<br></span>";
+		$returnArr["sorted"]++;
+		$dbcn->query("UPDATE games SET PLMatchID = $matchID WHERE RiotMatchID = '$RiotMatchID' AND TournamentID = $tournamentID");
 	}
 
 	// check which team won
