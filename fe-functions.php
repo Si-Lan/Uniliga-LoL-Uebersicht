@@ -234,6 +234,12 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
                           </a>
                         </div>";
 	} else {
+		$t1score = $match['Team1Score'];
+		$t2score = $match['Team2Score'];
+		if ($t1score == -1 || $t2score == -1) {
+			$t1score = ($t1score == -1) ? "L" : "W";
+			$t2score = ($t2score == -1) ? "L" : "W";
+		}
 		if ($match['Winner'] == 1) {
 			$state1 = "win";
 			$state2 = "loss";
@@ -251,8 +257,8 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\")'>";
 		}
 		echo "<div class='teams score'>
-				<div class='team 1 $state1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div><div class='score'>{$match['Team1Score']}</div></div>
-				<div class='team 2 $state2$current2'><div class='name'>{$teams[$match['Team2ID']]['TeamName']}</div><div class='score'>{$match['Team2Score']}</div></div>
+				<div class='team 1 $state1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div><div class='score'>{$t1score}</div></div>
+				<div class='team 2 $state2$current2'><div class='name'>{$teams[$match['Team2ID']]['TeamName']}</div><div class='score'>{$t2score}</div></div>
 			  </div>
 			</a>
 			<a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>

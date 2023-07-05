@@ -247,11 +247,17 @@ try {
 				$team1score = "draw";
 				$team2score = "draw";
 			}
+			$t1score = $curr_matchData['Team1Score'];
+			$t2score = $curr_matchData['Team2Score'];
+			if ($t1score == -1 || $t2score == -1) {
+				$t1score = ($t1score == -1) ? "L" : "W";
+				$t2score = ($t2score == -1) ? "L" : "W";
+			}
 			echo "
                 <h2 class='round-title'>
                     <span class='round'>Runde {$curr_matchData['round']}: &nbsp</span>
                     <span class='team $team1score'>{$curr_team1['TeamName']}</span>
-                    <span class='score'><span class='$team1score'>{$curr_matchData['Team1Score']}</span>:<span class='$team2score'>{$curr_matchData['Team2Score']}</span></span>
+                    <span class='score'><span class='$team1score'>{$t1score}</span>:<span class='$team2score'>{$t2score}</span></span>
                     <span class='team $team2score'>{$curr_team2['TeamName']}</span>
                 </h2>";
 			foreach ($curr_games as $game_i=>$curr_game) {
