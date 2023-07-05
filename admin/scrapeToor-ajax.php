@@ -161,4 +161,35 @@ if ($type == "matches") {
 
     echo json_encode($returnArr, JSON_UNESCAPED_SLASHES);
 }
+if ($type == "playoffs-match-details") {
+	$tournID = $_GET["Tid"];
+	$matchID = $_GET["Mid"];
+	$returnArr = ["", [0,[]]];
+	$scrape_result = scrape_toornament_matches($tournID,$matchID,TRUE);
+
+	$returnArr[0] = $scrape_result["echo"];
+	$returnArr[1] = $scrape_result["changes"];
+
+	echo json_encode($returnArr, JSON_UNESCAPED_SLASHES);
+}
+
+if ($type == "playoffs") {
+	$tournID = $_GET["Tid"];
+	$scrape_result = scrape_toornament_playoffs($tournID);
+
+	//echo json_encode($scrape_result, JSON_UNESCAPED_SLASHES);
+}
+
+if ($type == "playoff-matchups") {
+	$tournID = $_GET["Tid"];
+	$playoffID = $_GET["Pid"];
+	$scrape_result = scrape_toornament_matchups_from_playoffs($tournID,$playoffID);
+
+	$returnArr = ["", 0, [0,[]]];
+	$returnArr[0] = $scrape_result["echo"];
+	$returnArr[1] = $scrape_result["writes"];
+	$returnArr[2] = $scrape_result["changes"];
+
+	echo json_encode($returnArr, JSON_UNESCAPED_SLASHES);
+}
 ?>

@@ -151,7 +151,7 @@ try {
                     <div class='divider'></div>
                     <div class='match-wrapper'>";
             foreach ($round as $match) {
-                create_matchbutton($dbcn,$tournamentID,$groupID,$match['MatchID']);
+                create_matchbutton($dbcn,$tournamentID,$match['MatchID'],"groups");
             }
             echo "</div>";
             echo "</div>"; // match-round

@@ -187,14 +187,20 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 	echo "</div></div>";
 }
 
-function create_matchbutton(mysqli $dbcn,$tournament_id,$group_id,$match_id,$team_id=NULL) {
+function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id=NULL) {
 	$pageurl = $_SERVER['REQUEST_URI'];
 	$toor_tourn_url = "https://play.toornament.com/de/tournaments/";
-	$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID=?",[$match_id])->fetch_assoc();
-	$teams_from_groupDB = $dbcn->execute_query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = ? ORDER BY `Rank`",[$group_id])->fetch_all(MYSQLI_ASSOC);
-	$teams_from_group = [];
-	foreach ($teams_from_groupDB as $i=>$team_from_group) {
-		$teams_from_group[$team_from_group['TeamID']] = array("TeamName"=>$team_from_group['TeamName'], "imgID"=>$team_from_group['imgID']);
+	if ($type == "groups") {
+		$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$match_id])->fetch_assoc();
+	} elseif ($type == "playoffs") {
+		$match = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?",[$match_id])->fetch_assoc();
+	} else {
+		return;
+	}
+	$teams_from_DB = $dbcn->execute_query("SELECT * FROM teams")->fetch_all(MYSQLI_ASSOC);
+	$teams = [];
+	foreach ($teams_from_DB as $i=>$team) {
+		$teams[$team['TeamID']] = array("TeamName"=>$team['TeamName'], "imgID"=>$team['imgID']);
 	}
 
 	$current1 = "";
@@ -214,8 +220,8 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$group_id,$match_id,$tea
 		echo "<div class='match-button-wrapper'>
                             <a class='button match nolink sideext-right'>
                                 <div class='teams'>
-                                    <div class='team 1$current1'><div class='name'>{$teams_from_group[$match['Team1ID']]['TeamName']}</div></div>
-                                    <div class='team 2$current2'><div class='name'>{$teams_from_group[$match['Team2ID']]['TeamName']}</div></div>
+                                    <div class='team 1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div></div>
+                                    <div class='team 2$current2'><div class='name'>{$teams[$match['Team2ID']]['TeamName']}</div></div>
                                 </div>";
 		if ($match['plannedDate'] != NULL) {
 			echo "<div class='date'>{$date}<br>{$time}</div>";
@@ -228,6 +234,12 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$group_id,$match_id,$tea
                           </a>
                         </div>";
 	} else {
+		$t1score = $match['Team1Score'];
+		$t2score = $match['Team2Score'];
+		if ($t1score == -1 || $t2score == -1) {
+			$t1score = ($t1score == -1) ? "L" : "W";
+			$t2score = ($t2score == -1) ? "L" : "W";
+		}
 		if ($match['Winner'] == 1) {
 			$state1 = "win";
 			$state2 = "loss";
@@ -245,8 +257,8 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$group_id,$match_id,$tea
 			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\")'>";
 		}
 		echo "<div class='teams score'>
-				<div class='team 1 $state1$current1'><div class='name'>{$teams_from_group[$match['Team1ID']]['TeamName']}</div><div class='score'>{$match['Team1Score']}</div></div>
-				<div class='team 2 $state2$current2'><div class='name'>{$teams_from_group[$match['Team2ID']]['TeamName']}</div><div class='score'>{$match['Team2Score']}</div></div>
+				<div class='team 1 $state1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div><div class='score'>{$t1score}</div></div>
+				<div class='team 2 $state2$current2'><div class='name'>{$teams[$match['Team2ID']]['TeamName']}</div><div class='score'>{$t2score}</div></div>
 			  </div>
 			</a>
 			<a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>

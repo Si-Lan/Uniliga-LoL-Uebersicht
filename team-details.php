@@ -62,6 +62,9 @@ try {
 		if (isset($_GET['match'])) {
 			$curr_matchID = $_GET['match'];
 			$curr_matchData = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$curr_matchID])->fetch_assoc();
+			if ($curr_matchData == NULL) {
+				$curr_matchData = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?",[$curr_matchID])->fetch_assoc();
+			}
 			if ($curr_matchData != NULL) {
 				echo "<body class='team$lightmode$adminbtnbody' style='overflow: hidden'>";
 			} else {
@@ -148,6 +151,7 @@ try {
         $div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?",[$group['DivID']])->fetch_assoc();
         $players = $dbcn->execute_query("SELECT * FROM players WHERE TournamentID = ? AND TeamID = ?",[$tournament['TournamentID'],$teamID])->fetch_all(MYSQLI_ASSOC);
         $matches = $dbcn->execute_query("SELECT * FROM matches WHERE GroupID = ? AND (Team1ID = ? OR Team2ID = ?)",[$group['GroupID'],$teamID,$teamID])->fetch_all(MYSQLI_ASSOC);
+        $playoffmatches = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE (Team1ID = ? OR Team2ID = ?) ORDER BY plannedDate",[$teamID,$teamID])->fetch_all(MYSQLI_ASSOC);
         $teams_from_groupDB = $dbcn->execute_query("SELECT * FROM teams JOIN teamsingroup ON teams.TeamID = teamsingroup.TeamID WHERE teamsingroup.GroupID = ? ORDER BY `Rank`",[$group['GroupID']])->fetch_all(MYSQLI_ASSOC);
         $teams_from_group = [];
         foreach ($teams_from_groupDB as $i=>$team_from_group) {
@@ -224,7 +228,7 @@ try {
 		echo "<div class='matches'>
                      <div class='title'><h3>Spiele</h3></div>";
 		if ($curr_matchID != NULL && $curr_matchData != NULL) {
-			$curr_games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? ORDER BY RiotMatchID", [$curr_matchID])->fetch_all(MYSQLI_ASSOC);
+			$curr_games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ? ORDER BY RiotMatchID", [$curr_matchID,$curr_matchID])->fetch_all(MYSQLI_ASSOC);
 			$curr_team1 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?", [$curr_matchData['Team1ID']])->fetch_assoc();
 			$curr_team2 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?", [$curr_matchData['Team2ID']])->fetch_assoc();
 			echo "
@@ -243,11 +247,17 @@ try {
 				$team1score = "draw";
 				$team2score = "draw";
 			}
+			$t1score = $curr_matchData['Team1Score'];
+			$t2score = $curr_matchData['Team2Score'];
+			if ($t1score == -1 || $t2score == -1) {
+				$t1score = ($t1score == -1) ? "L" : "W";
+				$t2score = ($t2score == -1) ? "L" : "W";
+			}
 			echo "
                 <h2 class='round-title'>
                     <span class='round'>Runde {$curr_matchData['round']}: &nbsp</span>
                     <span class='team $team1score'>{$curr_team1['TeamName']}</span>
-                    <span class='score'><span class='$team1score'>{$curr_matchData['Team1Score']}</span>:<span class='$team2score'>{$curr_matchData['Team2Score']}</span></span>
+                    <span class='score'><span class='$team1score'>{$t1score}</span>:<span class='$team2score'>{$t2score}</span></span>
                     <span class='team $team2score'>{$curr_team2['TeamName']}</span>
                 </h2>";
 			foreach ($curr_games as $game_i=>$curr_game) {
@@ -267,9 +277,16 @@ try {
 
         echo "<div class='match-content content'>";
         foreach ($matches as $match) {
-            create_matchbutton($dbcn,$tournament['TournamentID'],$group['GroupID'],$match['MatchID'],$teamID);
+            create_matchbutton($dbcn,$tournament['TournamentID'],$match['MatchID'],"groups",$teamID);
         }
-        echo "</div></div>";
+		if (count($playoffmatches) > 0) {
+			echo "<h4>Playoffs</h4>";
+			foreach ($playoffmatches as $match) {
+				create_matchbutton($dbcn,$tournament['TournamentID'],$match['MatchID'],"playoffs",$teamID);
+			}
+		}
+		echo "</div>";
+		echo "</div>"; // matches
         echo "</div>"; // inner-content
         echo "</div>"; // main-content
 

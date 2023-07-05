@@ -64,6 +64,28 @@ if ($dbcn -> connect_error){
 		echo $result;
     }
 
+	if ($type == "playoffs") {
+		$tournID = $_REQUEST["Tid"];
+		$playoffs = $dbcn->execute_query("SELECT * FROM playoffs WHERE TournamentID = ?",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($playoffs);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
+	if ($type == "playoffs-matches") {
+		$tournID = $_REQUEST["Tid"];
+		$matches = $dbcn->execute_query("SELECT * FROM playoffmatches pm JOIN playoffs p on pm.PlayoffID = p.PlayoffID WHERE p.TournamentID = ?",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($matches);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
+	if ($type == "playoffs-matches-unplayed") {
+		$tournID = $_REQUEST["Tid"];
+		$matches = $dbcn->execute_query("SELECT * FROM playoffmatches pm JOIN playoffs p on pm.PlayoffID = p.PlayoffID WHERE p.TournamentID = ? AND pm.played = FALSE",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($matches);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
+
 	if ($type == "match") {
 		$matchID =$_REQUEST['Mid'];
 		$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$matchID])->fetch_assoc();
@@ -148,14 +170,14 @@ if ($dbcn -> connect_error){
 	}
 	if ($type == "games-unassigned") {
 		$tournamentID = $_REQUEST["tournament"];
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE TournamentID = ? AND MatchID IS NULL AND (`UL-Game` IS NULL OR `UL-Game` = TRUE)",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE TournamentID = ? AND (MatchID IS NULL AND PLMatchID IS NULL ) AND (`UL-Game` IS NULL OR `UL-Game` = TRUE)",[$tournamentID])->fetch_all(MYSQLI_ASSOC);
 		$result = json_encode($games);
 		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
 		echo $result;
 	}
 	if ($type == "games-by-match") {
 		$matchID = $_REQUEST['match'];
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ?",[$matchID])->fetch_all(MYSQLI_ASSOC);
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ?",[$matchID,$matchID])->fetch_all(MYSQLI_ASSOC);
 		$result = json_encode($games);
 		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
 		echo $result;
@@ -163,7 +185,10 @@ if ($dbcn -> connect_error){
 	if ($type == "match-games-teams-by-matchid") {
 		$matchID = $_REQUEST['match'];
 		$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$matchID])->fetch_assoc();
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? ORDER BY RiotMatchID",[$matchID])->fetch_all(MYSQLI_ASSOC);
+		if ($match == NULL) {
+			$match = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?",[$matchID])->fetch_assoc();
+		}
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ? ORDER BY RiotMatchID",[$matchID,$matchID])->fetch_all(MYSQLI_ASSOC);
 		$team1 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$match["Team1ID"]])->fetch_assoc();
 		$team2 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$match["Team2ID"]])->fetch_assoc();
 		$result = json_encode(array("match"=>$match, "games"=>$games, "team1"=>$team1, "team2"=>$team2));
@@ -200,6 +225,16 @@ if ($dbcn -> connect_error){
 	if ($type == "number-matches") {
 		$tournamentID = $_REQUEST["tournament"];
 		$Num = $dbcn->execute_query("SELECT COUNT(matches.MatchID) FROM matches,`groups`,divisions WHERE divisions.TournamentID = ? AND `groups`.DivID = divisions.DivID AND matches.GroupID = `groups`.GroupID",[$tournamentID])->fetch_row()[0];
+		echo $Num;
+	}
+	if ($type == "number-playoffs") {
+		$tournamentID = $_REQUEST["tournament"];
+		$Num = $dbcn->execute_query("SELECT COUNT(playoffs.PlayoffID) FROM playoffs WHERE playoffs.TournamentID = ?",[$tournamentID])->fetch_row()[0];
+		echo $Num;
+	}
+	if ($type == "number-playoff-matches") {
+		$tournamentID = $_REQUEST["tournament"];
+		$Num = $dbcn->execute_query("SELECT COUNT(playoffmatches.PlayoffID) FROM playoffmatches,playoffs WHERE playoffs.TournamentID = ? AND playoffmatches.PlayoffID = playoffs.PlayoffID",[$tournamentID])->fetch_row()[0];
 		echo $Num;
 	}
 }

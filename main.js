@@ -274,11 +274,17 @@ async function popup_match(matchID,teamID=null) {
                 team1score = "draw";
                 team2score = "draw";
             }
+            let team1wins = data['match']['Team1Score'];
+            let team2wins = data['match']['Team2Score'];
+            if (team1wins === -1 || team2wins === -1) {
+                team1wins = (team1wins === -1) ? "L" : "W";
+                team2wins = (team2wins === -1) ? "L" : "W";
+            }
             if (current_match_in_popup === data['match']['MatchID']) {
                 popup.append("<h2 class='round-title'>" +
                     "           <span class='round'>Runde "+data['match']['round']+": &nbsp</span>" +
                     "           <span class='team "+team1score+"'>"+data['team1']['TeamName']+"</span>" +
-                    "           <span class='score'><span class='"+team1score+"'>"+data['match']['Team1Score']+"</span>:<span class='"+team2score+"'>"+data['match']['Team2Score']+"</span></span>" +
+                    "           <span class='score'><span class='"+team1score+"'>"+ team1wins +"</span>:<span class='"+team2score+"'>"+ team2wins +"</span></span>" +
                     "           <span class='team "+ team2score +"'>"+data['team2']['TeamName']+"</span>" +
                     "         </h2>");
             }
@@ -291,7 +297,7 @@ async function popup_match(matchID,teamID=null) {
             }
             let game_counter = 0;
             for (const [i,game] of games.entries()) {
-                if (current_match_in_popup === game['MatchID']) {
+                if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                     popup.append("<div class='game game"+i+"'></div>");
                 }
                 let gameID = game['RiotMatchID'];
@@ -300,7 +306,7 @@ async function popup_match(matchID,teamID=null) {
                     // noinspection JSPotentiallyInvalidUsageOfThis
                     if (this.readyState === 4 && this.status === 200) {
                         let game_wrap = popup.find('.game'+i);
-                        if (current_match_in_popup === game['MatchID']) {
+                        if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                             game_wrap.empty();
                             // noinspection JSPotentiallyInvalidUsageOfThis
                             game_wrap.append(this.responseText);

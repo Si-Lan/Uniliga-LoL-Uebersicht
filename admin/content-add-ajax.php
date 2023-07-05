@@ -31,6 +31,8 @@ if ($type == "create_tournament_buttons") {
                     $GroupNum = $dbcn->query("SELECT COUNT(`groups`.GroupID) FROM `groups`,divisions WHERE divisions.TournamentID = {$currTournID} AND `groups`.DivID = divisions.DivID")->fetch_all()[0][0];
                     $teamsInGroupNum = $dbcn->query("SELECT COUNT(teamsingroup.TeamID) FROM teamsingroup,`groups`,divisions WHERE divisions.TournamentID = $currTournID AND `groups`.DivID = divisions.DivID AND teamsingroup.GroupID = `groups`.GroupID")->fetch_all()[0][0];
                     $matchesNum = $dbcn->query("SELECT COUNT(matches.MatchID) FROM matches,`groups`,divisions WHERE divisions.TournamentID = $currTournID AND `groups`.DivID = divisions.DivID AND matches.GroupID = `groups`.GroupID")->fetch_all()[0][0];
+					$playoffsNum = $dbcn->execute_query("SELECT COUNT(playoffs.PlayoffID) FROM playoffs WHERE playoffs.TournamentID = ?",[$currTournID])->fetch_row()[0];
+					$playoffmatchNum = $dbcn->execute_query("SELECT COUNT(playoffmatches.PlayoffID) FROM playoffmatches,playoffs WHERE playoffs.TournamentID = ? AND playoffmatches.PlayoffID = playoffs.PlayoffID",[$currTournID])->fetch_row()[0];
 
                     echo "<div class='turnier-button-wrap'>";
                     echo "<div class=\"turnier-button $currTournID\">
@@ -71,8 +73,20 @@ if ($type == "create_tournament_buttons") {
                     echo "<div class='tbutton-act get turnier-button-add-matches green $currTournID followed' onclick=\"get_matches('$currTournID')\">
                             Get Match-Results for all Matches
                         </div>";
-					echo "<div class='tbutton-act get turnier-button-add-matches-unplayed green $currTournID tbutton-last' onclick=\"get_matches('$currTournID', false)\">
+					echo "<div class='tbutton-act get turnier-button-add-matches-unplayed green $currTournID followed' onclick=\"get_matches('$currTournID', false)\">
                             Get Match-Results for unplayed Matches
+                        </div>";
+					echo "<div class='tbutton-act get turnier-button-add-playoffs green $currTournID followed' onclick=\"get_playoffs('$currTournID')\">
+                            Get Playoffs &nbsp<i>($playoffsNum)</i>
+                        </div>";
+					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches green $currTournID followed' onclick=\"get_playoffs_matches('$currTournID')\">
+                            Get Playoff-Matches &nbsp<i>($playoffmatchNum)</i>
+                        </div>";
+					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches-details green $currTournID followed' onclick=\"get_matches('$currTournID', true, true)\">
+                            Get Playoff-Match-Details for all
+                        </div>";
+					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches-details-unplayed green $currTournID tbutton-last' onclick=\"get_matches('$currTournID', false, true)\">
+                            Get Playoff-Match-Details for unplayed
                         </div>";
                     echo "</div>";
 

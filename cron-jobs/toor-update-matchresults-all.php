@@ -29,7 +29,7 @@ foreach ($matches as $mindex=>$match) {
 	if (($mindex) % 5 === 0 && $mindex != 0) {
 		sleep(2);
 	}
-	$result = scrape_toornament_matches($tournament_id,$match['MatchID'], FALSE);
+	$result = scrape_toornament_matches($tournament_id,$match['MatchID']);
 	$matchresults_gotten += $result["changes"][0];
 	$percentage = count_percentages($mindex,count($matches),$percentage);
 }
