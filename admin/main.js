@@ -311,13 +311,13 @@ function get_matches_from_groups(tournID) {
     xmlhttpDivs.send();
 }
 
-function get_matches(tournID, all = true) {
+function get_matches(tournID, all = true, playoffs = false) {
     console.log("----- Start Matches -----")
     let currButton;
     if (all) {
-        currButton = $("div.turnier-button-add-matches."+tournID);
+        currButton = (playoffs) ? $("div.turnier-button-add-playoffs-matches-details."+tournID) : $("div.turnier-button-add-matches."+tournID);
     } else {
-        currButton = $("div.turnier-button-add-matches-unplayed."+tournID);
+        currButton = (playoffs) ? $("div.turnier-button-add-playoffs-matches-details-unplayed."+tournID) : $("div.turnier-button-add-matches-unplayed."+tournID);
     }
     if (!(currButton.hasClass('loading-data'))) {
         $(".tbutton-act.get."+tournID).addClass('loading-data');
@@ -353,9 +353,9 @@ function get_matches(tournID, all = true) {
                             container.scrollTop(container.prop("scrollHeight"));
                             $(".tbutton-act.get." + tournID).removeClass('loading-data');
                             if (all) {
-                                currButton.html("Get Match-Results for all Matches");
+                                if (playoffs) {currButton.html("Get Playoff-Match-Details for all")} else {currButton.html("Get Match-Results for all Matches")}
                             } else {
-                                currButton.html("Get Match-Results for unplayed Matches");
+                                if (playoffs) {currButton.html("Get Playoff-Match-Details for unplayed")} else {currButton.html("Get Match-Results for unplayed Matches")}
                             }
                             set_all_actions_onclick(tournID, 1);
                             console.log("----- Matches Done -----");
@@ -368,15 +368,27 @@ function get_matches(tournID, all = true) {
                     await new Promise(r => setTimeout(r, 1000));
                     console.log("-- slept --");
                 }
-                xmlhttp.open("GET", "scrapeToor-ajax.php?type=matches&Tid=" + tournID + "&Mid=" + matches[i]["MatchID"]);
+                if (playoffs) {
+                    xmlhttp.open("GET", "scrapeToor-ajax.php?type=playoffs-match-details&Tid=" + tournID + "&Mid=" + matches[i]["MatchID"]);
+                } else {
+                    xmlhttp.open("GET", "scrapeToor-ajax.php?type=matches&Tid=" + tournID + "&Mid=" + matches[i]["MatchID"]);
+                }
                 xmlhttp.send();
             }
         }
     };
     if (all) {
-        xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=matches&Tid="+tournID,true);
+        if (playoffs) {
+            xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=playoffs-matches&Tid="+tournID,true);
+        } else {
+            xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=matches&Tid="+tournID,true);
+        }
     } else {
-        xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=matches-unplayed&Tid="+tournID,true);
+        if (playoffs) {
+            xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=playoffs-matches-unplayed&Tid="+tournID,true);
+        } else {
+            xmlhttpM.open("GET", "../ajax-functions/get-DB-ajax.php?type=matches-unplayed&Tid="+tournID,true);
+        }
     }
     xmlhttpM.send();
 }
@@ -468,9 +480,6 @@ function get_playoffs_matches(tournID) {
     xmlhttpPlayoffs.send();
 }
 
-function get_playoffs_matches_details(tournID) {
-
-}
 
 function set_all_actions_onclick(tournID,set) {
     if (set === 1) {
@@ -486,7 +495,8 @@ function set_all_actions_onclick(tournID,set) {
         $(".turnier-button-add-matches-unplayed."+tournID).attr("onClick","get_matches('"+tournID+"', false)");
         $(".turnier-button-add-playoffs."+tournID).attr("onClick","get_playoffs('"+tournID+"')");
         $(".turnier-button-add-playoffs-matches."+tournID).attr("onClick","get_playoffs_matches('"+tournID+"')");
-        $(".turnier-button-add-playoffs-matches-details."+tournID).attr("onClick","get_playoffs_matches_details('"+tournID+"')");
+        $(".turnier-button-add-playoffs-matches-details."+tournID).attr("onClick","get_matches('"+tournID+"', true, true)");
+        $(".turnier-button-add-playoffs-matches-details-unplayed."+tournID).attr("onClick","get_matches('"+tournID+"', false, true)");
     } else if (set === 0) {
         $(".tbutton-act.get."+tournID).attr("onClick","");
     }

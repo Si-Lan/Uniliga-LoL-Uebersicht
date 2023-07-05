@@ -156,7 +156,7 @@ div.turnier-button {
     transition: max-height 0.3s linear;
 }
 .tbutton-act-wrap.open {
-    max-height: 625px;
+    max-height: 670px;
 }
 .tbutton-act {
     color: black;

@@ -82,8 +82,11 @@ if ($type == "create_tournament_buttons") {
 					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches green $currTournID followed' onclick=\"get_playoffs_matches('$currTournID')\">
                             Get Playoff-Matches &nbsp<i>($playoffmatchNum)</i>
                         </div>";
-					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches-details green $currTournID tbutton-last' onclick=\"get_playoffs_matches_details('$currTournID')\">
-                            Get Playoff-Match-Details
+					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches-details green $currTournID followed' onclick=\"get_matches('$currTournID', true, true)\">
+                            Get Playoff-Match-Details for all
+                        </div>";
+					echo "<div class='tbutton-act get turnier-button-add-playoffs-matches-details-unplayed green $currTournID tbutton-last' onclick=\"get_matches('$currTournID', false, true)\">
+                            Get Playoff-Match-Details for unplayed
                         </div>";
                     echo "</div>";
 

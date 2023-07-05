@@ -71,6 +71,20 @@ if ($dbcn -> connect_error){
 		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
 		echo $result;
 	}
+	if ($type == "playoffs-matches") {
+		$tournID = $_REQUEST["Tid"];
+		$matches = $dbcn->execute_query("SELECT * FROM playoffmatches pm JOIN playoffs p on pm.PlayoffID = p.PlayoffID WHERE p.TournamentID = ?",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($matches);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
+	if ($type == "playoffs-matches-unplayed") {
+		$tournID = $_REQUEST["Tid"];
+		$matches = $dbcn->execute_query("SELECT * FROM playoffmatches pm JOIN playoffs p on pm.PlayoffID = p.PlayoffID WHERE p.TournamentID = ? AND pm.played = FALSE",[$tournID])->fetch_all(MYSQLI_ASSOC);
+		$result = json_encode($matches);
+		$result = preg_replace("/:(\d{19,})([,\}])/",':"$1"$2',$result);
+		echo $result;
+	}
 
 	if ($type == "match") {
 		$matchID =$_REQUEST['Mid'];

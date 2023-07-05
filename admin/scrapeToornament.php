@@ -872,7 +872,7 @@ function scrape_toornament_matches_from_swiss($tournID, $divID, $groupID) {
 	return $returnArr;
 }
 
-function scrape_toornament_matches($tournID,$matchID,$test=FALSE) {
+function scrape_toornament_matches($tournID, $matchID, $playoffs = FALSE, $test=FALSE) {
     $returnArr = array("return"=>0, "echo"=>"<span style='color: blue'>writing Matches:<br></span>", "changes"=>[0, []]);
 	if ($test) {
 		return $returnArr;
@@ -940,7 +940,13 @@ function scrape_toornament_matches($tournID,$matchID,$test=FALSE) {
         $results["T2Score"] = $S2;
 		$results["Winner"] = $matchresult;
 
-        $matchinDB = $dbcn->query("SELECT Team1Score, Team2Score, plannedDate, played, bestOf, Winner FROM matches WHERE MatchID = {$matchID}")->fetch_all();
+		if ($playoffs) {
+			$table = "playoffmatches";
+		} else {
+			$table = "matches";
+		}
+
+        $matchinDB = $dbcn->query("SELECT Team1Score, Team2Score, plannedDate, played, bestOf, Winner FROM {$table} WHERE MatchID = {$matchID}")->fetch_all();
         $newdata = [strval($results["T1Score"]), strval($results["T2Score"]), strval($results["date"]), strval($results["played"]), strval($results["bestOf"]), strval($results["Winner"])];
         if ($matchinDB[0] == $newdata) {
             $returnArr["echo"] .= "<span style='color: yellow'>Daten sind unverändert<br></span>";
@@ -950,7 +956,7 @@ function scrape_toornament_matches($tournID,$matchID,$test=FALSE) {
             $returnArr["changes"][1][] = [$matchinDB[0], $newdata];
             $results["T1Score"] = (strval($results["T1Score"]) == NULL) ? "NULL" : $results["T1Score"];
             $results["T2Score"] = (strval($results["T2Score"]) == NULL) ? "NULL" : $results["T2Score"];
-            $dbcn->query("UPDATE matches SET Team1Score = {$results["T1Score"]}, Team2Score = {$results["T2Score"]}, plannedDate = '{$results["date"]}', played = {$results["played"]}, bestOf = {$results["bestOf"]}, Winner = {$results["Winner"]} WHERE MatchID = {$matchID}");
+            $dbcn->query("UPDATE {$table} SET Team1Score = {$results["T1Score"]}, Team2Score = {$results["T2Score"]}, plannedDate = '{$results["date"]}', played = {$results["played"]}, bestOf = {$results["bestOf"]}, Winner = {$results["Winner"]} WHERE MatchID = {$matchID}");
         }
     } else {
         $returnArr["echo"] .= "<span style='color: red'>Fehler beim Aufrufen von Toornament". "<br></span>";
@@ -1195,7 +1201,7 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 				//match not in Database
 				$returnArr["writes"]++;
 				$returnArr["echo"] .= "<span style='color: limegreen'>- schreibe in DB<br></span>";
-				//$dbcn->execute_query("INSERT INTO playoffmatches (MatchID, PlayoffID, Team1ID, Team2ID, round, bracket, played) VALUES (?, ?, ?, ?, ?, ?, ?)", [$result["matchID"], $playoffID, $result["team1ID"], $result["team2ID"], $result["round"], $result["bracket"], 0]);
+				$dbcn->execute_query("INSERT INTO playoffmatches (MatchID, PlayoffID, Team1ID, Team2ID, round, bracket, played) VALUES (?, ?, ?, ?, ?, ?, ?)", [$result["matchID"], $playoffID, $result["team1ID"], $result["team2ID"], $result["round"], $result["bracket"], 0]);
 			} else {
 				// match already in Database
 				$returnArr["echo"] .= "<span style='color: orange'>Match ist schon in DB<br></span>";
@@ -1206,7 +1212,7 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 					$returnArr["echo"] .= "<span style='font-size: 30px; color: orange'>neue Daten, Update:<br></span>" . json_encode($matchinDB) . "<br>" . json_encode($newdata) . "<br>";
 					$returnArr["changes"][0]++;
 					$returnArr["changes"][1][] = [$matchinDB,$newdata];
-					//$dbcn->execute_query("UPDATE playoffmatches SET Team1ID = ?, Team2ID = ?, round = ?, bracket = ? WHERE MatchID = ? AND PlayoffID = ?", [$result["team1ID"],$result["team2ID"],$result["round"],$result["bracket"],$result["matchID"],$playoffID]);
+					$dbcn->execute_query("UPDATE playoffmatches SET Team1ID = ?, Team2ID = ?, round = ?, bracket = ? WHERE MatchID = ? AND PlayoffID = ?", [$result["team1ID"],$result["team2ID"],$result["round"],$result["bracket"],$result["matchID"],$playoffID]);
 				}
 			}
 		}
@@ -1216,5 +1222,3 @@ function scrape_toornament_matchups_from_playoffs($tournID, $playoffID) {
 	$returnArr["echo"] .= "<br>";
 	return $returnArr;
 }
-
-scrape_toornament_matchups_from_playoffs("6510029359269781504", "6826842846261698560");
