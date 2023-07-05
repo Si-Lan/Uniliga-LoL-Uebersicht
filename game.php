@@ -118,7 +118,7 @@ function create_game($dbcn,$gameID,$curr_team=NULL) {
 			$patches[] = $fileinfo->getFilename();
 		}
 	}
-	sort($patches);
+	usort($patches, "version_compare");
 	$game_patch_1 = explode(".",$info['gameVersion'])[0];
 	$game_patch_2 = explode(".",$info['gameVersion'])[1];
 	foreach ($patches as $patch_from_arr) {
