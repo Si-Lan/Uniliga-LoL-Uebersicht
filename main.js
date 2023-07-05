@@ -291,7 +291,7 @@ async function popup_match(matchID,teamID=null) {
             }
             let game_counter = 0;
             for (const [i,game] of games.entries()) {
-                if (current_match_in_popup === game['MatchID']) {
+                if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                     popup.append("<div class='game game"+i+"'></div>");
                 }
                 let gameID = game['RiotMatchID'];
@@ -300,7 +300,7 @@ async function popup_match(matchID,teamID=null) {
                     // noinspection JSPotentiallyInvalidUsageOfThis
                     if (this.readyState === 4 && this.status === 200) {
                         let game_wrap = popup.find('.game'+i);
-                        if (current_match_in_popup === game['MatchID']) {
+                        if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                             game_wrap.empty();
                             // noinspection JSPotentiallyInvalidUsageOfThis
                             game_wrap.append(this.responseText);

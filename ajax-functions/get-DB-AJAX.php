@@ -185,7 +185,10 @@ if ($dbcn -> connect_error){
 	if ($type == "match-games-teams-by-matchid") {
 		$matchID = $_REQUEST['match'];
 		$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$matchID])->fetch_assoc();
-		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? ORDER BY RiotMatchID",[$matchID])->fetch_all(MYSQLI_ASSOC);
+		if ($match == NULL) {
+			$match = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?",[$matchID])->fetch_assoc();
+		}
+		$games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ? ORDER BY RiotMatchID",[$matchID,$matchID])->fetch_all(MYSQLI_ASSOC);
 		$team1 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$match["Team1ID"]])->fetch_assoc();
 		$team2 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?",[$match["Team2ID"]])->fetch_assoc();
 		$result = json_encode(array("match"=>$match, "games"=>$games, "team1"=>$team1, "team2"=>$team2));
