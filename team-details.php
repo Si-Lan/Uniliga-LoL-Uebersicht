@@ -128,7 +128,7 @@ try {
 				echo "
                     <div class='team-avg-rank'>
                         Team-Rang: 
-                        <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.webp' alt='$avg_rank_cap'>
+                        <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.svg' alt='$avg_rank_cap'>
                         <span>{$avg_rank_cap} {$team['avg_rank_div']}</span>
                     </div>";
 			}
@@ -207,7 +207,7 @@ try {
 			echo "
                     <div class='team-avg-rank'>
                         Team-Rang: 
-                        <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.webp' alt='$avg_rank_cap'>
+                        <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.svg' alt='$avg_rank_cap'>
                         <span>{$avg_rank_cap} {$team['avg_rank_div']}</span>
                     </div>";
 		}

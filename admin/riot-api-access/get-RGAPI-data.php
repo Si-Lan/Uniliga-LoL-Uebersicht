@@ -469,13 +469,17 @@ function calculate_avg_team_rank($teamID) {
 		"PLATINUM III" => 18,
 		"PLATINUM II" => 19,
 		"PLATINUM I" => 20,
-		"DIAMOND IV" => 21,
-		"DIAMOND III" => 22,
-		"DIAMOND II" => 23,
-		"DIAMOND I" => 24,
-		"MASTER" => 28,
-		"GRANDMASTER" => 32,
-		"CHALLENGER" => 35
+		"EMERALD IV" => 21,
+		"EMERALD III" => 22,
+		"EMERALD II" => 23,
+		"EMERALD I" => 24,
+		"DIAMOND IV" => 25,
+		"DIAMOND III" => 26,
+		"DIAMOND II" => 27,
+		"DIAMOND I" => 28,
+		"MASTER" => 32,
+		"GRANDMASTER" => 36,
+		"CHALLENGER" => 39
 	);
 	$ranks_rev = array(
 		1 => ["IRON", " IV"],
@@ -498,21 +502,25 @@ function calculate_avg_team_rank($teamID) {
 		18 => ["PLATINUM", " III"],
 		19 => ["PLATINUM", " II"],
 		20 => ["PLATINUM", " I"],
-		21 => ["DIAMOND", " IV"],
-		22 => ["DIAMOND", " III"],
-		23 => ["DIAMOND", " II"],
-		24 => ["DIAMOND", " I"],
-		25 => ["MASTER",""],
-		26 => ["MASTER",""],
-		27 => ["MASTER",""],
-		28 => ["MASTER",""],
+		21 => ["EMERALD", " IV"],
+		22 => ["EMERALD", " III"],
+		23 => ["EMERALD", " II"],
+		24 => ["EMERALD", " I"],
+		25 => ["DIAMOND", " IV"],
+		26 => ["DIAMOND", " III"],
+		27 => ["DIAMOND", " II"],
+		28 => ["DIAMOND", " I"],
 		29 => ["MASTER",""],
 		30 => ["MASTER",""],
-		31 => ["GRANDMASTER",""],
-		32 => ["GRANDMASTER",""],
-		33 => ["GRANDMASTER",""],
-		34 => ["CHALLENGER",""],
-		35 => ["CHALLENGER",""]
+		31 => ["MASTER",""],
+		32 => ["MASTER",""],
+		33 => ["MASTER",""],
+		34 => ["MASTER",""],
+		35 => ["GRANDMASTER",""],
+		36 => ["GRANDMASTER",""],
+		37 => ["GRANDMASTER",""],
+		38 => ["CHALLENGER",""],
+		39 => ["CHALLENGER",""]
 	);
 
 	$players = $dbcn->query("SELECT * FROM players WHERE TeamID = $teamID")->fetch_all(MYSQLI_ASSOC);
@@ -529,7 +537,7 @@ function calculate_avg_team_rank($teamID) {
 		}
 	}
 	if (count($rank_arr) == 0) {
-		$dbcn->query("UPDATE teams SET avg_rank_tier = NULL, avg_rank_div = NULL WHERE TeamID = {$teamID}");
+		$dbcn->query("UPDATE teams SET avg_rank_tier = NULL, avg_rank_div = NULL, avg_rank_num = NULL WHERE TeamID = {$teamID}");
 		$returnArr["echo"] .= "";
 	} else {
 		$rank = 0;

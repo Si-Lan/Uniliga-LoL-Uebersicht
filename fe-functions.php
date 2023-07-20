@@ -89,7 +89,7 @@ function generate_elo_list($dbcn,$view,$teams,$tournamentID,$division,$group) {
 			$avg_rank_cap = ucfirst($avg_rank);
 			$avg_rank_num = round($team['avg_rank_num'], 2);
 			echo "
-                                <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.webp' alt='$avg_rank_cap'>
+                                <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$avg_rank}.svg' alt='$avg_rank_cap'>
                                 <span>{$avg_rank_cap} {$team['avg_rank_div']}</span>";
 		} else {
 			$avg_rank_num = 0.00;
@@ -167,7 +167,7 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 			echo "<div class='team-name-rank'>
                         <span>{$currteam['TeamName']}</span>
                         <span class='rank'>
-                            <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$team_tier.webp' alt='$team_tier_cap'>
+                            <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$team_tier.svg' alt='$team_tier_cap'>
                             $team_tier_cap ".$currteam['avg_rank_div']."
                         </span>
                       </div>
