@@ -101,7 +101,7 @@ if ($dbcn -> connect_error){
 			}
 		}
 		if (count($rank_arr) == 0) {
-			$dbcn->query("UPDATE teams SET avg_rank_tier = NULL, avg_rank_div = NULL WHERE TeamID = {$teamID}");
+			$dbcn->query("UPDATE teams SET avg_rank_tier = NULL, avg_rank_div = NULL, avg_rank_num = NULL WHERE TeamID = {$teamID}");
 			echo "";
 		} else {
 			$rank = 0;
