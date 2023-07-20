@@ -308,7 +308,7 @@ function create_game($dbcn,$gameID,$curr_team=NULL) {
 			if (array_key_exists($puuid, $players_PUUID)) {
                 if ($summoner_rank != NULL) {
 					echo "
-                    <div class='summ-rank'><img loading='lazy' class='rank-emblem-mini' src='/uniliga/ddragon/img/ranks/mini-crests/{$summoner_rank}.webp' alt=''> $summoner_rank_cap $summoner_rank_div</div>";
+                    <div class='summ-rank'><img loading='lazy' class='rank-emblem-mini' src='/uniliga/ddragon/img/ranks/mini-crests/{$summoner_rank}.svg' alt=''> $summoner_rank_cap $summoner_rank_div</div>";
 				}
 			}
             echo "

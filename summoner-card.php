@@ -37,7 +37,7 @@ function create_summonercard($player,$collapsed=FALSE){
 		}
 		echo "
 		<div class='card-rank'>
-			<img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$player_tier}.webp' alt='$player_tier_cap'>
+			<img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/{$player_tier}.svg' alt='$player_tier_cap'>
 			$player_tier_cap $player_div $player_LP
 		</div>";
 	}
