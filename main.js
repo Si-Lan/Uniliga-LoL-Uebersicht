@@ -446,6 +446,7 @@ async function popup_team(teamID) {
                     card_container.append("<div class='summoner-card-wrapper placeholder p"+i+"'></div>");
                 }
 
+                /*
                 let player_counter = 0;
                 for (let i = 0; i < team_data["players"].length; i++) {
                     let player_id = team_data["players"][i]["PlayerID"];
@@ -466,6 +467,22 @@ async function popup_team(teamID) {
                     summonercard_request.open("GET","ajax-functions/summoner-card-ajax.php?player="+player_id);
                     summonercard_request.send();
                 }
+                */
+                let summonercard_request = new XMLHttpRequest();
+                summonercard_request.onreadystatechange = async function() {
+                    if (this.readyState === 4 && this.status === 200) {
+                        let card_results = JSON.parse(this.responseText);
+                        for (let i = 0; i < card_results.length; i++) {
+                            card_container.find(".placeholder.p" + i).replaceWith(card_results[i]);
+                        }
+                        let popup_loader = $('.popup-loading-indicator');
+                        popup_loader.css("opacity", "0");
+                        await new Promise(r => setTimeout(r, 210));
+                        popup_loader.remove();
+                    }
+                }
+                summonercard_request.open("GET","ajax-functions/summoner-card-ajax.php?team="+teamID);
+                summonercard_request.send();
             }
         }
     }
