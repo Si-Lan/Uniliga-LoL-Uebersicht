@@ -305,6 +305,14 @@ a.button.exp_coll_sc {
     height: 24px;
     width: 24px;
 }
+.github-link .material-symbol svg {
+    height: 22px;
+    width: 22px;
+}
+.github-link .material-symbol svg path {
+    transform: scale(0.22);
+    fill: var(--text-color);
+}
 div.svg-wrapper,
 div.svg-wrapper svg {
     width: 30px;
