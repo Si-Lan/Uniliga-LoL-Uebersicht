@@ -53,7 +53,7 @@ if ($dbcn->connect_error) {
     rsort($patches);
     $latest_patch = $patches[0];
 
-    $games_played = $teamstats['games_played'];
+    $games_played = $teamstats['games_played'] ?? 0;
 
 	create_header($dbcn,"team",$tournament_id,$group_id,$team_id);
 	create_tournament_overview_nav_buttons($dbcn,$tournament_id,"",$div_id,$group_id);

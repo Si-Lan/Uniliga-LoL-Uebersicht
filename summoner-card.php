@@ -75,7 +75,7 @@ function create_summonercard($player,$collapsed=FALSE,$echo=TRUE){
 			$patches[] = $fileinfo->getFilename();
 		}
 	}
-	sort($patches);
+	usort($patches, "version_compare");
 	$patch = end($patches);
 
 	foreach ($champions as $champion=>$champion_amount) {
@@ -97,6 +97,9 @@ function create_summonercard($player,$collapsed=FALSE,$echo=TRUE){
 	</div>"; // card-summoner
 	$return .= "
 	</div>"; // summoner-card
+	if ($player["PUUID"] != NULL) {
+		$return .= "<a href='javascript:void(0)' class='open-playerhistory' onclick='popup_player(\"{$player["PUUID"]}\")'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/history.svg") ."</div>Spieler-History</a>";
+	}
 	$return .= "<a href='https://www.op.gg/summoners/euw/$enc_summoner' target='_blank' class='op-gg-single'><div class='svg-wrapper op-gg'>".file_get_contents(dirname(__FILE__)."/img/opgglogo.svg")."</div></a>";
 	$return .= "</div>"; // summoner-card-wrapper
 

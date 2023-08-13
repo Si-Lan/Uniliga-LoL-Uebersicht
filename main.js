@@ -1056,3 +1056,147 @@ function expand_collapse_summonercard() {
 $(document).ready(function () {
     $('.player-cards a.exp_coll_sc').on("click",expand_collapse_summonercard);
 });
+
+let player_search_request = new XMLHttpRequest();
+function search_players() {
+    player_search_request.abort();
+
+    let searchbar = $('.search-wrapper .searchbar');
+    let input = $('input.search-players')[0];
+    let input_value = input.value.toUpperCase();
+    let player_list = $('.player-list');
+    let loading_indicator = $('.search-loading-indicator');
+
+    if (input_value.length < 2) {
+        loading_indicator.remove();
+        player_list.empty();
+        return;
+
+    }
+    if (loading_indicator.length > 0) {
+        loading_indicator.remove();
+    }
+    searchbar.append("<div class='search-loading-indicator'></div>");
+
+    player_search_request.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            $('.search-loading-indicator').remove();
+            player_list.html(this.responseText);
+        }
+    }
+    player_search_request.open("GET","ajax-functions/player-overview-card-ajax.php?search="+input_value);
+    player_search_request.send();
+
+}
+
+window.onload = function () {
+    if ($("body.players").length === 0) {
+        return;
+    }
+    search_players();
+    $('body.players .searchbar input').on("input",search_players);
+}
+
+let current_player_in_popup = null;
+async function popup_player(PUUID) {
+    event.preventDefault();
+    let popup = $('.player-popup');
+
+    if (popup.length === 0) {
+        $("header").after("<div class=\"player-popup-bg\" onclick=\"close_popup_player(event)\"><div class=\"player-popup\"></div></div>")
+    }
+    popup = $('.player-popup');
+    let popupbg = $('.player-popup-bg');
+
+    let pagebody = $("body");
+
+    if (current_player_in_popup === PUUID) {
+        popupbg.css("opacity","0");
+        popupbg.css("display","block");
+        await new Promise(r => setTimeout(r, 10));
+        popupbg.css("opacity","1");
+        pagebody.css("overflow","hidden");
+        return;
+    }
+
+    current_player_in_popup = PUUID;
+    popup.empty();
+
+    popup.append("<div class='close-button' onclick='closex_popup_player()'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"></path></svg></div></div>");
+    popup.append("<div class='close-button-space'><div class='popup-loading-indicator'></div></div>");
+
+    popupbg.css("opacity","0");
+    popupbg.css("display","block");
+    await new Promise(r => setTimeout(r, 10));
+    popupbg.css("opacity","1");
+    pagebody.css("overflow","hidden");
+
+    if (PUUID === "") {
+        popup.append("Für diesen Spieler wurden keine weiteren Profile gefunden")
+    }
+
+    let player_overview_request = new XMLHttpRequest();
+    player_overview_request.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            let content = this.responseText;
+
+            if (current_player_in_popup === PUUID) {
+                popup.append(content);
+                let popup_loader = $('.popup-loading-indicator');
+                popup_loader.css("opacity","0");
+                await new Promise(r => setTimeout(r, 210));
+                popup_loader.remove();
+            }
+        }
+    }
+    player_overview_request.open("GET","ajax-functions/player-overview-ajax.php?puuid="+PUUID);
+    player_overview_request.send();
+
+}
+async function close_popup_player(event) {
+    let popupbg = $('.player-popup-bg');
+    if (event.target === popupbg[0]) {
+        popupbg.css("opacity","0");
+        await new Promise(r => setTimeout(r, 250));
+        $("body").css("overflow","")
+        popupbg.css("display","none");
+    }
+}
+async function closex_popup_player() {
+    let popupbg = $('.player-popup-bg');
+    popupbg.css("opacity","0");
+    await new Promise(r => setTimeout(r, 250));
+    $("body").css("overflow","")
+    popupbg.css("display","none");
+}
+$(document).ready(function () {
+    let body = $('body');
+    if (body.hasClass("players")) {
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                closex_popup_player();
+            }
+        })
+    }
+});
+
+function expand_playercard(card_button) {
+    event.preventDefault();
+    let card = card_button.parentNode;
+    if (card.classList.contains("expanded-pcard")) {
+        card.classList.remove("expanded-pcard");
+    } else {
+        card.classList.add("expanded-pcard");
+    }
+}
+function expand_all_playercards(collapse=false) {
+    event.preventDefault();
+    let cards = document.getElementsByClassName("player-card");
+    for (const card of cards) {
+        if (collapse) {
+            card.classList.remove("expanded-pcard");
+        } else {
+            card.classList.add("expanded-pcard");
+        }
+    }
+}

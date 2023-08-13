@@ -322,6 +322,9 @@ function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=N
 	if ($type == "home") {
 		echo "<h1>Uniliga LoL - Übersicht</h1>";
 	}
+	if ($type == "players") {
+		echo "<h1>Uniliga LoL - Spieler</h1>";
+	}
 	if ($type == "tournament" || $type == "group" || $type == "team") {
 		echo "<h1>$tournament_name</h1>";
 		echo "<a href='$toor_tourn_url$tournament_id' target='_blank' class='toorlink'><div class='material-symbol'>$outlinkicon</div></a>";
@@ -445,4 +448,186 @@ function populate_th($maintext,$tooltiptext,$init=false) {
 		$svg_code = file_get_contents(dirname(__FILE__)."/icons/material/check_indeterminate_small.svg");
 	}
 	return "<span class='tooltip'>$maintext<span class='tooltiptext'>$tooltiptext</span><div class='material-symbol sort-direction'>".$svg_code."</div></span>";
+}
+
+function create_player_overview_cards($dbcn,$search) {
+	$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE ? OR PlayerName LIKE ?)",["%".$search."%","%".$search."%"])->fetch_all(MYSQLI_ASSOC);
+	$unique_players = array();
+	foreach ($puuids AS $puuid) {
+		$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid["PUUID"]])->fetch_all(MYSQLI_ASSOC);
+		$unique_players[] = $player_stats;
+	}
+	$player_cards = "";
+
+	foreach ($unique_players as $player) {
+		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\")'>";
+		$player_names = array();
+		$summoner_names = array();
+		foreach ($player as $tourn_player) {
+			if (!in_array($tourn_player["PlayerName"],$player_names)) {
+				$player_names[] = $tourn_player["PlayerName"];
+			}
+			if (!in_array($tourn_player["SummonerName"],$summoner_names)) {
+				$summoner_names[] = $tourn_player["SummonerName"];
+			}
+		}
+		$player_cards .= "<span>".$player_names[0]."</span>";
+		if (count($player_names)>1) {
+			$player_cards .= "<span>(";
+			for ($i=1; $i < count($player_names); $i++) {
+				$player_cards .= $player_names[$i];
+				if (!($i == count($player_names)-1)) {
+					$player_cards .= ", ";
+				}
+			}
+			$player_cards .= ")</span>";
+		}
+		$player_cards .= "<div class='divider'></div>";
+		$player_cards .= "<span>".$summoner_names[0]."</span>";
+		if (count($summoner_names)>1) {
+			$player_cards .= "<span>(";
+			for ($i=1; $i < count($summoner_names); $i++) {
+				$player_cards .= $summoner_names[$i];
+				if (!($i == count($summoner_names)-1)) {
+					$player_cards .= ", ";
+				}
+			}
+			$player_cards .= ")</span>";
+		}
+		$player_cards .= "</a>";
+	}
+
+	echo $player_cards;
+}
+
+function create_player_overview($dbcn,$puuid) {
+	$player_stats = $dbcn->execute_query("SELECT players.PlayerID, players.PlayerName, players.SummonerName, teams.TeamName, teams.TeamID, players.PUUID, tournaments.`Name`, teams.imgID, tournaments.Season, tournaments.Split, tournaments.TournamentID, tournaments.imgID as TimgID FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
+	if (count($player_stats) >= 2) {
+		echo "<div class='player-ov-buttons'>";
+		echo "<a href='#' class='button expand-pcards' title='Ausklappen' onclick='expand_all_playercards()'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/unfold_more.svg")."</div></a>";
+		echo "<a href='#' class='button expand-pcards' title='Einklappen' onclick='expand_all_playercards(true)'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/unfold_less.svg")."</div></a>";
+		echo "</div>";
+	}
+	echo "<div class='player-popup-content'>";
+	foreach ($player_stats as $player) {
+		$details = $dbcn->execute_query("SELECT rank_div, rank_tier, leaguePoints, roles, champions FROM players WHERE PlayerID=?", [$player["PlayerID"]])->fetch_assoc();
+		echo create_playercard($player, $details);
+	}
+	echo "</div>";
+}
+
+function create_playercard($player_data, $detail_stats=NULL) {
+	if ($detail_stats != NULL) {
+		$roles = json_decode($detail_stats['roles'], true);
+		$champions = json_decode($detail_stats['champions'], true);
+		$rendered_rows = 0;
+		if (array_sum($roles)>0 && count($champions)>0) {
+			$rendered_rows = 2;
+		} elseif (array_sum($roles)>0 || count($champions)>0) {
+			$rendered_rows = 1;
+		}
+		$result = "<div class='player-card' data-details='$rendered_rows'>";
+	} else {
+		$result = "<div class='player-card'>";
+	}
+
+	// Turnier-Titel
+	$result .= "<a class='player-card-div player-card-tournament' href='turnier/{$player_data["TournamentID"]}'>";
+	if ($player_data["TimgID"] != NULL) {
+		$result .= "<img alt='Turnier Logo' src='img/tournament_logos/{$player_data["TimgID"]}/logo_medium.webp'>";
+	}
+	$result .= "{$player_data["Split"]} {$player_data["Season"]}";
+	$result .= "</a>";
+	// Spielername und Summonername
+	$result .= "<div class='player-card-div player-card-name'>
+					<span>{$player_data["PlayerName"]}</span>
+					<a href='https://op.gg/summoners/euw/{$player_data["SummonerName"]}' target='_blank'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/person.svg")."</div>{$player_data["SummonerName"]}</a>
+				</div>";
+	// Teamname
+	$result .= "<a class='player-card-div player-card-team' href='team/{$player_data["TeamID"]}'>";
+	if ($player_data["imgID"] != NULL) {
+		$result .= "<img alt='{$player_data["TeamName"]} Logo' src='img/team_logos/{$player_data["imgID"]}/logo_medium.webp'>";
+		$result .= "<span>{$player_data["TeamName"]}</span>";
+	} else {
+		$result .= "<span class='player-card-nologo'>{$player_data["TeamName"]}</span>";
+
+	}
+	$result .= "</a>";
+	// detailed Stats
+	if ($detail_stats != NULL) {
+		$rank_tier = strtolower($detail_stats["rank_tier"]);
+		$rank_div = $detail_stats["rank_div"];
+		$LP = $detail_stats["leaguePoints"];
+		if ($rank_tier == "CHALLENGER" || $rank_tier == "GRANDMASTER" || $rank_tier == "MASTER") {
+			$rank_div = "";
+		}
+		if ($LP != NULL) {
+			$LP = "(".$LP." LP)";
+		} else {
+			$LP = "";
+		}
+
+		// Rang
+		if ($detail_stats["rank_tier"] != NULL) {
+			$result .= "<div class='player-card-div player-card-rank'><img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$rank_tier.webp' alt='".ucfirst($rank_tier)."'>".ucfirst($rank_tier)." $rank_div $LP</div>";
+		} else {
+			$result .= "<div class='player-card-div player-card-rank'>kein Rang</div>";
+		}
+
+		// roles
+		if (array_sum($roles) > 0) {
+			$result .= "<div class='player-card-div player-card-roles'>";
+			foreach ($roles as $role => $role_amount) {
+				if ($role_amount != 0) {
+					$result .= "
+				<div class='role-single'>
+					<div class='svg-wrapper role'>" . file_get_contents(dirname(__FILE__) . "/ddragon/img/positions/position-$role-light.svg") . "</div>
+					<span class='played-amount'>$role_amount</span>
+				</div>";
+				}
+			}
+			$result .= "</div>";
+		}
+
+		// champs
+		if (count($champions) > 0) {
+			$result .= "<div class='player-card-div player-card-roles'>";
+			arsort($champions);
+			$champs_cut = FALSE;
+			if (count($champions) > 5) {
+				$champions = array_slice($champions, 0, 5);
+				$champs_cut = TRUE;
+			}
+
+			$patches = [];
+			$dir = new DirectoryIterator(dirname(__FILE__) . "/ddragon");
+			foreach ($dir as $fileinfo) {
+				if (!$fileinfo->isDot() && $fileinfo->getFilename() != "img") {
+					$patches[] = $fileinfo->getFilename();
+				}
+			}
+			usort($patches, "version_compare");
+			$patch = end($patches);
+
+			foreach ($champions as $champion => $champion_amount) {
+				$result .= "
+			<div class='champ-single'>
+				<img src='/uniliga/ddragon/{$patch}/img/champion/{$champion}.webp' alt='$champion'>
+				<span class='played-amount'>" . $champion_amount['games'] . "</span>
+			</div>";
+			}
+			if ($champs_cut) {
+				$result .= "
+		<div class='champ-single'>
+			<div class='material-symbol'>" . file_get_contents(dirname(__FILE__) . "/icons/material/more_horiz.svg") . "</div>
+		</div>";
+			}
+			$result .= "</div>";
+		}
+		// erweiterungs button
+		$result .= "<a class='player-card-div player-card-more' href='#' onclick='expand_playercard(this)'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/expand_more.svg")."</div> mehr Infos</a>";
+	}
+
+	$result .= "</div>";
+	return $result;
 }

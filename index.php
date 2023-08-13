@@ -60,8 +60,9 @@ create_header($dbcn,"home");
 ?>
 
 <div class="home-content">
-    <div id="turnier-select">
-        <h2>Turniere:</h2>
+	<div id="turnier-select">
+		<a href='spieler' class="button">Spielerübersicht</a>
+		<h2>Turniere:</h2>
 
     <?php
 
