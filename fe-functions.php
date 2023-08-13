@@ -569,7 +569,7 @@ function create_playercard($player_data, $detail_stats=NULL) {
 
 		// Rang
 		if ($detail_stats["rank_tier"] != NULL) {
-			$result .= "<div class='player-card-div player-card-rank'><img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$rank_tier.webp' alt='".ucfirst($rank_tier)."'>".ucfirst($rank_tier)." $rank_div $LP</div>";
+			$result .= "<div class='player-card-div player-card-rank'><img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$rank_tier.svg' alt='".ucfirst($rank_tier)."'>".ucfirst($rank_tier)." $rank_div $LP</div>";
 		} else {
 			$result .= "<div class='player-card-div player-card-rank'>kein Rang</div>";
 		}
