@@ -1045,6 +1045,26 @@ div.summoner-card-container {
     background-color: var(--main-button-hover);
 }
 
+.summoner-card-wrapper .open-playerhistory:hover {
+    background-color: var(--main-button-hover);
+}
+
+.summoner-card-wrapper .open-playerhistory {
+    display: flex;
+    background-color: var(--main-button-color);
+    box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+    border-top: solid 1px var(--divider-color-main);
+    padding: 10px 20px;
+    box-sizing: border-box;
+    transition: background-color 0.2s linear;
+    z-index: 1;
+    flex-wrap: wrap;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
 img.op-gg {
     max-height: 20px;
 }
@@ -2382,7 +2402,7 @@ h2.round-title span.team.loss {
 .player-popup-bg {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: 2; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */

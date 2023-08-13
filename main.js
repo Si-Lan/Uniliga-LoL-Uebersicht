@@ -1079,6 +1079,13 @@ async function popup_player(PUUID) {
     event.preventDefault();
     let popup = $('.player-popup');
     let popupbg = $('.player-popup-bg');
+
+    if (popup.length === 0) {
+        $("header").after("<div class=\"player-popup-bg\" onclick=\"close_popup_player(event)\"><div class=\"player-popup\"></div></div>")
+    }
+    popup = $('.player-popup');
+    popupbg = $('.player-popup-bg');
+
     let pagebody = $("body");
 
     if (current_player_in_popup === PUUID) {
@@ -1101,6 +1108,10 @@ async function popup_player(PUUID) {
     await new Promise(r => setTimeout(r, 10));
     popupbg.css("opacity","1");
     pagebody.css("overflow","hidden");
+
+    if (PUUID === "") {
+        popup.append("Für diesen Spieler wurden keine weiteren Profile gefunden")
+    }
 
     let player_overview_request = new XMLHttpRequest();
     player_overview_request.onreadystatechange = async function() {

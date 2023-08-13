@@ -96,6 +96,9 @@ function create_summonercard($player,$collapsed=FALSE){
 	</div>"; // card-summoner
     echo "
 	</div>"; // summoner-card
+	if ($player["PUUID"] != NULL) {
+		echo "<a href='javascript:void(0)' class='open-playerhistory' onclick='popup_player(\"{$player["PUUID"]}\")'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/history.svg") ."</div>Spieler-History</a>";
+	}
     echo "<a href='https://www.op.gg/summoners/euw/$enc_summoner' target='_blank' class='op-gg-single'><div class='svg-wrapper op-gg'>".file_get_contents(dirname(__FILE__)."/img/opgglogo.svg")."</div></a>";
     echo "</div>"; // summoner-card-wrapper
 }
