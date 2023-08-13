@@ -74,7 +74,7 @@ function create_summonercard($player,$collapsed=FALSE){
 			$patches[] = $fileinfo->getFilename();
 		}
 	}
-	sort($patches);
+	usort($patches, "version_compare");
 	$patch = end($patches);
 
 	foreach ($champions as $champion=>$champion_amount) {

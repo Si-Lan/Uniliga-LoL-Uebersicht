@@ -2404,7 +2404,7 @@ h2.round-title span.team.loss {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 15px;
 }
 .player-popup-bg div.close-button {
     position: absolute;
@@ -2459,7 +2459,180 @@ div.player-list {
 .player-ov-card .divider {
     margin: 5px 0;
 }
+.player-ov-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
+.player-popup .button.expand-pcards {
+    padding: 12px 14px;
+}
+
+.player-card {
+    width: 230px;
+    min-width: 230px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: var(--main-button-color);
+    box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: height 400ms ease-out;
+    position: relative;
+    overflow: hidden;
+}
+.player-card.expanded-pcard {
+    height: 386px;
+}
+.player-card.expanded-pcard[data-details="2"] {
+    height: 386px;
+}
+.player-card.expanded-pcard[data-details="1"] {
+    height: 338px;
+}
+.player-card.expanded-pcard[data-details="0"] {
+    height: 290px;
+}
+.player-card-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+}
+.player-card-tournament {
+    justify-content: center;
+    font-size: 1.1em;
+    padding: 12px 0;
+    gap: 4px;
+}
+.player-card-tournament img {
+    height: 32px;
+}
+.player-card-team img {
+    height: 42px;
+    border-radius: 8px;
+}
+.player-card-name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: auto 1.1em;
+}
+.player-card-name span,
+.player-card-name a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+}
+.player-card-name a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    left: calc(50% + 24px);
+    bottom: 0;
+    background-color: var(--text-color);
+    transition: all ease-in-out .2s;
+    border-radius: 0 0 100px 100px;
+}
+.player-card-name a:hover::after {
+    width: calc(100% - 24px);
+    left: 24px;
+}
+.player-card-name span:first-child {
+    font-size: 1.5em;
+}
+.player-card-team {
+    gap: 8px;
+    font-size: 1.1em;
+    justify-content: center;
+    max-height: 50px;
+    padding: 8px 14px;
+}
+.player-card-team span {
+    margin: 15px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.player-card-team span.player-card-nologo {
+    text-align: center;
+}
+.player-card-rank {
+    gap: 5px;
+}
+a.player-card-div {
+    transition: background-color 0.2s linear, height 400ms ease-out;
+}
+a.player-card-div:hover {
+    background-color: var(--main-button-hover);
+}
+.player-card-more {
+    justify-content: center;
+    padding: 10px 0;
+    gap: 2px;
+}
+.player-card .player-card-more .material-symbol {
+    transition: transform 400ms;
+}
+.player-card.expanded-pcard .player-card-more .material-symbol {
+    transform: rotateX(180deg);
+}
+.player-card-rank,
+.player-card-champs,
+.player-card-roles {
+    height: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition-property: height, opacity;
+    transition-duration: 400ms;
+    transition-timing-function: ease-out;
+}
+.player-card-champs,
+.player-card-roles {
+    gap: 4px;
+}
+.expanded-pcard .player-card-rank,
+.expanded-pcard .player-card-champs,
+.expanded-pcard .player-card-roles {
+    height: 40px;
+    opacity: 1;
+    pointer-events: initial;
+}
+.expanded-pcard .player-card-champs,
+.expanded-pcard .player-card-roles {
+    height: 48px;
+}
+.player-card .role-single {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.player-card div.champ-single {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.player-card div.champ-single img {
+    width: 30px;
+    height: 30px;
+}
+
+.player-popup-content {
+    display: flex;
+    flex-direction: row;
+    gap: 23px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 
 @media screen and (min-width: 1185px) {
     a.button.totop {

@@ -1066,9 +1066,13 @@ function search_players() {
 
 }
 
-$(document).ready(function () {
+window.onload = function () {
+    if ($("body.players").length === 0) {
+        return;
+    }
+    search_players();
     $('body.players .searchbar input').on("input",search_players);
-})
+}
 
 let current_player_in_popup = null;
 async function popup_player(PUUID) {
@@ -1142,3 +1146,24 @@ $(document).ready(function () {
         })
     }
 });
+
+function expand_playercard(card_button) {
+    event.preventDefault();
+    let card = card_button.parentNode;
+    if (card.classList.contains("expanded-pcard")) {
+        card.classList.remove("expanded-pcard");
+    } else {
+        card.classList.add("expanded-pcard");
+    }
+}
+function expand_all_playercards(collapse=false) {
+    event.preventDefault();
+    let cards = document.getElementsByClassName("player-card");
+    for (const card of cards) {
+        if (collapse) {
+            card.classList.remove("expanded-pcard");
+        } else {
+            card.classList.add("expanded-pcard");
+        }
+    }
+}

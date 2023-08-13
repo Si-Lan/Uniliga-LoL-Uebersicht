@@ -487,8 +487,133 @@ function create_player_overview_cards($dbcn,$search) {
 }
 
 function create_player_overview($dbcn,$puuid) {
-	$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, teams.TeamID, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
-	foreach ($player_stats as $player) {
-		echo "<span>".$player["PlayerName"]." (".$player["SummonerName"].") von <a href='team/".$player["TeamID"]."'>".$player["TeamName"]."</a> in ".$player["Name"]."</span><br>";
+	$player_stats = $dbcn->execute_query("SELECT players.PlayerID, players.PlayerName, players.SummonerName, teams.TeamName, teams.TeamID, players.PUUID, tournaments.`Name`, teams.imgID, tournaments.Season, tournaments.Split, tournaments.TournamentID, tournaments.imgID as TimgID FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
+	if (count($player_stats) >= 2) {
+		echo "<div class='player-ov-buttons'>";
+		echo "<a href='#' class='button expand-pcards' title='Ausklappen' onclick='expand_all_playercards()'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/unfold_more.svg")."</div></a>";
+		echo "<a href='#' class='button expand-pcards' title='Einklappen' onclick='expand_all_playercards(true)'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/unfold_less.svg")."</div></a>";
+		echo "</div>";
 	}
+	echo "<div class='player-popup-content'>";
+	foreach ($player_stats as $player) {
+		$details = $dbcn->execute_query("SELECT rank_div, rank_tier, leaguePoints, roles, champions FROM players WHERE PlayerID=?", [$player["PlayerID"]])->fetch_assoc();
+		echo create_playercard($player, $details);
+	}
+	echo "</div>";
+}
+
+function create_playercard($player_data, $detail_stats=NULL) {
+	if ($detail_stats != NULL) {
+		$roles = json_decode($detail_stats['roles'], true);
+		$champions = json_decode($detail_stats['champions'], true);
+		$rendered_rows = 0;
+		if (array_sum($roles)>0 && count($champions)>0) {
+			$rendered_rows = 2;
+		} elseif (array_sum($roles)>0 || count($champions)>0) {
+			$rendered_rows = 1;
+		}
+		$result = "<div class='player-card' data-details='$rendered_rows'>";
+	} else {
+		$result = "<div class='player-card'>";
+	}
+
+	// Turnier-Titel
+	$result .= "<a class='player-card-div player-card-tournament' href='turnier/{$player_data["TournamentID"]}'>";
+	if ($player_data["TimgID"] != NULL) {
+		$result .= "<img alt='Turnier Logo' src='img/tournament_logos/{$player_data["TimgID"]}/logo_medium.webp'>";
+	}
+	$result .= "{$player_data["Split"]} {$player_data["Season"]}";
+	$result .= "</a>";
+	// Spielername und Summonername
+	$result .= "<div class='player-card-div player-card-name'>
+					<span>{$player_data["PlayerName"]}</span>
+					<a href='https://op.gg/summoners/euw/{$player_data["SummonerName"]}' target='_blank'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/person.svg")."</div>{$player_data["SummonerName"]}</a>
+				</div>";
+	// Teamname
+	$result .= "<a class='player-card-div player-card-team' href='team/{$player_data["TeamID"]}'>";
+	if ($player_data["imgID"] != NULL) {
+		$result .= "<img alt='{$player_data["TeamName"]} Logo' src='img/team_logos/{$player_data["imgID"]}/logo_medium.webp'>";
+		$result .= "<span>{$player_data["TeamName"]}</span>";
+	} else {
+		$result .= "<span class='player-card-nologo'>{$player_data["TeamName"]}</span>";
+
+	}
+	$result .= "</a>";
+	// detailed Stats
+	if ($detail_stats != NULL) {
+		$rank_tier = strtolower($detail_stats["rank_tier"]);
+		$rank_div = $detail_stats["rank_div"];
+		$LP = $detail_stats["leaguePoints"];
+		if ($rank_tier == "CHALLENGER" || $rank_tier == "GRANDMASTER" || $rank_tier == "MASTER") {
+			$rank_div = "";
+		}
+		if ($LP != NULL) {
+			$LP = "(".$LP." LP)";
+		} else {
+			$LP = "";
+		}
+
+		// Rang
+		if ($detail_stats["rank_tier"] != NULL) {
+			$result .= "<div class='player-card-div player-card-rank'><img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/$rank_tier.webp' alt='".ucfirst($rank_tier)."'>".ucfirst($rank_tier)." $rank_div $LP</div>";
+		} else {
+			$result .= "<div class='player-card-div player-card-rank'>kein Rang</div>";
+		}
+
+		// roles
+		if (array_sum($roles) > 0) {
+			$result .= "<div class='player-card-div player-card-roles'>";
+			foreach ($roles as $role => $role_amount) {
+				if ($role_amount != 0) {
+					$result .= "
+				<div class='role-single'>
+					<div class='svg-wrapper role'>" . file_get_contents(dirname(__FILE__) . "/ddragon/img/positions/position-$role-light.svg") . "</div>
+					<span class='played-amount'>$role_amount</span>
+				</div>";
+				}
+			}
+			$result .= "</div>";
+		}
+
+		// champs
+		if (count($champions) > 0) {
+			$result .= "<div class='player-card-div player-card-roles'>";
+			arsort($champions);
+			$champs_cut = FALSE;
+			if (count($champions) > 5) {
+				$champions = array_slice($champions, 0, 5);
+				$champs_cut = TRUE;
+			}
+
+			$patches = [];
+			$dir = new DirectoryIterator(dirname(__FILE__) . "/ddragon");
+			foreach ($dir as $fileinfo) {
+				if (!$fileinfo->isDot() && $fileinfo->getFilename() != "img") {
+					$patches[] = $fileinfo->getFilename();
+				}
+			}
+			usort($patches, "version_compare");
+			$patch = end($patches);
+
+			foreach ($champions as $champion => $champion_amount) {
+				$result .= "
+			<div class='champ-single'>
+				<img src='/uniliga/ddragon/{$patch}/img/champion/{$champion}.webp' alt='$champion'>
+				<span class='played-amount'>" . $champion_amount['games'] . "</span>
+			</div>";
+			}
+			if ($champs_cut) {
+				$result .= "
+		<div class='champ-single'>
+			<div class='material-symbol'>" . file_get_contents(dirname(__FILE__) . "/icons/material/more_horiz.svg") . "</div>
+		</div>";
+			}
+			$result .= "</div>";
+		}
+		// erweiterungs button
+		$result .= "<a class='player-card-div player-card-more' href='#' onclick='expand_playercard(this)'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/expand_more.svg")."</div> mehr Infos</a>";
+	}
+
+	$result .= "</div>";
+	return $result;
 }
