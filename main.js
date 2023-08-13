@@ -1078,13 +1078,12 @@ let current_player_in_popup = null;
 async function popup_player(PUUID) {
     event.preventDefault();
     let popup = $('.player-popup');
-    let popupbg = $('.player-popup-bg');
 
     if (popup.length === 0) {
         $("header").after("<div class=\"player-popup-bg\" onclick=\"close_popup_player(event)\"><div class=\"player-popup\"></div></div>")
     }
     popup = $('.player-popup');
-    popupbg = $('.player-popup-bg');
+    let popupbg = $('.player-popup-bg');
 
     let pagebody = $("body");
 
