@@ -2561,6 +2561,7 @@ div.player-list {
     flex-direction: column;
     align-items: flex-start;
     margin: auto 1.1em;
+    overflow: hidden;
 }
 .player-card-name span,
 .player-card-name a {

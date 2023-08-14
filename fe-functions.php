@@ -557,9 +557,10 @@ function create_playercard($player_data, $detail_stats=NULL) {
 	if ($detail_stats != NULL) {
 		$rank_tier = strtolower($detail_stats["rank_tier"]);
 		$rank_div = $detail_stats["rank_div"];
-		$LP = $detail_stats["leaguePoints"];
+		$LP = NULL;
 		if ($rank_tier == "CHALLENGER" || $rank_tier == "GRANDMASTER" || $rank_tier == "MASTER") {
 			$rank_div = "";
+			$LP = $detail_stats["leaguePoints"];
 		}
 		if ($LP != NULL) {
 			$LP = "(".$LP." LP)";
