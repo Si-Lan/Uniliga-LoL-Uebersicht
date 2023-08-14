@@ -789,6 +789,16 @@ div.button-dropdown-wrapper {
     min-width: 210px;
 }
 
+a.button.player-button {
+    align-self: center;
+    padding: 16px 32px;
+    font-size: 1.1em;
+}
+a.button.player-button .material-symbol,
+a.button.player-button .material-symbol svg {
+    width: 28px;
+    height: 28px;
+}
 
 div.team-filter-wrap {
     display: flex;
@@ -2456,8 +2466,11 @@ body.players div.main-content {
     flex-direction: column;
     align-items: center;
 }
+body.players div.main-content div:first-child {
+    text-align: center;
+}
 body.players div.search-wrapper {
-    width: clamp(280px,75%,700px);
+    width: clamp(280px,85%,600px);
 }
 body.players span.searchbar {
     max-width: unset;
