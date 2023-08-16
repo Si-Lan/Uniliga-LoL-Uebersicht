@@ -1253,6 +1253,144 @@ function expand_all_playercards(collapse=false) {
     }
 }
 
+function user_update_group(button) {
+    let group_ID = button.getAttribute("data-group");
+    $(button).addClass("user_updating");
+    button.disabled = true;
+
+    const last_update_xhr = new XMLHttpRequest();
+    last_update_xhr.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            await uug_start(this);
+        }
+    }
+    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+group_ID+"&utype=0");
+    last_update_xhr.send();
+
+    async function uug_start(result) {
+        let timestamp = Date.parse(result.responseText);
+        let current = Date.now();
+        let diff = new Date(current - timestamp);
+
+        if (current - timestamp < 20000) {
+            let rest = new Date(20000 - (current-timestamp));
+            window.alert("Das letzte Update wurde vor "+format_time(diff)+" durchgeführt. Versuche es in "+format_time(rest)+" noch einmal");
+            await new Promise(r => setTimeout(r, 1000));
+            $(button).removeClass("user_updating");
+            button.disabled = false;
+        } else {
+            const set_update_time_xhr = new XMLHttpRequest();
+            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=group_update_start&group="+group_ID, true);
+            set_update_time_xhr.send();
+
+            const update_standings_xhr = new XMLHttpRequest();
+            update_standings_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    await uug_standings(this);
+                }
+            }
+            update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&id="+group_ID, true);
+            update_standings_xhr.send();
+        }
+    }
+
+    async function uug_standings(result) {
+        let changes = result.responseText;
+
+        const update_matches_xhr = new XMLHttpRequest();
+        update_matches_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uug_matches(this);
+            }
+        }
+        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&id="+group_ID, true);
+        update_matches_xhr.send();
+    }
+
+    let matchresults_gotten = 0;
+    async function uug_matches(result) {
+        let changes = result.responseText;
+
+        const get_matches_xhr = new XMLHttpRequest();
+        get_matches_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                let matchids = JSON.parse(this.responseText);
+
+                for (const match of matchids) {
+
+                    const update_matches_xhr = new XMLHttpRequest();
+                    update_matches_xhr.onreadystatechange = async function() {
+                        if (this.readyState === 4 && this.status === 200) {
+                            await uug_matchresults(this, matchids.length);
+                        }
+                    }
+                    update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match, true);
+                    update_matches_xhr.send();
+                }
+            }
+        }
+        get_matches_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=matchids-by-group&group="+group_ID, true);
+
+        get_matches_xhr.send();
+    }
+
+    async function uug_matchresults(result, max_matches) {
+        let changes = result.responseText;
+
+        matchresults_gotten++;
+        if (max_matches <= matchresults_gotten) {
+            $(button).removeClass("user_updating");
+            button.disabled = false;
+            update_page();
+        }
+    }
+
+    function update_page() {
+        const standings_xhr = new XMLHttpRequest();
+        standings_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                $("div.standings").replaceWith(this.responseText);
+            }
+        }
+        standings_xhr.open("GET", "ajax-functions/create-page-elements.php?type=standings&group="+group_ID);
+        standings_xhr.send();
+
+        let matchbuttons = $("div.match-button-wrapper");
+        for (const matchbutton of matchbuttons) {
+            let match_ID = matchbutton.getAttribute("data-matchid");
+            let matchtype = matchbutton.getAttribute("data-matchtype")
+            const match_xhr = new XMLHttpRequest();
+            match_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    $(matchbutton).replaceWith(this.responseText);
+                }
+            }
+            match_xhr.open("GET", "ajax-functions/create-page-elements.php?type=matchbutton&match="+match_ID+"&mtype="+matchtype);
+            match_xhr.send();
+        }
+    }
+
+    function format_time(date) {
+        let format, trenner = "", min = "", nullausgleich = "";
+        if (date.getMinutes() === 0) {
+            format = " Sekunden";
+        } else {
+            min = date.getMinutes();
+            format = " Minuten";
+            trenner = ":";
+            if (date.getSeconds() < 10) {
+                nullausgleich = "0";
+            }
+        }
+        return min + trenner + nullausgleich + date.getSeconds() + format;
+    }
+}
+$(document).ready(function () {
+    $(".user_update_group").on("click", function () {
+        user_update_group(this);
+    });
+});
+
 function get_material_icon(name) {
     let res = "<div class='material-symbol'>";
     if (name === "close") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"/></svg>";

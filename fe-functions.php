@@ -217,7 +217,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 		$datetime = date_create($match['plannedDate']);
 		$date = date_format($datetime, 'd M');
 		$time = date_format($datetime, 'H:i');
-		echo "<div class='match-button-wrapper'>
+		echo "<div class='match-button-wrapper' data-matchid='$match_id' data-matchtype='$type'>
                             <a class='button match nolink sideext-right'>
                                 <div class='teams'>
                                     <div class='team 1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div></div>
@@ -230,7 +230,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 		}
 		echo "</a>
                           <a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>
-                            <div class='material-symbol'>". file_get_contents("icons/material/open_in_new.svg") ."</div>
+                            <div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg") ."</div>
                           </a>
                         </div>";
 	} else {
@@ -250,7 +250,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 			$state1 = "draw";
 			$state2 = "draw";
 		}
-		echo "<div class='match-button-wrapper'>";
+		echo "<div class='match-button-wrapper' data-matchid='$match_id' data-matchtype='$type'>";
 		if ($team_id != NULL) {
 			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",\"{$team_id}\")'>";
 		} else {
@@ -262,7 +262,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 			  </div>
 			</a>
 			<a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>
-				<div class='material-symbol'>". file_get_contents("icons/material/open_in_new.svg") ."</div>
+				<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg") ."</div>
 			</a>
 		</div>";
 	}

@@ -63,7 +63,8 @@ try {
 
         echo "<div class='pagetitlewrapper'><h2 class='pagetitle'>Liga {$divisionsDB['Number']} - $group_title</h2>
                 <a href='$toor_tourn_url$tournamentID/stages/{$divisionsDB['DivID']}/groups/{$groupID}/' target='_blank' class='toorlink'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg")."</div></a>
-                </div>";
+              	<button type='button' class='icononly user_update_group' data-group='$groupID'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
+              </div>";
         //echo "<div class='divider bot-space'></div>";
         /*
               echo "<div class='navbar group-nav'>";
