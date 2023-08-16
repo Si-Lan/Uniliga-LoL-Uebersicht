@@ -165,6 +165,27 @@ if ($dbcn -> connect_error){
 		echo $result;
 	}
 
+	// IDs only
+	if ($type == "matchids-by-group") {
+		$groupID = $_REQUEST["group"];
+		$matches_nested = $dbcn->execute_query("SELECT MatchID FROM matches WHERE GroupID = ?",[$groupID])->fetch_all();
+		$matches = array();
+		foreach ($matches_nested as $match) {
+			$matches[] = $match[0];
+		}
+		$result = json_encode($matches);
+		$result = preg_replace("/(\d{19,})/",'"$1"',$result);
+		echo $result;
+	}
+
+	// update timers
+	if ($type == "user-update-timer") {
+		$ItemID = $_REQUEST["id"] ?? NULL;
+		$ud_type = $_REQUEST["utype"] ?? NULL;
+		$last_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type = ?", [$ItemID, $ud_type])->fetch_column();
+		echo $last_update;
+	}
+
 	// counters
 	if ($type == "number-teams") {
 		$tournamentID = $_REQUEST["tournament"];
