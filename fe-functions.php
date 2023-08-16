@@ -647,3 +647,36 @@ function create_playercard($player_data, $detail_stats=NULL) {
 	$result .= "</div>";
 	return $result;
 }
+
+function max_time_from_timestamp($timestamp) {
+	$days = floor($timestamp/86400);
+	if ($days == 0) {
+		if ($timestamp < 60) return "vor ein paar Sekunden";
+		if ($timestamp < 120) return "vor 1 Minute";
+		if ($timestamp < 3600) return "vor ".floor($timestamp/60)." Minuten";
+		if ($timestamp < 7200) return "vor 1 Stunde";
+		if ($timestamp < 86400) return "vor ".floor($timestamp/3600)." Stunden";
+	}
+	if ($days == 1) return "Gestern";
+	if ($days < 7) return "vor $days Tagen";
+	if ($days < 31) return "vor ".ceil($days/7)." Wochen";
+	if ($days < 60) return "letzten Monat";
+
+	$years = intval(date("Y",$timestamp)) - 1970;
+	$months = intval(date("m",$timestamp)) - 1;
+	if ($years > 0) {
+		if ($years == 1) {
+			return "letztes Jahr";
+		} else {
+			return "vor $years Jahren";
+		}
+	}
+	if ($months > 0) {
+		if ($months == 1) {
+			return "letzen Monat";
+		} else {
+			return "vor $months Monate";
+		}
+	}
+	return "unknown";
+}
