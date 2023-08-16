@@ -61,13 +61,18 @@ try {
         create_header($dbcn,"group",$tournamentID,$groupID);
         create_tournament_overview_nav_buttons($dbcn,$tournamentID,"group",$divisionsDB['DivID'],$groupID);
 
-		$lastupdate = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=0", [$groupID])->fetch_column();
-		if ($lastupdate == NULL) {
+		$last_user_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=0", [$groupID])->fetch_column();
+		$last_cron_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
+		$last_manual_updates  = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
+
+		$last_update = latest_update($last_user_update,$last_cron_update,$last_manual_updates);
+
+		if ($last_update == NULL) {
 			$updatediff = "unbekannt";
 		} else {
-			$lastupdate = strtotime($lastupdate);
+			$last_update = strtotime($last_update);
 			$currtime = time();
-			$updatediff = max_time_from_timestamp($currtime-$lastupdate);
+			$updatediff = max_time_from_timestamp($currtime-$last_update);
 		}
 
 

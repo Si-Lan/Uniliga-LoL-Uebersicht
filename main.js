@@ -1274,8 +1274,8 @@ function user_update_group(button) {
         let current = Date.now();
         let diff = new Date(current - timestamp);
 
-        if (current - timestamp < 20000) {
-            let rest = new Date(20000 - (current-timestamp));
+        if (current - timestamp < 300000) {
+            let rest = new Date(300000 - (current-timestamp));
             window.alert("Das letzte Update wurde vor "+format_time(diff)+" durchgeführt. Versuche es in "+format_time(rest)+" noch einmal");
             await new Promise(r => setTimeout(r, 1000));
             $(button).removeClass("user_updating");

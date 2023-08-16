@@ -192,4 +192,26 @@ if ($type == "playoff-matchups") {
 
 	echo json_encode($returnArr, JSON_UNESCAPED_SLASHES);
 }
+
+
+// update timers
+if ($type == "update-timers") {
+	$tournID = $_GET["Tid"];
+	$table = $_GET["table"];
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	$lastupdate = $dbcn->execute_query("SELECT * FROM manual_updates WHERE TournamentID = ?", [$tournID])->fetch_assoc();
+	$t = date('Y-m-d H:i:s');
+
+	$allowed = ['teams', 'players', 'divisions', 'groups', 'standings','matches','matchresults'];
+	if (!in_array($table, $allowed)) {
+		exit();
+	}
+
+	if ($lastupdate == NULL) {
+		/** @noinspection SqlInsertValues */
+		$dbcn->execute_query("INSERT INTO manual_updates (TournamentID, $table) VALUES (?, '$t')", [$tournID]);
+	} else {
+		$dbcn->execute_query("UPDATE manual_updates SET $table = '$t' WHERE TournamentID = ?", [$tournID]);
+	}
+}
 ?>

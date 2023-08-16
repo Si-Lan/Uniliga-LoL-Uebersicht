@@ -651,7 +651,8 @@ function create_playercard($player_data, $detail_stats=NULL) {
 function max_time_from_timestamp($timestamp) {
 	$days = floor($timestamp/86400);
 	if ($days == 0) {
-		if ($timestamp < 60) return "vor ein paar Sekunden";
+		if ($timestamp < 30) return "vor ein paar Sekunden";
+		if ($timestamp < 60) return "vor $timestamp Sekunden";
 		if ($timestamp < 120) return "vor 1 Minute";
 		if ($timestamp < 3600) return "vor ".floor($timestamp/60)." Minuten";
 		if ($timestamp < 7200) return "vor 1 Stunde";
@@ -678,5 +679,32 @@ function max_time_from_timestamp($timestamp) {
 			return "vor $months Monate";
 		}
 	}
-	return "unknown";
+	return "unbekannt";
+}
+
+function latest_update($user_update,$cron_update,$manual_update): ?string {
+	$timestamps = array();
+	if ($manual_update != NULL) {
+		$manual_timestamps = array();
+		foreach ($manual_update as $update_time) {
+			if ($update_time != NULL) {
+				$manual_timestamps[] = strtotime($update_time);
+			}
+		}
+		if (count($manual_timestamps) > 0) {
+			$timestamps[] = max($manual_timestamps);
+		}
+	}
+	if ($user_update != NULL) {
+		$timestamps[] = strtotime($user_update);
+	}
+	if ($cron_update != NULL) {
+		$timestamps[] = strtotime($cron_update);
+	}
+
+	if (count($timestamps) == 0) {
+		return NULL;
+	}
+	$latest_update = max($timestamps);
+	return date('Y-m-d H:i:s',$latest_update);
 }
