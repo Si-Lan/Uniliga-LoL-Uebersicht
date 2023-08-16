@@ -311,6 +311,11 @@ h2.pagetitle {
     font-size: 2em;
     margin: 0.5em 0;
 }
+div.pagetitle {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
 div.pagetitlewrapper {
     display: flex;
     flex-direction: row;
@@ -318,6 +323,9 @@ div.pagetitlewrapper {
     align-items: center;
     gap: 20px;
     margin-bottom: 1.5em;
+}
+div.pagetitlewrapper.withupdatebutton {
+    flex-wrap: wrap;
 }
 div.pagetitlewrapper h2.pagetitle {
     margin: 0;
@@ -2752,6 +2760,31 @@ a.player-card-div:hover {
     gap: 23px;
     flex-wrap: wrap;
     justify-content: center;
+}
+
+div.updatebuttonwrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+button.update_data {
+    position: relative;
+    overflow: hidden;
+    --update-loading-bar-width : 0;
+}
+button.update_data div {
+    z-index: 1;
+}
+button.update_data::before {
+    content: '';
+    position: absolute;
+    width: var(--update-loading-bar-width);
+    height: 100%;
+    left: 0;
+    background-color: #1e6391;
+    border-radius: 5px;
+    box-shadow: 1px 0 3px 0 #1e6391;
+    transition: width 200ms ease;
 }
 
 @media screen and (min-width: 1185px) {

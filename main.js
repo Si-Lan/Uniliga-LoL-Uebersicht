@@ -1284,6 +1284,8 @@ function user_update_group(button) {
     $(button).addClass("user_updating");
     button.disabled = true;
 
+    let loading_width = 0;
+
     const last_update_xhr = new XMLHttpRequest();
     last_update_xhr.onreadystatechange = async function() {
         if (this.readyState === 4 && this.status === 200) {
@@ -1309,6 +1311,9 @@ function user_update_group(button) {
             set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=group_update_start&group="+group_ID, true);
             set_update_time_xhr.send();
 
+            loading_width = 1;
+            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
             const update_standings_xhr = new XMLHttpRequest();
             update_standings_xhr.onreadystatechange = async function() {
                 if (this.readyState === 4 && this.status === 200) {
@@ -1323,6 +1328,9 @@ function user_update_group(button) {
     async function uug_standings(result) {
         let changes = result.responseText;
 
+        loading_width = 20;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
         const update_matches_xhr = new XMLHttpRequest();
         update_matches_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
@@ -1336,6 +1344,9 @@ function user_update_group(button) {
     let matchresults_gotten = 0;
     async function uug_matches(result) {
         let changes = result.responseText;
+
+        loading_width = 40;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const get_matches_xhr = new XMLHttpRequest();
         get_matches_xhr.onreadystatechange = async function() {
@@ -1363,10 +1374,16 @@ function user_update_group(button) {
     async function uug_matchresults(result, max_matches) {
         let changes = result.responseText;
 
+        loading_width = loading_width + 60/max_matches;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
         matchresults_gotten++;
         if (max_matches <= matchresults_gotten) {
             $(button).removeClass("user_updating");
             button.disabled = false;
+            loading_width = 0;
+            button.style.setProperty("--update-loading-bar-width", "0");
+            $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
             update_page();
         }
     }

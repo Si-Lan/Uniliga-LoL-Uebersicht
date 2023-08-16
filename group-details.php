@@ -61,9 +61,25 @@ try {
         create_header($dbcn,"group",$tournamentID,$groupID);
         create_tournament_overview_nav_buttons($dbcn,$tournamentID,"group",$divisionsDB['DivID'],$groupID);
 
-        echo "<div class='pagetitlewrapper'><h2 class='pagetitle'>Liga {$divisionsDB['Number']} - $group_title</h2>
-                <a href='$toor_tourn_url$tournamentID/stages/{$divisionsDB['DivID']}/groups/{$groupID}/' target='_blank' class='toorlink'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg")."</div></a>
-              	<button type='button' class='icononly user_update_group' data-group='$groupID'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
+		$lastupdate = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=0", [$groupID])->fetch_column();
+		if ($lastupdate == NULL) {
+			$updatediff = "unbekannt";
+		} else {
+			$lastupdate = strtotime($lastupdate);
+			$currtime = time();
+			$updatediff = max_time_from_timestamp($currtime-$lastupdate);
+		}
+
+
+		echo "<div class='pagetitlewrapper withupdatebutton'>
+				<div class='pagetitle'>
+					<h2 class='pagetitle'>Liga {$divisionsDB['Number']} - $group_title</h2>
+                	<a href='$toor_tourn_url$tournamentID/stages/{$divisionsDB['DivID']}/groups/{$groupID}/' target='_blank' class='toorlink'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg")."</div></a>
+              	</div>
+              	<div class='updatebuttonwrapper'>
+              	<button type='button' class='icononly user_update_group update_data' data-group='$groupID'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
+				<span>letztes Update:<br>$updatediff</span>
+				</div>
               </div>";
         //echo "<div class='divider bot-space'></div>";
         /*
