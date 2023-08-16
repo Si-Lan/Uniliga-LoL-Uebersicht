@@ -1,6 +1,7 @@
 <?php
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;
 include(dirname(__FILE__).'/../DB-info.php');
+include_once(dirname(__FILE__).'/../fe-functions.php');
 
 $dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 
@@ -182,7 +183,18 @@ if ($dbcn -> connect_error){
 	if ($type == "user-update-timer") {
 		$ItemID = $_REQUEST["id"] ?? NULL;
 		$ud_type = $_REQUEST["utype"] ?? NULL;
+		$tournamentID = $_REQUEST["t"] ?? NULL;
 		$last_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type = ?", [$ItemID, $ud_type])->fetch_column();
+		if ($tournamentID != NULL) {
+			$last_cron_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
+			$manual_updates  = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
+			$last_update = latest_update($last_update,$last_cron_update,$manual_updates);
+		}
+		echo $last_update;
+	}
+	if ($type == "cron-update-timer") {
+		$tournamentID = $_REQUEST["id"] ?? NULL;
+		$last_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
 		echo $last_update;
 	}
 
