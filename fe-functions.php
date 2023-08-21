@@ -410,7 +410,7 @@ function create_tournament_overview_nav_buttons($dbcn,$tournament_id,$active="",
 	echo "<div class='divider bot-space'></div>";
 }
 
-function create_team_nav_buttons($tournament_id,$team,$active) {
+function create_team_nav_buttons($tournament_id,$team,$active,$updatediff="unbekannt") {
 	$details_a = $matchhistory_a = $stats_a = "";
 	if ($active == "details") {
 		$details_a = " active";
@@ -438,6 +438,11 @@ function create_team_nav_buttons($tournament_id,$team,$active) {
            	<a href='team/$team_id/matchhistory' class='button$matchhistory_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/manage_search.svg") ."</div>Match-History</a>
             <a href='team/$team_id/stats' class='button$stats_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/monitoring.svg") ."</div>Statistiken</a>
         </div>";
+	echo "
+				<div class='updatebuttonwrapper'>
+           			<button type='button' class='icononly user_update_team update_data' data-team='$team_id'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
+					<span>letztes Update:<br>$updatediff</span>
+				</div>";
 	echo "</div>";
 }
 

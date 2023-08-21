@@ -7,25 +7,31 @@ include('../DB-info.php');
 
 //error_reporting(0);
 
-if ($type == "group_update_start") {
-	$group_ID = $_REQUEST['group'];
+if ($type == "update_start_time") {
+	$item_ID = $_REQUEST['id'];
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
-	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = 0", [$group_ID])->fetch_assoc();
+	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = 0", [$item_ID])->fetch_assoc();
 	$t = date('Y-m-d H:i:s');
 	if ($lastupdate == NULL) {
-		$dbcn->execute_query("INSERT INTO userupdates VALUES (?, 0, '$t')", [$group_ID]);
+		$dbcn->execute_query("INSERT INTO userupdates VALUES (?, 0, '$t')", [$item_ID]);
 	} else {
-		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = 0", [$group_ID]);
+		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = 0", [$item_ID]);
 	}
 }
 
+
 if ($type == "teams_in_group") {
-	$groupID = $_REQUEST['id'];
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if (isset($_REQUEST['teamid'])) {
+		$team_ID = $_REQUEST['teamid'];
+		$groupID = $dbcn->execute_query("SELECT GroupID FROM teamsingroup WHERE TeamID = ?", [$team_ID])->fetch_column();
+	} else {
+		$groupID = $_REQUEST['id'];
+	}
 	$delete = FALSE;
 	if (isset($_REQUEST["delete"])) {
 		$delete = TRUE;
 	}
-	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
 		echo -1;
 	} else {
@@ -40,10 +46,16 @@ if ($type == "teams_in_group") {
 		}
 	}
 }
-if ($type == "matches_from_group") {
-	$groupID = $_REQUEST['id'];
 
+if ($type == "matches_from_group") {
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if (isset($_REQUEST['teamid'])) {
+		$team_ID = $_REQUEST['teamid'];
+		$groupID = $dbcn->execute_query("SELECT GroupID FROM teamsingroup WHERE TeamID = ?", [$team_ID])->fetch_column();
+	} else {
+		$groupID = $_REQUEST['id'];
+	}
+
 	if ($dbcn -> connect_error){
 		echo -1;
 	} else {
@@ -58,6 +70,7 @@ if ($type == "matches_from_group") {
 		}
 	}
 }
+
 if ($type == "matchresult") {
 	$match_ID = $_REQUEST['id'] ?? NULL;
 	$format = $_REQUEST['format'] ?? "groups";

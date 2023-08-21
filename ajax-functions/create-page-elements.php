@@ -11,6 +11,9 @@ if ($type == "standings") {
 	$group_ID = $_REQUEST['group'] ?? NULL;
 	$team_ID = $_REQUEST['team'] ?? NULL;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($group_ID == NULL && $team_ID != NULL) {
+		$group_ID = $dbcn->execute_query("SELECT GroupID FROM teamsingroup WHERE TeamID = ?", [$team_ID])->fetch_column();
+	}
 	$div_ID = $dbcn->execute_query("SELECT DivID FROM `groups` WHERE GroupID = ?", [$group_ID])->fetch_column();
 	$tourn_ID = $dbcn->execute_query("SELECT TournamentID FROM divisions WHERE DivID = ?", [$div_ID])->fetch_column();
 	create_standings($dbcn,$tourn_ID,$group_ID,$team_ID);
