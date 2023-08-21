@@ -1279,10 +1279,32 @@ function expand_all_playercards(collapse=false) {
     }
 }
 
+function format_time_minsec(date) {
+    let format, trenner = "", min = "", nullausgleich = "";
+    if (date.getMinutes() === 0) {
+        format = " Sekunden";
+    } else {
+        min = date.getMinutes();
+        format = " Minuten";
+        trenner = ":";
+        if (date.getSeconds() < 10) {
+            nullausgleich = "0";
+        }
+    }
+    return min + trenner + nullausgleich + date.getSeconds() + format;
+}
+
+let user_update_running = false;
+window.onbeforeunload =  function() {
+    if (user_update_running) {
+        return "Ein Update läuft noch, beim verlassen der Seite wird das Update nicht abgeschlossen. Sicher verlassen?"
+    }
+}
 function user_update_group(button) {
     let group_ID = button.getAttribute("data-group");
     $(button).addClass("user_updating");
     button.disabled = true;
+    user_update_running = true;
 
     let loading_width = 0;
 
@@ -1302,13 +1324,14 @@ function user_update_group(button) {
 
         if (current - timestamp < 300000) {
             let rest = new Date(300000 - (current-timestamp));
-            window.alert("Das letzte Update wurde vor "+format_time(diff)+" durchgeführt. Versuche es in "+format_time(rest)+" noch einmal");
+            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
             await new Promise(r => setTimeout(r, 1000));
             $(button).removeClass("user_updating");
             button.disabled = false;
+            user_update_running = false;
         } else {
             const set_update_time_xhr = new XMLHttpRequest();
-            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=group_update_start&group="+group_ID, true);
+            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+group_ID, true);
             set_update_time_xhr.send();
 
             loading_width = 1;
@@ -1326,8 +1349,6 @@ function user_update_group(button) {
     }
 
     async function uug_standings(result) {
-        let changes = result.responseText;
-
         loading_width = 20;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1343,8 +1364,6 @@ function user_update_group(button) {
 
     let matchresults_gotten = 0;
     async function uug_matches(result) {
-        let changes = result.responseText;
-
         loading_width = 40;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1372,8 +1391,6 @@ function user_update_group(button) {
     }
 
     async function uug_matchresults(result, max_matches) {
-        let changes = result.responseText;
-
         loading_width = loading_width + 60/max_matches;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1381,6 +1398,7 @@ function user_update_group(button) {
         if (max_matches <= matchresults_gotten) {
             $(button).removeClass("user_updating");
             button.disabled = false;
+            user_update_running = false;
             loading_width = 0;
             button.style.setProperty("--update-loading-bar-width", "0");
             $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
@@ -1412,25 +1430,147 @@ function user_update_group(button) {
             match_xhr.send();
         }
     }
-
-    function format_time(date) {
-        let format, trenner = "", min = "", nullausgleich = "";
-        if (date.getMinutes() === 0) {
-            format = " Sekunden";
-        } else {
-            min = date.getMinutes();
-            format = " Minuten";
-            trenner = ":";
-            if (date.getSeconds() < 10) {
-                nullausgleich = "0";
-            }
-        }
-        return min + trenner + nullausgleich + date.getSeconds() + format;
-    }
 }
 $(document).ready(function () {
     $(".user_update_group").on("click", function () {
         user_update_group(this);
+    });
+});
+
+function user_update_team(button) {
+    let team_ID = button.getAttribute("data-team");
+    $(button).addClass("user_updating");
+    button.disabled = true;
+    user_update_running = true;
+
+    let loading_width = 0;
+
+    const last_update_xhr = new XMLHttpRequest();
+    last_update_xhr.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            await uut_start(this);
+        }
+    }
+    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+team_ID+"&utype=0");
+    last_update_xhr.send();
+
+    async function uut_start(result) {
+        let timestamp = Date.parse(result.responseText);
+        let current = Date.now();
+        let diff = new Date(current - timestamp);
+
+        if (current - timestamp < 300000) {
+            let rest = new Date(300000 - (current-timestamp));
+            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
+            await new Promise(r => setTimeout(r, 1000));
+            $(button).removeClass("user_updating");
+            button.disabled = false;
+            user_update_running = false;
+        } else {
+            const set_update_time_xhr = new XMLHttpRequest();
+            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+team_ID, true);
+            set_update_time_xhr.send();
+
+            loading_width = 1;
+            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+            const update_standings_xhr = new XMLHttpRequest();
+            update_standings_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    await uut_standings(this);
+                }
+            }
+            update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
+            update_standings_xhr.send();
+        }
+    }
+
+    async function uut_standings(result) {
+        loading_width = 20;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_matches_xhr = new XMLHttpRequest();
+        update_matches_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uut_matches(this);
+            }
+        }
+        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&teamid="+team_ID, true);
+        update_matches_xhr.send();
+    }
+
+    let matchresults_gotten = 0;
+    async function uut_matches(result) {
+        loading_width = 40;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const get_matches_xhr = new XMLHttpRequest();
+        get_matches_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                let matchids = JSON.parse(this.responseText);
+
+                for (const match of matchids) {
+
+                    const update_matches_xhr = new XMLHttpRequest();
+                    update_matches_xhr.onreadystatechange = async function() {
+                        if (this.readyState === 4 && this.status === 200) {
+                            await uut_matchresults(this, matchids.length);
+                        }
+                    }
+                    update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match, true);
+                    update_matches_xhr.send();
+                }
+            }
+        }
+        get_matches_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=matchids-by-team&team="+team_ID, true);
+
+        get_matches_xhr.send();
+    }
+
+    async function uut_matchresults(result, max_matches) {
+        loading_width = loading_width + 60/max_matches;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        matchresults_gotten++;
+        if (max_matches <= matchresults_gotten) {
+            $(button).removeClass("user_updating");
+            button.disabled = false;
+            user_update_running = false;
+            loading_width = 0;
+            button.style.setProperty("--update-loading-bar-width", "0");
+            $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
+            update_page();
+        }
+    }
+
+    function update_page() {
+        const standings_xhr = new XMLHttpRequest();
+        standings_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                $("div.standings").replaceWith(this.responseText);
+            }
+        }
+        standings_xhr.open("GET", "ajax-functions/create-page-elements.php?type=standings&team="+team_ID);
+        standings_xhr.send();
+
+        let matchbuttons = $("div.match-button-wrapper");
+        for (const matchbutton of matchbuttons) {
+            let match_ID = matchbutton.getAttribute("data-matchid");
+            let matchtype = matchbutton.getAttribute("data-matchtype")
+            const match_xhr = new XMLHttpRequest();
+            match_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    $(matchbutton).replaceWith(this.responseText);
+                }
+            }
+            match_xhr.open("GET", "ajax-functions/create-page-elements.php?type=matchbutton&match="+match_ID+"&mtype="+matchtype);
+            match_xhr.send();
+        }
+    }
+}
+$(document).ready(function () {
+    $(".user_update_team").on("click", function () {
+        user_update_team(this);
     });
 });
 

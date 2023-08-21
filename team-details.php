@@ -177,9 +177,23 @@ try {
         }
         arsort($players_gamecount_by_id);
 
+		$last_user_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=0", [$teamID])->fetch_column();
+		$last_cron_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$div["TournamentID"]])->fetch_column();
+		$last_manual_updates  = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$div["TournamentID"]])->fetch_row();
+
+		$last_update = latest_update($last_user_update,$last_cron_update,$last_manual_updates);
+
+		if ($last_update == NULL) {
+			$updatediff = "unbekannt";
+		} else {
+			$last_update = strtotime($last_update);
+			$currtime = time();
+			$updatediff = max_time_from_timestamp($currtime-$last_update);
+		}
+
         create_header($dbcn,"team",$tournament["TournamentID"],$group["GroupID"],$teamID);
         create_tournament_overview_nav_buttons($dbcn,$tournament['TournamentID'],"",$div['DivID'],$group['GroupID']);
-		create_team_nav_buttons($tournament["TournamentID"],$team,"details");
+		create_team_nav_buttons($tournament["TournamentID"],$team,"details",$updatediff);
 
         echo "<div class='main-content'>";
         echo "

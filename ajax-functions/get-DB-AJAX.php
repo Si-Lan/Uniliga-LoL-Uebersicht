@@ -178,6 +178,17 @@ if ($dbcn -> connect_error){
 		$result = preg_replace("/(\d{19,})/",'"$1"',$result);
 		echo $result;
 	}
+	if ($type == "matchids-by-team") {
+		$teamID = $_REQUEST["team"];
+		$matches_nested = $dbcn->execute_query("SELECT MatchID FROM matches WHERE Team1ID = ? OR Team2ID = ?",[$teamID,$teamID])->fetch_all();
+		$matches = array();
+		foreach ($matches_nested as $match) {
+			$matches[] = $match[0];
+		}
+		$result = json_encode($matches);
+		$result = preg_replace("/(\d{19,})/",'"$1"',$result);
+		echo $result;
+	}
 
 	// update timers
 	if ($type == "user-update-timer") {

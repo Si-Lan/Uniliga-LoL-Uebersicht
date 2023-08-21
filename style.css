@@ -3012,6 +3012,14 @@ button.update_data::before {
         height: 15px;
         width: 81px;
     }
+    .open-playerhistory .material-symbol,
+    .open-playerhistory svg {
+        width: 18px;
+        height: 18px;
+    }
+    .open-playerhistory {
+        font-size: 0.7em;
+    }
 }
 @media screen and (max-width: 480px) {
     div.team.title .team-titlebutton-wrapper a {
