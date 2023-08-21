@@ -60,8 +60,10 @@ create_header($dbcn,"home");
 ?>
 
 <div class="home-content">
-    <div id="turnier-select">
-        <h2>Turniere:</h2>
+	<div id="turnier-select">
+		<h2>Spieler:</h2>
+		<a href='spieler' class="button player-button"><?php echo "<div class='material-symbol'>" . file_get_contents(dirname(__FILE__) . "/icons/material/person.svg") . "</div>" ?>Spielerübersicht</a>
+		<h2>Turniere:</h2>
 
     <?php
 
@@ -72,11 +74,13 @@ create_header($dbcn,"home");
             $toornamentsRes = $dbcn->execute_query("SELECT name, split, season, imgID, TournamentID FROM tournaments ORDER BY TournamentID DESC");
             $toornaments = $toornamentsRes->fetch_all(MYSQLI_ASSOC);
 
+			/* Suchleiste ist eigentlich nicht nötig, bei so wenigen Turnieren
             echo "
             <span class='searchbar'>
                 <input class=\"search-tournaments deletable-search\" onkeyup=\"search_tourns()\" placeholder='Suche' type='text'>
                 <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
             </span>";
+			*/
 
             for ($i = 0; $i < count($toornaments); $i++) {
                 $currTourn = $toornaments[$i]['name'];

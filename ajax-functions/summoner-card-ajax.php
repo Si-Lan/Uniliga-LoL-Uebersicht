@@ -11,6 +11,16 @@ if ($dbcn -> connect_error){
 	if (isset($_GET['player'])) {
 		$player_id = $_GET['player'];
 		$player = $dbcn->execute_query("SELECT * FROM players WHERE PlayerID = ?",[$player_id])->fetch_assoc();
+		$dbcn->close();
 		create_summonercard($player);
+	} elseif (isset($_GET['team'])) {
+		$team_id = $_GET['team'];
+		$players = $dbcn->execute_query("SELECT * FROM players WHERE TeamID = ?",[$team_id])->fetch_all(MYSQLI_ASSOC);
+		$dbcn->close();
+		$cards = array();
+		foreach ($players as $player) {
+			$cards[] = create_summonercard($player,FALSE,FALSE);
+		}
+		echo json_encode($cards);
 	}
 }

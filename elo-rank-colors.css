@@ -1,72 +1,82 @@
 .main-content.colored-list {
-	--rank1: #606060;
-	--rank2: #545454;
-	--rank3: #464646;
-	--rank4: #3b3b3b;
+	--rank1: hsl(5, 7%, 23%);
+	--rank2: hsl(5, 7%, 25%);
+	--rank3: hsl(5, 7%, 27%);
+	--rank4: hsl(5, 7%, 29%);
 
-	--rank5: #564740;
-	--rank6: #57433a;
-	--rank7: #5d4236;
-	--rank8: #5b3a2c;
+	--rank5: hsl(18, 35%, 26%);
+	--rank6: hsl(18, 35%, 26%);
+	--rank7: hsl(18, 35%, 26%);
+	--rank8: hsl(18, 35%, 26%);
 
-	--rank9: #606060;
-	--rank10: #545454;
-	--rank11: #464646;
-	--rank12: #3b3b3b;
+	--rank9: hsl(0, 0%, 21%);
+	--rank10: hsl(0, 0%, 23%);
+	--rank11: hsl(0, 0%, 25%);
+	--rank12: hsl(0, 0%, 27%);
 
-	--rank13: #4d483b;
-	--rank14: #4b4432;
-	--rank15: #4d432b;
-	--rank16: #524424;
+	--rank13: hsl(42, 39%, 17%);
+	--rank14: hsl(42, 39%, 19%);
+	--rank15: hsl(42, 39%, 21%);
+	--rank16: hsl(42, 39%, 23%);
 
-	--rank17: #394d40;
-	--rank18: #314939;
-	--rank19: #284b34;
-	--rank20: #1f4b2e;
+	--rank17: hsl(207, 56%, 16%);
+	--rank18: hsl(207, 56%, 18%);
+	--rank19: hsl(207, 56%, 20%);
+	--rank20: hsl(207, 56%, 22%);
 
-	--rank21: #414950;
-	--rank22: #3e4952;
-	--rank23: #3c4c59;
-	--rank24: #324657;
+	--rank21: hsl(115, 83%, 10%);
+	--rank22: hsl(115, 83%, 12%);
+	--rank23: hsl(115, 83%, 14%);
+	--rank24: hsl(115, 83%, 16%);
 
-	--rankM: #502e52;
-	--rankGM: #702626;
-	--rankCH: #306c6c;
+	--rank25: hsl(251, 47%, 24%);
+	--rank26: hsl(251, 47%, 26%);
+	--rank27: hsl(251, 47%, 28%);
+	--rank28: hsl(251, 47%, 30%);
+
+	--rankM: hsl(297, 28%, 25%);
+	--rankGM: hsl(0, 49%, 29%);
+	--rankCH: hsl(180, 38%, 31%);
 }
 body.light .main-content.colored-list {
-	--rank1: #7c7c7c;
-	--rank2: #747474;
-	--rank3: #6a6a6a;
-	--rank4: #606060;
+	--rank1: hsl(0, 0%, 47%);
+	--rank2: hsl(0, 0%, 44%);
+	--rank3: hsl(0, 0%, 41%);
+	--rank4: hsl(0, 0%, 38%);
 
-	--rank5: #9e5330;
-	--rank6: #a4522d;
-	--rank7: #944726;
-	--rank8: #823e21;
+	--rank5: hsl(18, 60%, 41%);
+	--rank6: hsl(18, 60%, 38%);
+	--rank7: hsl(18, 60%, 35%);
+	--rank8: hsl(18, 60%, 32%);
 
-	--rank9: #c6c6c6;
-	--rank10: #c2c2c2;
-	--rank11: #bebebe;
-	--rank12: #aeaeae;
+	--rank9: hsl(0, 0%, 77%);
+	--rank10: hsl(0, 0%, 74%);
+	--rank11: hsl(0, 0%, 71%);
+	--rank12: hsl(0, 0%, 68%);
 
-	--rank13: #e5c369;
-	--rank14: #e5be59;
-	--rank15: #ebb940;
-	--rank16: #cd971c;
+	--rank13: hsl(42, 76%, 55%);
+	--rank14: hsl(42, 76%, 52%);
+	--rank15: hsl(42, 76%, 49%);
+	--rank16: hsl(42, 76%, 46%);
 
-	--rank17: #6bb284;
-	--rank18: #5aaa75;
-	--rank19: #519869;
-	--rank20: #40925c;
+	--rank17: hsl(207, 72%, 73%);
+	--rank18: hsl(207, 72%, 69%);
+	--rank19: hsl(207, 72%, 65%);
+	--rank20: hsl(207, 72%, 61%);
 
-	--rank21: #6da4d5;
-	--rank22: #64a2d5;
-	--rank23: #5c98cb;
-	--rank24: #4b89bf;
+	--rank21: hsl(118, 57%, 57%);
+	--rank22: hsl(118, 57%, 54%);
+	--rank23: hsl(118, 57%, 51%);
+	--rank24: hsl(118, 57%, 48%);
 
-	--rankM: #7f3a83;
-	--rankGM: #b64040;
-	--rankCH: #b9c452;
+	--rank25: hsl(251, 68%, 70%);
+	--rank26: hsl(251, 68%, 66%);
+	--rank27: hsl(251, 68%, 62%);
+	--rank28: hsl(251, 68%, 58%);
+
+	--rankM: hsl(297, 39%, 37%);
+	--rankGM: hsl(0, 48%, 48%);
+	--rankCH: hsl(66, 49%, 55%);
 }
 body.light .main-content.colored-list .elo-list-team.rank0,
 body.light .main-content.colored-list .elo-list-team.rank9,
@@ -239,29 +249,38 @@ body.light .main-content.colored-list .elo-list-team.rank35 {
 	background-color: var(--rank24);
 	transition: background-color 0.2s linear, filter 200ms linear;
 }
-/*MASTER*/
+/*EMERALD*/
 .main-content.colored-list .elo-list-team.rank25 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank25 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank25 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank25 .elo-list-after.elo-nr {
+	background-color: var(--rank25);
+	transition: background-color 0.2s linear, filter 200ms linear;
+}
 .main-content.colored-list .elo-list-team.rank26 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank26 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank26 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank26 .elo-list-after.elo-nr {
+	background-color: var(--rank26);
+	transition: background-color 0.2s linear, filter 200ms linear;
+}
 .main-content.colored-list .elo-list-team.rank27 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank27 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank27 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank27 .elo-list-after.elo-nr {
+	background-color: var(--rank27);
+	transition: background-color 0.2s linear, filter 200ms linear;
+}
 .main-content.colored-list .elo-list-team.rank28 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank28 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank28 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank28 .elo-list-after.elo-nr {
+	background-color: var(--rank28);
+	transition: background-color 0.2s linear, filter 200ms linear;
+}
+/*MASTER*/
 .main-content.colored-list .elo-list-team.rank29 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank29 .elo-list-pre,
 .main-content.colored-list .elo-list-team.rank29 .elo-list-after.elo-nr,
 .main-content.colored-list .elo-list-team.rank30 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank30 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank30 .elo-list-after.elo-nr {
-	background-color: var(--rankM);
-	transition: background-color 0.2s linear, filter 200ms linear;
-}
-/*GRANDMASTER*/
+.main-content.colored-list .elo-list-team.rank30 .elo-list-after.elo-nr,
 .main-content.colored-list .elo-list-team.rank31 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank31 .elo-list-pre,
 .main-content.colored-list .elo-list-team.rank31 .elo-list-after.elo-nr,
@@ -270,17 +289,33 @@ body.light .main-content.colored-list .elo-list-team.rank35 {
 .main-content.colored-list .elo-list-team.rank32 .elo-list-after.elo-nr,
 .main-content.colored-list .elo-list-team.rank33 .elo-list-item-wrapper,
 .main-content.colored-list .elo-list-team.rank33 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank33 .elo-list-after.elo-nr {
+.main-content.colored-list .elo-list-team.rank33 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank34 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank34 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank34 .elo-list-after.elo-nr {
+	background-color: var(--rankM);
+	transition: background-color 0.2s linear, filter 200ms linear;
+}
+/*GRANDMASTER*/
+.main-content.colored-list .elo-list-team.rank35 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank35 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank35 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank36 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank36 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank36 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank37 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank37 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank37 .elo-list-after.elo-nr {
 	background-color: var(--rankGM);
 	transition: background-color 0.2s linear, filter 200ms linear;
 }
 /*CHALLENGER*/
-.main-content.colored-list .elo-list-team.rank34 .elo-list-item-wrapper,
-.main-content.colored-list .elo-list-team.rank34 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank34 .elo-list-after.elo-nr,
-.main-content.colored-list .elo-list-team.rank35 .elo-list-item-wrapper,
-.main-content.colored-list .elo-list-team.rank35 .elo-list-pre,
-.main-content.colored-list .elo-list-team.rank35 .elo-list-after.elo-nr {
+.main-content.colored-list .elo-list-team.rank38 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank38 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank38 .elo-list-after.elo-nr,
+.main-content.colored-list .elo-list-team.rank39 .elo-list-item-wrapper,
+.main-content.colored-list .elo-list-team.rank39 .elo-list-pre,
+.main-content.colored-list .elo-list-team.rank39 .elo-list-after.elo-nr {
 	background-color: var(--rankCH);
 	transition: background-color 0.2s linear, filter 200ms linear;
 }
