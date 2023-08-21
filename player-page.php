@@ -49,6 +49,7 @@ echo "
             <div class='player-popup-bg' onclick='close_popup_player(event)'>
                 <div class='player-popup'></div>
             </div>";
+echo "<div class='recent-players-list'></div>";
 echo "<div class='player-list'></div>";
 echo "</div>";
 

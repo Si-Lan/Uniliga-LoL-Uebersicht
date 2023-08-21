@@ -2479,7 +2479,11 @@ body.players input[type=text] {
     max-width: unset;
 }
 
-div.player-list {
+.recent-players-list>span {
+    text-align: center;
+}
+div.player-list,
+div.recent-players-list {
     display: flex;
     flex-direction: column;
     gap: 5px;

@@ -10,6 +10,9 @@ if ($dbcn -> connect_error){
 } else {
 	if (isset($_GET['search'])) {
 		$search = $_GET['search'];
-		create_player_overview_cards($dbcn,$search);
+		create_player_overview_cards_from_search($dbcn,$search);
+	} elseif (isset($_SERVER['HTTP_DATA_PUUIDS'])) {
+		$puuids = json_decode($_SERVER['HTTP_DATA_PUUIDS']);
+		create_player_overview_cards($dbcn,$puuids);
 	}
 }

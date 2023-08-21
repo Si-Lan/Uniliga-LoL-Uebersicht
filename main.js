@@ -1065,13 +1065,14 @@ function search_players() {
     let input = $('input.search-players')[0];
     let input_value = input.value.toUpperCase();
     let player_list = $('.player-list');
+    let recents_list = $('.recent-players-list');
     let loading_indicator = $('.search-loading-indicator');
 
     if (input_value.length < 2) {
         loading_indicator.remove();
         player_list.empty();
+        recents_list.css("display",'');
         return;
-
     }
     if (loading_indicator.length > 0) {
         loading_indicator.remove();
@@ -1081,6 +1082,7 @@ function search_players() {
     player_search_request.onreadystatechange = async function() {
         if (this.readyState === 4 && this.status === 200) {
             $('.search-loading-indicator').remove();
+            recents_list.css("display","none");
             player_list.html(this.responseText);
         }
     }
@@ -1088,17 +1090,35 @@ function search_players() {
     player_search_request.send();
 
 }
+async function reload_recent_players() {
+    let player_list = $('.recent-players-list');
+    let rprequest = new XMLHttpRequest();
+    rprequest.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            $('.search-loading-indicator').remove();
+            player_list.html("<span>Zuletzt gesucht:</span>"+this.responseText);
+        }
+    }
+    rprequest.open("GET","ajax-functions/player-overview-card-ajax.php",true);
+    rprequest.setRequestHeader("data-puuids",localStorage.getItem("searched_players_PUUIDS"));
+    rprequest.send();
+}
 
 window.onload = function () {
     if ($("body.players").length === 0) {
         return;
     }
-    search_players();
     $('body.players .searchbar input').on("input",search_players);
+    let player_search_input = $("input.search-players")[0].value;
+    if (player_search_input != null && player_search_input.length > 2) {
+        search_players();
+    } else {
+        reload_recent_players();
+    }
 }
 
 let current_player_in_popup = null;
-async function popup_player(PUUID) {
+async function popup_player(PUUID, add_to_recents = false) {
     event.preventDefault();
     let popup = $('.player-popup');
 
@@ -1117,6 +1137,25 @@ async function popup_player(PUUID) {
         popupbg.css("opacity","1");
         pagebody.css("overflow","hidden");
         return;
+    }
+
+    if (add_to_recents) {
+        let recents = JSON.parse(localStorage.getItem("searched_players_PUUIDS"));
+        if (recents === null) {
+            recents = [PUUID];
+        }
+        if (recents.includes(PUUID)) {
+            let index = recents.indexOf(PUUID);
+            recents.splice(index,1);
+        }
+        recents.unshift(PUUID);
+        while (recents.length > 5) {
+            recents = recents.slice(0,5);
+        }
+        localStorage.setItem("searched_players_PUUIDS",JSON.stringify(recents));
+        if ($("body.players").length > 0) {
+            reload_recent_players();
+        }
     }
 
     current_player_in_popup = PUUID;

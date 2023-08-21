@@ -450,17 +450,25 @@ function populate_th($maintext,$tooltiptext,$init=false) {
 	return "<span class='tooltip'>$maintext<span class='tooltiptext'>$tooltiptext</span><div class='material-symbol sort-direction'>".$svg_code."</div></span>";
 }
 
-function create_player_overview_cards($dbcn,$search) {
-	$puuids = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE ? OR PlayerName LIKE ?)",["%".$search."%","%".$search."%"])->fetch_all(MYSQLI_ASSOC);
+function create_player_overview_cards_from_search ($dbcn, $search) {
+	$puuids_DB = $dbcn->execute_query("SELECT DISTINCT PUUID FROM players WHERE PUUID IN (SELECT PUUID FROM players WHERE SummonerName LIKE ? OR PlayerName LIKE ?)",["%".$search."%","%".$search."%"]);
+	$puuids = array();
+	while ($puuid = $puuids_DB->fetch_column()) {
+		$puuids[] = $puuid;
+	}
+	create_player_overview_cards($dbcn,$puuids);
+}
+function create_player_overview_cards($dbcn,$puuids) {
+
 	$unique_players = array();
 	foreach ($puuids AS $puuid) {
-		$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid["PUUID"]])->fetch_all(MYSQLI_ASSOC);
+		$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
 		$unique_players[] = $player_stats;
 	}
 	$player_cards = "";
 
 	foreach ($unique_players as $player) {
-		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\")'>";
+		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\",true)'>";
 		$player_names = array();
 		$summoner_names = array();
 		foreach ($player as $tourn_player) {
