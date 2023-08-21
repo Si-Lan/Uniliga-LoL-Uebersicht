@@ -471,9 +471,6 @@ function create_player_overview_cards($dbcn,$puuids,$remove_from_recents=false) 
 
 	foreach ($unique_players as $player) {
 		$player_cards .= "<div class='player-ov-card-wrapper'>";
-		if ($remove_from_recents) {
-			$player_cards .= "<a class='x-remove-recent-player' href='/uniliga/spieler' onclick='remove_recent_player(\"".$player[0]["PUUID"]."\")'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/close.svg")."</div></a>";
-		}
 		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\",true)'>";
 		$player_names = array();
 		$summoner_names = array();
@@ -509,6 +506,9 @@ function create_player_overview_cards($dbcn,$puuids,$remove_from_recents=false) 
 			$player_cards .= ")</span>";
 		}
 		$player_cards .= "</a>";
+		if ($remove_from_recents) {
+			$player_cards .= "<a class='x-remove-recent-player' href='/uniliga/spieler' onclick='remove_recent_player(\"".$player[0]["PUUID"]."\")'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/close.svg")."</div></a>";
+		}
 		$player_cards .= "</div>";
 	}
 
