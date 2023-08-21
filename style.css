@@ -2466,7 +2466,7 @@ body.players div.main-content {
     flex-direction: column;
     align-items: center;
 }
-body.players div.main-content div:first-child {
+body.players div.main-content>div:first-child {
     text-align: center;
 }
 body.players div.search-wrapper {
@@ -2480,13 +2480,21 @@ body.players input[type=text] {
 }
 
 .recent-players-list>span {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 1.1em;
+    margin-bottom: 5px;
 }
 div.player-list,
 div.recent-players-list {
     display: flex;
     flex-direction: column;
     gap: 5px;
+}
+.player-ov-card-wrapper {
+    position: relative;
 }
 .player-ov-card {
     display: flex;
@@ -2508,6 +2516,10 @@ div.recent-players-list {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+}
+.x-remove-recent-player {
+    position: absolute;
+    right: -25px;
 }
 
 .player-popup .button.expand-pcards {

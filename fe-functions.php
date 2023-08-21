@@ -458,8 +458,10 @@ function create_player_overview_cards_from_search ($dbcn, $search) {
 	}
 	create_player_overview_cards($dbcn,$puuids);
 }
-function create_player_overview_cards($dbcn,$puuids) {
-
+function create_player_overview_cards($dbcn,$puuids,$remove_from_recents=false) {
+	if ($puuids == NULL) {
+		return;
+	}
 	$unique_players = array();
 	foreach ($puuids AS $puuid) {
 		$player_stats = $dbcn->execute_query("SELECT PlayerName, SummonerName, TeamName, PUUID, `Name` FROM players JOIN teams ON players.TeamID=teams.TeamID JOIN tournaments ON tournaments.TournamentID=teams.TournamentID WHERE PUUID = ? ORDER BY tournaments.DateStart DESC",[$puuid])->fetch_all(MYSQLI_ASSOC);
@@ -468,6 +470,10 @@ function create_player_overview_cards($dbcn,$puuids) {
 	$player_cards = "";
 
 	foreach ($unique_players as $player) {
+		$player_cards .= "<div class='player-ov-card-wrapper'>";
+		if ($remove_from_recents) {
+			$player_cards .= "<a class='x-remove-recent-player' href='/uniliga/spieler' onclick='remove_recent_player(\"".$player[0]["PUUID"]."\")'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/close.svg")."</div></a>";
+		}
 		$player_cards .= "<a class='player-ov-card' href='/uniliga/spieler' onclick='popup_player(\"".$player[0]["PUUID"]."\",true)'>";
 		$player_names = array();
 		$summoner_names = array();
@@ -503,6 +509,7 @@ function create_player_overview_cards($dbcn,$puuids) {
 			$player_cards .= ")</span>";
 		}
 		$player_cards .= "</a>";
+		$player_cards .= "</div>";
 	}
 
 	echo $player_cards;

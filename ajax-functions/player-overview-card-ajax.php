@@ -13,6 +13,6 @@ if ($dbcn -> connect_error){
 		create_player_overview_cards_from_search($dbcn,$search);
 	} elseif (isset($_SERVER['HTTP_DATA_PUUIDS'])) {
 		$puuids = json_decode($_SERVER['HTTP_DATA_PUUIDS']);
-		create_player_overview_cards($dbcn,$puuids);
+		create_player_overview_cards($dbcn,$puuids,true);
 	}
 }
