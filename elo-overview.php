@@ -46,7 +46,7 @@ try {
 		echo "<div class='search-wrapper'>
                 <span class='searchbar'>
                     <input class=\"search-teams-elo $tournamentID deletable-search\" oninput='search_teams_elo()' placeholder='Team suchen' type='text'>
-                    <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
+                    <a class='material-symbol' href='#' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</a>
                 </span>
               </div>";
         $filtered = $_REQUEST['view'] ?? NULL;

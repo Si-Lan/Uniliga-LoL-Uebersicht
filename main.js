@@ -1,6 +1,20 @@
 function clear_searchbar() {
+    event.preventDefault();
     $('.searchbar input').val('').trigger('keyup').trigger('input').focus();
 }
+function toggle_clear_search_x() {
+    let clear_button = $(".searchbar .material-symbol");
+    let input = $('.searchbar input')[0].value;
+    if (input === "") {
+        clear_button.css("display", "none");
+    } else {
+        clear_button.css("display", "block");
+    }
+}
+$(document).ready(function() {
+    $('.searchbar input').on("input",toggle_clear_search_x);
+});
+
 
 // teamlist-filter
 function update_team_filter_groups(div_id) {
@@ -216,10 +230,10 @@ function player_to_opgg_link(player_id, player_name) {
 
 // open match popup
 let current_match_in_popup = null;
-onload = () => {
+$(document).ready(function() {
     let url = new URL(window.location.href);
     current_match_in_popup = url.searchParams.get('match');
-}
+});
 async function popup_match(matchID,teamID=null) {
     event.preventDefault();
     let popup = $('.mh-popup');
@@ -629,6 +643,7 @@ function search_teams_elo() {
                 $('html').stop().animate({scrollTop: this.getElementsByTagName("input")[0].value-300}, 400, 'swing');
                 $('.search-wrapper .searchbar .autocomplete-items').empty();
                 $('.search-wrapper .searchbar input').val("");
+                $(".searchbar .material-symbol").css("display","none");
                 $('.elo-list-team').removeClass('ac-selected-team');
                 $('.elo-list-team.'+teams_list[i][2]).addClass('ac-selected-team');
             }));
@@ -1090,13 +1105,24 @@ function search_players() {
     player_search_request.send();
 
 }
-async function reload_recent_players() {
+async function reload_recent_players(initial=false) {
     let player_list = $('.recent-players-list');
+    let recents = localStorage.getItem("searched_players_PUUIDS");
+    if (JSON.parse(recents) == null || JSON.parse(recents).length === 0) {
+        player_list.html("");
+        return;
+    }
     let rprequest = new XMLHttpRequest();
     rprequest.onreadystatechange = async function() {
         if (this.readyState === 4 && this.status === 200) {
             $('.search-loading-indicator').remove();
+            if (initial) {
+                player_list.hide();
+            }
             player_list.html("<span>"+get_material_icon("history")+"Zuletzt gesucht:</span>"+this.responseText);
+            if (initial) {
+                player_list.fadeIn(200);
+            }
         }
     }
     rprequest.open("GET","ajax-functions/player-overview-card-ajax.php",true);
@@ -1117,7 +1143,7 @@ function remove_recent_player(puuid) {
     }
 }
 
-window.onload = function () {
+$(document).ready(function () {
     if ($("body.players").length === 0) {
         return;
     }
@@ -1126,9 +1152,9 @@ window.onload = function () {
     if (player_search_input != null && player_search_input.length > 2) {
         search_players();
     } else {
-        reload_recent_players();
+        reload_recent_players(true);
     }
-}
+});
 
 let current_player_in_popup = null;
 async function popup_player(PUUID, add_to_recents = false) {

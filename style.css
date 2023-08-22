@@ -381,9 +381,6 @@ input[type=text]::placeholder {
     color: var(--text-tertiary);
     position: relative;
 }
-input[type=text]:placeholder-shown {
-    padding-left: 30px;
-}
 input[type=text] {
     max-width: 420px;
     box-sizing: border-box;
@@ -430,9 +427,9 @@ span.searchbar {
     align-self: center;
     border-radius: 6px;
 }
-span.searchbar div.material-symbol {
+span.searchbar .material-symbol {
     position: absolute;
-    display: block;
+    display: none;
     right: 6px;
     border-radius: 5px;
     color: var(--text-color);
@@ -441,29 +438,25 @@ span.searchbar div.material-symbol {
     padding: 4px 5px 2px 5px;
     transition: color 0.2s, background-color 0.2s;
 }
-span.searchbar div.material-symbol:hover {
+span.searchbar .material-symbol:hover {
     color: var(--text-color);
     background-color: var(--hover-bg-transparent);
 }
-span.searchbar input.search-tournaments + div.material-symbol {
+span.searchbar input.search-tournaments + .material-symbol {
     width: 20px;
     height: 20px;
     font-size: 18px;
 }
-span.searchbar input.search-teams + div.material-symbol,
-span.searchbar input.search-teams-elo + div.material-symbol {
+span.searchbar input.search-teams + .material-symbol,
+span.searchbar input.search-teams-elo + .material-symbol {
     width: 18px;
     height: 18px;
     font-size: 16px;
 }
-span.searchbar input.search-players + div.material-symbol {
+span.searchbar input.search-players + .material-symbol {
     width: 20px;
     height: 20px;
     font-size: 18px;
-}
-span.searchbar input {
-    padding-right: 42px;
-    padding-left: 12px;
 }
 
 .turnier-button{
