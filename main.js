@@ -706,10 +706,16 @@ async function hide_top_button() {
 window.onscroll= hide_top_button;
 
 function tournament_nav_switch_active() {
+    if (user_update_running) {
+        return;
+    }
     $('.turnier-bonus-buttons .active').removeClass('active');
     $(this).addClass('active');
 }
 function team_nav_switch_active() {
+    if (user_update_running) {
+        return;
+    }
     $('.team-titlebutton-wrapper .active').removeClass('active');
     $(this).addClass('active');
 }
@@ -1474,19 +1480,32 @@ function user_update_team(button) {
             loading_width = 1;
             button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
-            const update_standings_xhr = new XMLHttpRequest();
-            update_standings_xhr.onreadystatechange = async function() {
+            const update_players_xhr = new XMLHttpRequest();
+            update_players_xhr.onreadystatechange = async function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    await uut_standings(this);
+                    await uut_players(this);
                 }
             }
-            update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
-            update_standings_xhr.send();
+            update_players_xhr.open("GET", "ajax-functions/user-update-functions.php?type=players_in_team&id="+team_ID, true);
+            update_players_xhr.send();
         }
+    }
+    async function uut_players(result) {
+        loading_width = 20;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_standings_xhr = new XMLHttpRequest();
+        update_standings_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uut_standings(this);
+            }
+        }
+        update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
+        update_standings_xhr.send();
     }
 
     async function uut_standings(result) {
-        loading_width = 20;
+        loading_width = 40;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_matches_xhr = new XMLHttpRequest();
@@ -1501,7 +1520,7 @@ function user_update_team(button) {
 
     let matchresults_gotten = 0;
     async function uut_matches(result) {
-        loading_width = 40;
+        loading_width = 60;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const get_matches_xhr = new XMLHttpRequest();
@@ -1528,7 +1547,7 @@ function user_update_team(button) {
     }
 
     async function uut_matchresults(result, max_matches) {
-        loading_width = loading_width + 60/max_matches;
+        loading_width = loading_width + 40/max_matches;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         matchresults_gotten++;
@@ -1544,6 +1563,16 @@ function user_update_team(button) {
     }
 
     function update_page() {
+        const players_xhr = new XMLHttpRequest();
+        players_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                $("div.summoner-card-container").replaceWith(this.responseText);
+            }
+        }
+        players_xhr.open("GET","ajax-functions/create-page-elements.php?type=summoner-card-container")
+        players_xhr.setRequestHeader("data-teamid",team_ID);
+        players_xhr.send();
+
         const standings_xhr = new XMLHttpRequest();
         standings_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {

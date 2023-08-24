@@ -108,17 +108,11 @@ try {
                     <div class='title'>
                         <h3>Spieler</h3>
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
-			if (isset($_COOKIE["preference_sccollapsed"])) {
-				if ($_COOKIE["preference_sccollapsed"] === "1") {
-					$collapsed = TRUE;
-					echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
-				} else {
-					$collapsed = FALSE;
-					echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
-				}
-			} else {
-				$collapsed = TRUE;
+			$collapsed = summonercards_collapsed();
+			if ($collapsed) {
 				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+			} else {
+				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
 			}
 			echo "
                      </div>";
@@ -201,17 +195,11 @@ try {
                     <div class='title'>
                         <h3>Spieler</h3>
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
-		if (isset($_COOKIE["preference_sccollapsed"])) {
-			if ($_COOKIE["preference_sccollapsed"] === "1") {
-				$collapsed = TRUE;
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
-			} else {
-				$collapsed = FALSE;
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
-			}
-		} else {
-			$collapsed = TRUE;
+		$collapsed = summonercards_collapsed();
+		if ($collapsed) {
 			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+		} else {
+			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
 		}
         echo "
                      </div>";

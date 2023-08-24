@@ -88,10 +88,21 @@ if ($type == "matchresult") {
 		} else {
 			exit();
 		}
-		var_dump($match);
 		$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$match['GroupID']])->fetch_assoc();
 		$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
 		$scrape_result = scrape_toornament_matches($div["TournamentID"], $match_ID, $playoffs);
 		echo ($scrape_result["changes"][0]);
 	}
+}
+
+if ($type == "players_in_team") {
+	$team_ID = $_REQUEST['id'] ?? NULL;
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo -1;
+		exit();
+	}
+	$tournament_id = $dbcn->execute_query("SELECT TournamentID FROM teams WHERE TeamID = ?",[$team_ID])->fetch_column();
+	$scrape_result = scrape_toornaments_players($tournament_id,$team_ID);
+	echo ($scrape_result["writes"]+$scrape_result["NameUpdate"]+$scrape_result["SNameUpdate"]);
 }
