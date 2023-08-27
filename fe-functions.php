@@ -252,9 +252,9 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 		}
 		echo "<div class='match-button-wrapper' data-matchid='$match_id' data-matchtype='$type'>";
 		if ($team_id != NULL) {
-			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",\"{$team_id}\")'>";
+			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",\"{$team_id}\",\"$type\")'>";
 		} else {
-			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\")'>";
+			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",null,\"$type\")'>";
 		}
 		echo "<div class='teams score'>
 				<div class='team 1 $state1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div><div class='score'>{$t1score}</div></div>

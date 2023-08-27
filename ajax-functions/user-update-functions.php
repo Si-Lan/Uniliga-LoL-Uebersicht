@@ -1,5 +1,6 @@
 <?php
 include_once(dirname(__FILE__).'/../admin/scrapeToornament.php');
+include_once(dirname(__FILE__).'/../admin/riot-api-access/get-RGAPI-data.php');
 $type = $_REQUEST["type"] ?? NULL;
 
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;
@@ -9,11 +10,12 @@ include('../DB-info.php');
 
 if ($type == "update_start_time") {
 	$item_ID = $_REQUEST['id'];
+	$update_type = $_REQUEST['utype'] ?? 0;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = 0", [$item_ID])->fetch_assoc();
 	$t = date('Y-m-d H:i:s');
 	if ($lastupdate == NULL) {
-		$dbcn->execute_query("INSERT INTO userupdates VALUES (?, 0, '$t')", [$item_ID]);
+		$dbcn->execute_query("INSERT INTO userupdates VALUES (?, ?, '$t')", [$item_ID, $update_type]);
 	} else {
 		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = 0", [$item_ID]);
 	}
@@ -105,4 +107,85 @@ if ($type == "players_in_team") {
 	$tournament_id = $dbcn->execute_query("SELECT TournamentID FROM teams WHERE TeamID = ?",[$team_ID])->fetch_column();
 	$scrape_result = scrape_toornaments_players($tournament_id,$team_ID);
 	echo ($scrape_result["writes"]+$scrape_result["NameUpdate"]+$scrape_result["SNameUpdate"]);
+}
+
+if ($type == "games_for_match") {
+	$match_ID = $_REQUEST['id'] ?? NULL;
+	$format = $_REQUEST['format'] ?? "groups";
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo -1;
+		exit();
+	}
+	if ($format == "playoffs") {
+		$teams = $dbcn->execute_query("SELECT Team1ID, Team2ID FROM playoffmatches WHERE MatchID = ?", [$match_ID])->fetch_row();
+	} else {
+		$teams = $dbcn->execute_query("SELECT Team1ID, Team2ID FROM matches WHERE MatchID = ?", [$match_ID])->fetch_row();
+	}
+	$players1 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[0]])->fetch_all(MYSQLI_ASSOC);
+	$players2 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[1]])->fetch_all(MYSQLI_ASSOC);
+	function cut_players(array $playerlist):array {
+		$newlength = count($playerlist);
+		if (count($playerlist) >= 5) {
+			$newlength = ceil(count($playerlist) / 2)+1;
+		}
+		shuffle($playerlist);
+		return array_slice($playerlist,0,$newlength);
+	}
+	$players1 = cut_players($players1);
+	$players2 = cut_players($players2);
+	$players = array_merge($players1,$players2);
+	$games = array();
+	foreach ($players as $player) {
+		$result = get_games_by_player($player["PlayerID"]);
+	}
+
+}
+
+if ($type == "gamedata_for_match") {
+	$match_ID = $_REQUEST['id'] ?? NULL;
+	$format = $_REQUEST['format'] ?? "groups";
+	$sort = $_REQUEST['sort'] ?? "true";
+	if ($sort == "true") {
+		$sort = TRUE;
+	} else {
+		$sort = FALSE;
+	}
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo -1;
+		exit();
+	}
+	if ($format == "playoffs") {
+		$teams = $dbcn->execute_query("SELECT Team1ID, Team2ID FROM playoffmatches WHERE MatchID = ?", [$match_ID])->fetch_row();
+	} else {
+		$teams = $dbcn->execute_query("SELECT Team1ID, Team2ID FROM matches WHERE MatchID = ?", [$match_ID])->fetch_row();
+	}
+
+	$players1 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[0]])->fetch_all(MYSQLI_ASSOC);
+	$players2 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[1]])->fetch_all(MYSQLI_ASSOC);
+	$players = array_merge($players1,$players2);
+	$games = array();
+	foreach ($players as $player) {
+		$games_from_player = $dbcn->execute_query("SELECT matches_gotten FROM players WHERE PlayerID = ?", [$player["PlayerID"]])->fetch_column();
+		$games_from_player = json_decode($games_from_player);
+		foreach ($games_from_player as $game) {
+			if (!in_array($game,$games)) {
+				$games[] = $game;
+			}
+		}
+	}
+	$tournament_id = $dbcn->execute_query("SELECT TournamentID FROM teams WHERE TeamID = ? OR TeamID = ?",[$teams[0],$teams[1]])->fetch_column();
+	foreach ($games as $game) {
+		$matchdata = $dbcn->execute_query("SELECT MatchData FROM games WHERE RiotMatchID = ?", [$game])->fetch_column();
+		if ($matchdata == NULL) {
+			$result = add_match_data($game,$tournament_id);
+			if ($result["response"] == 429) {
+				break;
+			}
+		}
+		if ($sort) {
+			$sortresult = assign_and_filter_game($game,$tournament_id);
+		}
+	}
 }

@@ -33,7 +33,7 @@ function get_puuids_by_team($teamID, $all = FALSE) {
 		$options = ["http" => ["header" => "X-Riot-Token: $RGAPI_Key"]];
 		$context = stream_context_create($options);
 
-		$content = file_get_contents("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{$SummonerName_safe}", false, $context);
+		$content = @file_get_contents("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{$SummonerName_safe}", false, $context);
 		$returnArr["RGAPI-Calls"] += 1;
 		if ($content === FALSE) {
 			$returnArr["echo"] .= "<span style='color: orangered'>--could not get PUUID, request failed: {$http_response_header[0]}<br></span>";
@@ -97,6 +97,7 @@ function get_games_by_player($playerID) {
 	$player = $dbcn->query("SELECT * FROM players WHERE players.PlayerID = {$playerID}")->fetch_assoc();
 	$tournament = $dbcn->query("SELECT * FROM tournaments WHERE TournamentID = {$player['TournamentID']}")->fetch_assoc();
 	$returnArr["echo"] .= "<span style='color: royalblue'>writing Matches for {$player['PlayerName']} :<br></span>";
+	$matches_from_player = json_decode($player["matches_gotten"]);
 
 	$tournament_start = strtotime($tournament['DateStart'])-(86400*7); // eine woche puffer
 	$tournament_end = strtotime($tournament['DateEnd'])+86400; // ein Tag Puffer
@@ -123,18 +124,24 @@ function get_games_by_player($playerID) {
 				$returnArr["echo"] .= "<span style='color: orange'>--Game $game already in DB<br></span>";
 				$returnArr["already"]++;
 			}
+			if (!in_array($game,$matches_from_player)) {
+				$matches_from_player[] = $game;
+			}
 		}
 	} else {
 		$response = explode(" ", $http_response_header[0])[1];
 		$returnArr["echo"] .= "<span style='color: orangered'>-could not get Games, response-code: $response<br></span>";
 	}
 
+	$matches_gotten = json_encode($matches_from_player);
+	$dbcn->execute_query("UPDATE players SET matches_gotten = '$matches_gotten' WHERE PlayerID = ?", [$playerID]);
+
 	return $returnArr;
 }
 
 // sendet 1 Anfrage an Riot API (Match-V5)
 function add_match_data($RiotMatchID,$tournamentID) {
-	$returnArr = array("return"=>0, "echo"=>"", "writes"=>0);
+	$returnArr = array("return"=>0, "echo"=>"", "writes"=>0, "response"=>NULL);
 	global $dbservername, $dbusername, $dbpassword, $dbdatabase, $dbport, $RGAPI_Key;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
@@ -164,6 +171,7 @@ function add_match_data($RiotMatchID,$tournamentID) {
 		} else {
 			$response = explode(" ", $http_response_header[0])[1];
 			$returnArr["echo"] .= "<span style='color: orangered'>-could not get MatchData, response-code: $response<br></span>";
+			$returnArr["response"] = $response;
 		}
 	} else {
 		$returnArr["echo"] .= "<span style='color: orange'>-Matchdata is already in DB<br></span>";

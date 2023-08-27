@@ -2351,7 +2351,7 @@ h2.round-title span.score .win {
 h2.round-title span.score .loss {
     color: var(--match-loss-red);
 }
-h2.round-title span.team.loss {
+h2.round-title .team.loss {
     color: var(--match-loss-name-grey);
 }
 
@@ -2380,7 +2380,7 @@ h2.round-title span.team.loss {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
     tab-index: "0";
 }
 .mh-popup-bg div.close-button {
@@ -2397,12 +2397,16 @@ h2.round-title span.team.loss {
     box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
 }
 .mh-popup-bg div.close-button-space {
-    height: 30px;
+    height: 40px;
 }
 .mh-popup .game {
     width: 100%;
     display: flex;
     justify-content: center;
+}
+.mh-popup-buttons {
+    display: flex;
+    gap: 10px;
 }
 @media (max-width: 1280px) {
     .mh-popup .game {

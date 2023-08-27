@@ -234,7 +234,7 @@ $(document).ready(function() {
     let url = new URL(window.location.href);
     current_match_in_popup = url.searchParams.get('match');
 });
-async function popup_match(matchID,teamID=null) {
+async function popup_match(matchID,teamID=null,matchtype="groups") {
     event.preventDefault();
     let popup = $('.mh-popup');
     let popupbg = $('.mh-popup-bg');
@@ -273,9 +273,29 @@ async function popup_match(matchID,teamID=null) {
             let data = JSON.parse(this.responseText);
             let games = data['games'];
 
+            let buttonwrapper = "<div class='mh-popup-buttons'>";
             if (teamID != null) {
-                popup.append("<a class='button' href='team/"+teamID+"/matchhistory#"+matchID+"'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M110 436q-12.75 0-21.375-8.675Q80 418.649 80 405.825 80 393 88.625 384.5T110 376h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 436H110Zm0 210q-12.75 0-21.375-8.675Q80 628.649 80 615.825 80 603 88.625 594.5T110 586h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 646H110Zm707 189L678 696q-26 20-56 30t-62 10q-83 0-141.5-58.5T360 536q0-83 58.5-141.5T560 336q83 0 141.5 58.5T760 536q0 32-10 62t-30 56l139 139q9 9 9 21t-9 21q-9 9-21 9t-21-9ZM559.765 676Q618 676 659 635.235q41-40.764 41-99Q700 478 659.235 437q-40.764-41-99-41Q502 396 461 436.765q-41 40.764-41 99Q420 594 460.765 635q40.764 41 99 41ZM110 856q-12.75 0-21.375-8.675Q80 838.649 80 825.825 80 813 88.625 804.5T110 796h340q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T450 856H110Z\"/></svg></div>in Matchhistory ansehen</a>");
+                buttonwrapper += "<a class='button' href='team/"+teamID+"/matchhistory#"+matchID+"'>"+get_material_icon("manage_search")+"in Matchhistory ansehen</a>";
             }
+            let teamid_data = "";
+            if (teamID !== null) teamid_data = "data-team='"+teamID+"'";
+            buttonwrapper += "<div class='updatebuttonwrapper'><button type='button' class='icononly user_update_match update_data' data-match='"+matchID+"' data-matchformat='"+matchtype+"' "+teamid_data+">"+get_material_icon('sync')+"</button><span>letztes Update:<br>&nbsp;</span></div>";
+            buttonwrapper += "</div>";
+            popup.append(buttonwrapper);
+
+            $(".user_update_match").on("click", function () {
+                user_update_match(this);
+            });
+
+            let last_update_xhr = new XMLHttpRequest();
+            last_update_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    $(".updatebuttonwrapper span").html("letztes Update:<br>"+this.responseText);
+                }
+            }
+            last_update_xhr.open("GET","ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+matchID+"&utype=1&reltime=true", true);
+            last_update_xhr.send();
+
             let team1score;
             let team2score;
             if (data['match']['Winner'] === 1) {
@@ -297,13 +317,13 @@ async function popup_match(matchID,teamID=null) {
             if (current_match_in_popup === data['match']['MatchID']) {
                 popup.append("<h2 class='round-title'>" +
                     "           <span class='round'>Runde "+data['match']['round']+": &nbsp</span>" +
-                    "           <span class='team "+team1score+"'>"+data['team1']['TeamName']+"</span>" +
+                    "           <a href='team/"+ data['team1']['TeamID'] +"' class='team "+team1score+"'>"+data['team1']['TeamName']+"</a>" +
                     "           <span class='score'><span class='"+team1score+"'>"+ team1wins +"</span>:<span class='"+team2score+"'>"+ team2wins +"</span></span>" +
-                    "           <span class='team "+ team2score +"'>"+data['team2']['TeamName']+"</span>" +
+                    "           <a href='team/"+ data['team2']['TeamID'] +"' class='team "+ team2score +"'>"+data['team2']['TeamName']+"</a>" +
                     "         </h2>");
             }
             if (games.length === 0) {
-                popup.append("<div>Keine Spieldaten gefunden</div>");
+                popup.append("<div class='no-game-found'>Keine Spieldaten gefunden</div>");
                 let popup_loader = $('.popup-loading-indicator');
                 popup_loader.css("opacity","0");
                 await new Promise(r => setTimeout(r, 210));
@@ -1175,15 +1195,6 @@ async function popup_player(PUUID, add_to_recents = false) {
 
     let pagebody = $("body");
 
-    if (current_player_in_popup === PUUID) {
-        popupbg.css("opacity","0");
-        popupbg.css("display","block");
-        await new Promise(r => setTimeout(r, 10));
-        popupbg.css("opacity","1");
-        pagebody.css("overflow","hidden");
-        return;
-    }
-
     if (add_to_recents) {
         let recents = JSON.parse(localStorage.getItem("searched_players_PUUIDS"));
         if (recents === null) {
@@ -1201,6 +1212,15 @@ async function popup_player(PUUID, add_to_recents = false) {
         if ($("body.players").length > 0) {
             reload_recent_players();
         }
+    }
+
+    if (current_player_in_popup === PUUID) {
+        popupbg.css("opacity","0");
+        popupbg.css("display","block");
+        await new Promise(r => setTimeout(r, 10));
+        popupbg.css("opacity","1");
+        pagebody.css("overflow","hidden");
+        return;
     }
 
     current_player_in_popup = PUUID;
@@ -1346,7 +1366,7 @@ function user_update_group(button) {
             const update_standings_xhr = new XMLHttpRequest();
             update_standings_xhr.onreadystatechange = async function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    await uug_standings(this);
+                    await uug_standings();
                 }
             }
             update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&id="+group_ID, true);
@@ -1354,14 +1374,14 @@ function user_update_group(button) {
         }
     }
 
-    async function uug_standings(result) {
+    async function uug_standings() {
         loading_width = 20;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_matches_xhr = new XMLHttpRequest();
         update_matches_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uug_matches(this);
+                await uug_matches();
             }
         }
         update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&id="+group_ID, true);
@@ -1369,7 +1389,7 @@ function user_update_group(button) {
     }
 
     let matchresults_gotten = 0;
-    async function uug_matches(result) {
+    async function uug_matches() {
         loading_width = 40;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1483,35 +1503,35 @@ function user_update_team(button) {
             const update_players_xhr = new XMLHttpRequest();
             update_players_xhr.onreadystatechange = async function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    await uut_players(this);
+                    await uut_players();
                 }
             }
             update_players_xhr.open("GET", "ajax-functions/user-update-functions.php?type=players_in_team&id="+team_ID, true);
             update_players_xhr.send();
         }
     }
-    async function uut_players(result) {
+    async function uut_players() {
         loading_width = 20;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_standings_xhr = new XMLHttpRequest();
         update_standings_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uut_standings(this);
+                await uut_standings();
             }
         }
         update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
         update_standings_xhr.send();
     }
 
-    async function uut_standings(result) {
+    async function uut_standings() {
         loading_width = 40;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_matches_xhr = new XMLHttpRequest();
         update_matches_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uut_matches(this);
+                await uut_matches();
             }
         }
         update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&teamid="+team_ID, true);
@@ -1519,7 +1539,7 @@ function user_update_team(button) {
     }
 
     let matchresults_gotten = 0;
-    async function uut_matches(result) {
+    async function uut_matches() {
         loading_width = 60;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1603,10 +1623,152 @@ $(document).ready(function () {
     });
 });
 
+function user_update_match(button) {
+    let match_ID = button.getAttribute("data-match");
+    let format = button.getAttribute("data-matchformat");
+    let team_ID = button.getAttribute("data-team");
+    $(button).addClass("user_updating");
+    button.disabled = true;
+    user_update_running = true;
+
+    let loading_width = 0;
+
+    const last_update_xhr = new XMLHttpRequest();
+    last_update_xhr.onreadystatechange = async function() {
+        if (this.readyState === 4 && this.status === 200) {
+            await uum_start(this);
+        }
+    }
+    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+match_ID+"&utype=1");
+    last_update_xhr.send();
+
+    async function uum_start(result) {
+        let timestamp = Date.parse(result.responseText);
+        let current = Date.now();
+        let diff = new Date(current - timestamp);
+
+        if (current - timestamp < 300000) {
+            let rest = new Date(300000 - (current-timestamp));
+            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
+            await new Promise(r => setTimeout(r, 1000));
+            $(button).removeClass("user_updating");
+            button.disabled = false;
+            user_update_running = false;
+        } else {
+            const set_update_time_xhr = new XMLHttpRequest();
+            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+match_ID+"&utype=1", true);
+            set_update_time_xhr.send();
+
+            loading_width = 1;
+            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+            const update_matchresults_xhr = new XMLHttpRequest();
+            update_matchresults_xhr.onreadystatechange = async function() {
+                if (this.readyState === 4 && this.status === 200) {
+                    await uum_games();
+                }
+            }
+            update_matchresults_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match_ID+"&format="+format, true);
+            update_matchresults_xhr.send();
+        }
+    }
+    async function uum_games() {
+        loading_width = 20;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_games_xhr = new XMLHttpRequest();
+        update_games_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uum_gamedata_sort();
+            }
+        }
+        update_games_xhr.open("GET", "ajax-functions/user-update-functions.php?type=games_for_match&id="+match_ID+"format="+format, true);
+        update_games_xhr.send();
+    }
+
+    async function uum_gamedata_sort() {
+        loading_width = 60;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_matches_xhr = new XMLHttpRequest();
+        update_matches_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uum_finished();
+            }
+        }
+        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=gamedata_for_match&id="+match_ID+"format="+format, true);
+        update_matches_xhr.send();
+    }
+
+    async function uum_finished() {
+        loading_width = 100;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        $(button).removeClass("user_updating");
+        button.disabled = false;
+        user_update_running = false;
+        update_page();
+        loading_width = 0;
+        button.style.setProperty("--update-loading-bar-width", "0");
+        $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
+    }
+
+    function update_page() {
+        let match_request = new XMLHttpRequest();
+        match_request.open("GET","ajax-functions/get-DB-AJAX.php?type=match-games-teams-by-matchid&match="+match_ID);
+        match_request.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                let data = JSON.parse(this.responseText);
+                let games = data['games'];
+
+                let popup = $('.mh-popup');
+
+                if (games.length > 0) {
+                    $(".no-game-found").remove();
+                }
+                let game_counter = 0;
+                for (const [i,game] of games.entries()) {
+                    if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
+                        popup.append("<div class='game game"+i+"'></div>");
+                    }
+                    let gameID = game['RiotMatchID'];
+                    let game_request = new XMLHttpRequest();
+                    game_request.onreadystatechange = async function() {
+                        // noinspection JSPotentiallyInvalidUsageOfThis
+                        if (this.readyState === 4 && this.status === 200) {
+                            let game_wrap = popup.find('.game'+i);
+                            if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
+                                game_wrap.empty();
+                                // noinspection JSPotentiallyInvalidUsageOfThis
+                                game_wrap.append(this.responseText);
+                                game_counter++;
+                            }
+                        }
+                    }
+                    if (team_ID === null) {
+                        game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID);
+                    } else {
+                        game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID+"&teamID="+team_ID);
+                    }
+                    game_request.send();
+                }
+            }
+        }
+        match_request.send();
+    }
+}
+$(document).ready(function () {
+    $(".user_update_match").on("click", function () {
+        user_update_match(this);
+    });
+});
+
 function get_material_icon(name) {
     let res = "<div class='material-symbol'>";
     if (name === "close") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"/></svg>";
     if (name === "history") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 -960 960 960\" width=\"48\"><path d=\"M477-120q-142 0-243.5-95.5T121-451q-1-12 7.5-21t21.5-9q12 0 20.5 8.5T181-451q11 115 95 193t201 78q127 0 215-89t88-216q0-124-89-209.5T477-780q-68 0-127.5 31T246-667h75q13 0 21.5 8.5T351-637q0 13-8.5 21.5T321-607H172q-13 0-21.5-8.5T142-637v-148q0-13 8.5-21.5T172-815q13 0 21.5 8.5T202-785v76q52-61 123.5-96T477-840q75 0 141 28t115.5 76.5Q783-687 811.5-622T840-482q0 75-28.5 141t-78 115Q684-177 618-148.5T477-120Zm34-374 115 113q9 9 9 21.5t-9 21.5q-9 9-21 9t-21-9L460-460q-5-5-7-10.5t-2-11.5v-171q0-13 8.5-21.5T481-683q13 0 21.5 8.5T511-653v159Z\"/></svg>";
+    if (name === "sync") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 -960 960 960\" width=\"48\"><path d=\"M220-477q0 63 23.5 109.5T307-287l30 21v-94q0-13 8.5-21.5T367-390q13 0 21.5 8.5T397-360v170q0 13-8.5 21.5T367-160H197q-13 0-21.5-8.5T167-190q0-13 8.5-21.5T197-220h100l-15-12q-64-51-93-111t-29-134q0-94 49.5-171.5T342-766q11-5 21 0t14 16q5 11 0 22.5T361-710q-64 34-102.5 96.5T220-477Zm520-6q0-48-23.5-97.5T655-668l-29-26v94q0 13-8.5 21.5T596-570q-13 0-21.5-8.5T566-600v-170q0-13 8.5-21.5T596-800h170q13 0 21.5 8.5T796-770q0 13-8.5 21.5T766-740H665l15 14q60 56 90 120t30 123q0 93-48 169.5T623-195q-11 6-22.5 1.5T584-210q-5-11 0-22.5t16-17.5q65-33 102.5-96T740-483Z\"/></svg>";
+    if (name === "manage_search") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M110 436q-12.75 0-21.375-8.675Q80 418.649 80 405.825 80 393 88.625 384.5T110 376h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 436H110Zm0 210q-12.75 0-21.375-8.675Q80 628.649 80 615.825 80 603 88.625 594.5T110 586h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 646H110Zm707 189L678 696q-26 20-56 30t-62 10q-83 0-141.5-58.5T360 536q0-83 58.5-141.5T560 336q83 0 141.5 58.5T760 536q0 32-10 62t-30 56l139 139q9 9 9 21t-9 21q-9 9-21 9t-21-9ZM559.765 676Q618 676 659 635.235q41-40.764 41-99Q700 478 659.235 437q-40.764-41-99-41Q502 396 461 436.765q-41 40.764-41 99Q420 594 460.765 635q40.764 41 99 41ZM110 856q-12.75 0-21.375-8.675Q80 838.649 80 825.825 80 813 88.625 804.5T110 796h340q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T450 856H110Z\"/></svg>";
     res += "</div>";
     return res;
 }

@@ -195,13 +195,37 @@ if ($dbcn -> connect_error){
 		$ItemID = $_REQUEST["id"] ?? NULL;
 		$ud_type = $_REQUEST["utype"] ?? NULL;
 		$tournamentID = $_REQUEST["t"] ?? NULL;
+		if ($ud_type === "1") {
+			$GroupID = $dbcn->execute_query("SELECT GroupID FROM matches WHERE MatchID = ?",[$ItemID])->fetch_column();
+			if ($GroupID == NULL) {
+				$PlayoffID = $dbcn->execute_query("SELECT PlayoffID FROM playoffmatches WHERE MatchID = ?",[$ItemID])->fetch_column();
+				$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM playoffs WHERE PlayoffID = ?", [$PlayoffID])->fetch_column();
+			} else {
+				$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM divisions WHERE DivID = (SELECT DivID FROM `groups` WHERE GroupID = ?)", [$GroupID])->fetch_column();
+			}
+		}
 		$last_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type = ?", [$ItemID, $ud_type])->fetch_column();
 		if ($tournamentID != NULL) {
 			$last_cron_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
-			$manual_updates  = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_column();
+			if ($ud_type == "0") {
+				$manual_updates = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
+			} elseif ($ud_type == "1") {
+				$manual_updates = $dbcn->execute_query("SELECT matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
+			} else {
+				$manual_updates = NULL;
+			}
 			$last_update = latest_update($last_update,$last_cron_update,$manual_updates);
 		}
-		echo $last_update;
+		$return_relative_time_string = $_REQUEST["reltime"] ?? FALSE;
+		if ($return_relative_time_string) {
+			if ($last_update == NULL) {
+				echo "unbekannt";
+			} else {
+				echo max_time_from_timestamp(time() - strtotime($last_update));
+			}
+		} else {
+			echo $last_update;
+		}
 	}
 	if ($type == "cron-update-timer") {
 		$tournamentID = $_REQUEST["id"] ?? NULL;
