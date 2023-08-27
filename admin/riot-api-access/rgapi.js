@@ -439,6 +439,10 @@ function get_game_data(tournamentID, teamID = 0, all = 0) {
 		games_request.open("GET","/uniliga/ajax-functions/get-DB-AJAX.php?type=games&tournament="+tournamentID,true);
 	}
 	games_request.send();
+
+	const timerxhr = new XMLHttpRequest();
+	timerxhr.open("POST", "/uniliga/admin/scrapeToor-ajax.php?type=update-timers&Tid="+tournamentID+"&table=gamedata");
+	timerxhr.send();
 }
 
 function assign_and_filter_games(tournamentID,teamID = 0, all = 0) {
@@ -512,6 +516,10 @@ function assign_and_filter_games(tournamentID,teamID = 0, all = 0) {
 		games_request.open("GET","/uniliga/ajax-functions/get-DB-AJAX.php?type=games&tournament="+tournamentID,true);
 	}
 	games_request.send();
+
+	const timerxhr = new XMLHttpRequest();
+	timerxhr.open("POST", "/uniliga/admin/scrapeToor-ajax.php?type=update-timers&Tid="+tournamentID+"&table=gamesort");
+	timerxhr.send();
 }
 
 function get_ranks(tournamentID) {

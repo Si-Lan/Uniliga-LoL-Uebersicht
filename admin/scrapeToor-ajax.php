@@ -202,7 +202,7 @@ if ($type == "update-timers") {
 	$lastupdate = $dbcn->execute_query("SELECT * FROM manual_updates WHERE TournamentID = ?", [$tournID])->fetch_assoc();
 	$t = date('Y-m-d H:i:s');
 
-	$allowed = ['teams', 'players', 'divisions', 'groups', 'standings','matches','matchresults'];
+	$allowed = ['teams', 'players', 'divisions', 'groups', 'standings','matches','matchresults','gamedata','gamesort'];
 	if (!in_array($table, $allowed)) {
 		exit();
 	}

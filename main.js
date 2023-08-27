@@ -1503,35 +1503,50 @@ function user_update_team(button) {
             const update_players_xhr = new XMLHttpRequest();
             update_players_xhr.onreadystatechange = async function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    await uut_players();
+                    await uut_calc_stats();
                 }
             }
             update_players_xhr.open("GET", "ajax-functions/user-update-functions.php?type=players_in_team&id="+team_ID, true);
             update_players_xhr.send();
         }
     }
-    async function uut_players() {
-        loading_width = 20;
+
+    async function uut_calc_stats() {
+        loading_width = 15;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_stats_xhr = new XMLHttpRequest();
+        update_stats_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uut_standings();
+            }
+        }
+        update_stats_xhr.open("GET", "ajax-functions/user-update-functions.php?type=recalc_team_stats&id="+team_ID, true);
+        update_stats_xhr.send();
+    }
+
+    async function uut_standings() {
+        loading_width = 30;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_standings_xhr = new XMLHttpRequest();
         update_standings_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uut_standings();
+                await uut_matches();
             }
         }
         update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
         update_standings_xhr.send();
     }
 
-    async function uut_standings() {
-        loading_width = 40;
+    async function uut_matches() {
+        loading_width = 45;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_matches_xhr = new XMLHttpRequest();
         update_matches_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uut_matches();
+                await uut_matchresults();
             }
         }
         update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&teamid="+team_ID, true);
@@ -1539,7 +1554,7 @@ function user_update_team(button) {
     }
 
     let matchresults_gotten = 0;
-    async function uut_matches() {
+    async function uut_matchresults() {
         loading_width = 60;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1553,7 +1568,7 @@ function user_update_team(button) {
                     const update_matches_xhr = new XMLHttpRequest();
                     update_matches_xhr.onreadystatechange = async function() {
                         if (this.readyState === 4 && this.status === 200) {
-                            await uut_matchresults(this, matchids.length);
+                            await uut_finished(this, matchids.length);
                         }
                     }
                     update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match, true);
@@ -1566,7 +1581,7 @@ function user_update_team(button) {
         get_matches_xhr.send();
     }
 
-    async function uut_matchresults(result, max_matches) {
+    async function uut_finished(result, max_matches) {
         loading_width = loading_width + 40/max_matches;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
@@ -1687,17 +1702,37 @@ function user_update_match(button) {
     }
 
     async function uum_gamedata_sort() {
-        loading_width = 60;
+        loading_width = 50;
         button.style.setProperty("--update-loading-bar-width", loading_width+"%");
 
         const update_matches_xhr = new XMLHttpRequest();
         update_matches_xhr.onreadystatechange = async function() {
             if (this.readyState === 4 && this.status === 200) {
-                await uum_finished();
+                await uum_calc_stats();
             }
         }
         update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=gamedata_for_match&id="+match_ID+"format="+format, true);
         update_matches_xhr.send();
+        while (update_matches_xhr.readyState < 4 && loading_width < 80) {
+            await new Promise(r => setTimeout(r, 6000));
+            if (loading_width === 0) break;
+            loading_width += 2;
+            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        }
+    }
+
+    async function uum_calc_stats() {
+        loading_width = 90;
+        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+
+        const update_stats_xhr = new XMLHttpRequest();
+        update_stats_xhr.onreadystatechange = async function() {
+            if (this.readyState === 4 && this.status === 200) {
+                await uum_finished();
+            }
+        }
+        update_stats_xhr.open("GET", "ajax-functions/user-update-functions.php?type=recalc_team_stats&id="+team_ID, true);
+        update_stats_xhr.send();
     }
 
     async function uum_finished() {
@@ -1725,6 +1760,7 @@ function user_update_match(button) {
 
                 if (games.length > 0) {
                     $(".no-game-found").remove();
+                    $(".game").remove();
                 }
                 let game_counter = 0;
                 for (const [i,game] of games.entries()) {

@@ -12,12 +12,12 @@ if ($type == "update_start_time") {
 	$item_ID = $_REQUEST['id'];
 	$update_type = $_REQUEST['utype'] ?? 0;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
-	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = 0", [$item_ID])->fetch_assoc();
+	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = ?", [$item_ID, $update_type])->fetch_assoc();
 	$t = date('Y-m-d H:i:s');
 	if ($lastupdate == NULL) {
 		$dbcn->execute_query("INSERT INTO userupdates VALUES (?, ?, '$t')", [$item_ID, $update_type]);
 	} else {
-		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = 0", [$item_ID]);
+		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = ?", [$item_ID, $update_type]);
 	}
 }
 
@@ -106,6 +106,7 @@ if ($type == "players_in_team") {
 	}
 	$tournament_id = $dbcn->execute_query("SELECT TournamentID FROM teams WHERE TeamID = ?",[$team_ID])->fetch_column();
 	$scrape_result = scrape_toornaments_players($tournament_id,$team_ID);
+	$puuids_result = get_puuids_by_team($team_ID, TRUE);
 	echo ($scrape_result["writes"]+$scrape_result["NameUpdate"]+$scrape_result["SNameUpdate"]);
 }
 
@@ -188,4 +189,16 @@ if ($type == "gamedata_for_match") {
 			$sortresult = assign_and_filter_game($game,$tournament_id);
 		}
 	}
+}
+
+if ($type == "recalc_team_stats") {
+	$team_ID = $_REQUEST['id'] ?? NULL;
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	if ($dbcn -> connect_error){
+		echo -1;
+		exit();
+	}
+	get_played_champions_for_players($team_ID);
+	get_played_positions_for_players($team_ID);
+	calculate_teamstats($dbcn,$team_ID);
 }
