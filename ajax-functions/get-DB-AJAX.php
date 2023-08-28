@@ -210,7 +210,7 @@ if ($dbcn -> connect_error){
 			if ($ud_type == "0") {
 				$manual_updates = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
 			} elseif ($ud_type == "1") {
-				$manual_updates = $dbcn->execute_query("SELECT matchresults FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
+				$manual_updates = $dbcn->execute_query("SELECT matchresults, gamedata, gamesort FROM manual_updates WHERE TournamentID = ?", [$tournamentID])->fetch_row();
 			} else {
 				$manual_updates = NULL;
 			}

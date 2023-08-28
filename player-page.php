@@ -59,4 +59,5 @@ echo "</div>";
 	echo "<title>Error</title></head>";
 }
 ?>
+</body>
 </html>
