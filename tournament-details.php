@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="de">
 <head>
 <?php
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;

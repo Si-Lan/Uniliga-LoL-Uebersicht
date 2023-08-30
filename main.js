@@ -21,20 +21,22 @@ function update_team_filter_groups(div_id) {
     if (div_id === "all") {
         $("select.groups").empty().append("<option value='all' selected='selected'>Alle Gruppen</option>");
     } else {
-        let groups;
-        let xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                groups = JSON.parse(this.responseText);
+        fetch(`ajax-functions/get-DB-AJAX.php`, {
+            method: "GET",
+            headers: {
+                "type": "groups",
+                "divID": div_id,
+            }
+        })
+            .then(res => res.json())
+            .then(groups => {
                 let groupslist = $("select.groups");
                 groupslist.empty().append("<option value='all' selected='selected'>Alle Gruppen</option>")
                 for (let i = 0; i < groups.length; i++) {
-                    groupslist.append("<option value='" + groups[i]["GroupID"] + "'>Gruppe " + groups[i]["Number"] + "</option>");
+                    groupslist.append(`<option value='${groups[i]["GroupID"]}'>Gruppe ${groups[i]["Number"]}</option>`);
                 }
-            }
-        };
-        xmlhttp.open("GET", "ajax-functions/get-DB-AJAX.php?type=groups&Did=" + div_id, true);
-        xmlhttp.send();
+            })
+            .catch(error => console.error(error));
     }
 }
 function filter_teams_list_division(division) {
@@ -110,9 +112,9 @@ function filter_teams_list_group(group) {
     } else {
         group_button.addClass('shown');
         if (url.searchParams.get('tournament') === null) {
-            group_button.attr('href','turnier/'+url.pathname.split("turnier/")[1].split("/")[0]+'/gruppe/'+group);
+            group_button.attr('href',`turnier/${url.pathname.split("turnier/")[1].split("/")[0]}/gruppe/${group}`);
         } else {
-            group_button.attr('href','?page=group&tournament='+url.searchParams.get('tournament')+'&group='+group);
+            group_button.attr('href',`?page=group&tournament=${url.searchParams.get('tournament')}&group=${group}`);
         }
     }
 
@@ -153,9 +155,9 @@ function search_teams(tournID) {
         }
     }
     if (results === 0) {
-        document.getElementsByClassName('no-search-res-text ' + tournID)[0].style.display = "";
+        document.getElementsByClassName(`no-search-res-text ${tournID}`)[0].style.display = "";
     } else {
-        document.getElementsByClassName('no-search-res-text ' + tournID)[0].style.display = "none";
+        document.getElementsByClassName(`no-search-res-text ${tournID}`)[0].style.display = "none";
     }
 }
 
@@ -199,7 +201,7 @@ function toggle_group_nav(div_num) {
 
 // OPGG on Summoner Cards
 function player_to_opgg_link(player_id, player_name) {
-    let checkbox = $('.summoner-card.'+player_id+' input.opgg-checkbox');
+    let checkbox = $(`.summoner-card.${player_id} input.opgg-checkbox`);
     let opgg_button = $('div.opgg-cards a.op-gg');
     let opgg_button_num = $('div.opgg-cards a.op-gg span.player-amount');
     let opgg_link = new URL(opgg_button.attr('href'));
@@ -225,7 +227,7 @@ function player_to_opgg_link(player_id, player_name) {
     }
     opgg_link.searchParams.set('summoners', players);
     opgg_button.attr('href', opgg_link);
-    opgg_button_num.text("("+player_amount+" Spieler)");
+    opgg_button_num.text(`(${player_amount} Spieler)`);
 }
 
 // open match popup
@@ -255,8 +257,8 @@ async function popup_match(matchID,teamID=null,matchtype="groups") {
     current_match_in_popup = matchID;
     popup.empty();
 
-    popup.append("<div class='close-button' onclick='closex_popup_match()'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"></path></svg></div></div>");
-    popup.append("<div class='close-button-space'><div class='popup-loading-indicator'></div></div>");
+    popup.append(`<div class='close-button' onclick='closex_popup_match()'>${get_material_icon("close")}</div>`);
+    popup.append(`<div class='close-button-space'><div class='popup-loading-indicator'></div></div>`);
 
     popupbg.css("opacity","0");
     popupbg.css("display","block");
@@ -267,19 +269,24 @@ async function popup_match(matchID,teamID=null,matchtype="groups") {
     url.searchParams.set("match",matchID);
     window.history.replaceState({}, '', url);
 
-    let match_request = new XMLHttpRequest();
-    match_request.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            let data = JSON.parse(this.responseText);
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "match-games-teams-by-matchid",
+            matchid: matchID,
+        }
+    })
+        .then(res => res.json())
+        .then(async data => {
             let games = data['games'];
 
-            let buttonwrapper = "<div class='mh-popup-buttons'>";
+            let buttonwrapper = `<div class='mh-popup-buttons'>`;
             if (teamID != null) {
-                buttonwrapper += "<a class='button' href='team/"+teamID+"/matchhistory#"+matchID+"'>"+get_material_icon("manage_search")+"in Matchhistory ansehen</a>";
+                buttonwrapper += `<a class='button' href='team/${teamID}/matchhistory#${matchID}'> ${get_material_icon("manage_search")} in Matchhistory ansehen</a>`;
             }
             let teamid_data = "";
-            if (teamID !== null) teamid_data = "data-team='"+teamID+"'";
-            buttonwrapper += "<div class='updatebuttonwrapper'><button type='button' class='icononly user_update_match update_data' data-match='"+matchID+"' data-matchformat='"+matchtype+"' "+teamid_data+">"+get_material_icon('sync')+"</button><span>letztes Update:<br>&nbsp;</span></div>";
+            if (teamID !== null) teamid_data = `data-team='${teamID}'`;
+            buttonwrapper += `<div class='updatebuttonwrapper'><button type='button' class='icononly user_update_match update_data' data-match='${matchID}' data-matchformat='${matchtype}' ${teamid_data}>${get_material_icon('sync')}</button><span>letztes Update:<br>&nbsp;</span></div>`;
             buttonwrapper += "</div>";
             popup.append(buttonwrapper);
 
@@ -287,14 +294,20 @@ async function popup_match(matchID,teamID=null,matchtype="groups") {
                 user_update_match(this);
             });
 
-            let last_update_xhr = new XMLHttpRequest();
-            last_update_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    $(".updatebuttonwrapper span").html("letztes Update:<br>"+this.responseText);
+            fetch(`ajax-functions/get-DB-AJAX.php`, {
+                method: "GET",
+                headers: {
+                    type: "user-update-timer",
+                    itemid: matchID,
+                    updatetype: "1",
+                    relativetime: "true",
                 }
-            }
-            last_update_xhr.open("GET","ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+matchID+"&utype=1&reltime=true", true);
-            last_update_xhr.send();
+            })
+                .then(res => res.text())
+                .then(time => {
+                    $(".updatebuttonwrapper span").html(`letztes Update:<br>${time}`);
+                })
+                .catch(error => console.error(error));
 
             let team1score;
             let team2score;
@@ -315,56 +328,56 @@ async function popup_match(matchID,teamID=null,matchtype="groups") {
                 team2wins = (team2wins === -1) ? "L" : "W";
             }
             if (current_match_in_popup === data['match']['MatchID']) {
-                popup.append("<h2 class='round-title'>" +
-                    "           <span class='round'>Runde "+data['match']['round']+": &nbsp</span>" +
-                    "           <a href='team/"+ data['team1']['TeamID'] +"' class='team "+team1score+"'>"+data['team1']['TeamName']+"</a>" +
-                    "           <span class='score'><span class='"+team1score+"'>"+ team1wins +"</span>:<span class='"+team2score+"'>"+ team2wins +"</span></span>" +
-                    "           <a href='team/"+ data['team2']['TeamID'] +"' class='team "+ team2score +"'>"+data['team2']['TeamName']+"</a>" +
-                    "         </h2>");
+                popup.append(`<h2 class='round-title'>
+                                <span class='round'>Runde ${data['match']['round']}: &nbsp</span>
+                                <a href='team/${data['team1']['TeamID']}' class='team "+team1score+"'>${data['team1']['TeamName']}</a>
+                                <span class='score'><span class='${team1score}'>${team1wins}</span>:<span class='${team2score}'>${team2wins}</span></span>
+                                <a href='team/${data['team2']['TeamID']}' class='team ${team2score}'>${data['team2']['TeamName']}</a>
+                              </h2>`);
             }
             if (games.length === 0) {
                 popup.append("<div class='no-game-found'>Keine Spieldaten gefunden</div>");
                 let popup_loader = $('.popup-loading-indicator');
-                popup_loader.css("opacity","0");
+                popup_loader.css("opacity", "0");
                 await new Promise(r => setTimeout(r, 210));
                 popup_loader.remove();
             }
             let game_counter = 0;
-            for (const [i,game] of games.entries()) {
+            for (const [i, game] of games.entries()) {
                 if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
-                    popup.append("<div class='game game"+i+"'></div>");
+                    popup.append(`<div class='game game${i}'></div>`);
                 }
                 let gameID = game['RiotMatchID'];
-                let game_request = new XMLHttpRequest();
-                game_request.onreadystatechange = async function() {
-                    // noinspection JSPotentiallyInvalidUsageOfThis
-                    if (this.readyState === 4 && this.status === 200) {
-                        let game_wrap = popup.find('.game'+i);
+
+                let fetchheaders = new Headers({
+                    gameid: gameID
+                });
+                if (teamID !== null) {
+                    fetchheaders.append("teamid",teamID)
+                }
+                fetch(`ajax-functions/game-AJAX.php`, {
+                    method: "GET",
+                    headers: fetchheaders,
+                })
+                    .then(res => res.text())
+                    .then(async data => {
+                        let game_wrap = popup.find(`.game${i}`);
                         if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                             game_wrap.empty();
-                            // noinspection JSPotentiallyInvalidUsageOfThis
-                            game_wrap.append(this.responseText);
+                            game_wrap.append(data);
                             game_counter++;
                             if (game_counter >= games.length) {
                                 let popup_loader = $('.popup-loading-indicator');
-                                popup_loader.css("opacity","0");
+                                popup_loader.css("opacity", "0");
                                 await new Promise(r => setTimeout(r, 210));
                                 popup_loader.remove();
                             }
                         }
-                    }
-                }
-                if (teamID === null) {
-                    game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID);
-                } else {
-                    game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID+"&teamID="+teamID);
-                }
-                game_request.send();
+                    })
+                    .catch(error => console.error(error));
             }
-        }
-    }
-    match_request.open("GET","ajax-functions/get-DB-AJAX.php?type=match-games-teams-by-matchid&match="+matchID);
-    match_request.send();
+        })
+        .catch(error => console.log(error));
 }
 async function close_popup_match(event) {
     let popupbg = $('.mh-popup-bg');
@@ -436,7 +449,7 @@ async function popup_team(teamID) {
     current_team_in_popup = teamID;
     popup.empty();
 
-    popup.append("<div class='close-button' onclick='closex_popup_team()'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"></path></svg></div></div>");
+    popup.append(`<div class='close-button' onclick='closex_popup_team()'>${get_material_icon("close")}</div>`);
     popup.append("<div class='close-button-space'><div class='popup-loading-indicator'></div></div>");
 
     popupbg.css("opacity","0");
@@ -445,11 +458,15 @@ async function popup_team(teamID) {
     popupbg.css("opacity","1");
     pagebody.css("overflow","hidden");
 
-    let team_request = new XMLHttpRequest();
-    team_request.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            let team_data = JSON.parse(this.responseText);
-
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "team-and-players",
+            teamid: teamID,
+        }
+    })
+        .then(res => res.json())
+        .then(team_data => {
             if (current_team_in_popup === team_data['team']['TeamID']) {
 
                 let players_string = "";
@@ -463,12 +480,12 @@ async function popup_team(teamID) {
                 popup.append("<div class='team-buttons opgg-cards'></div>");
                 let name_container = $("div.team-buttons");
                 if (team_data["team"]["imgID"] !== null && team_data["team"]["imgID"] !== "") {
-                    name_container.append("<img class='list-overview-logo' src='img/team_logos/" + team_data["team"]["imgID"] + "/logo_small.webp' alt='Team-Logo'>");
+                    name_container.append(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`);
                 }
-                name_container.append("<h2>" + team_data["team"]["TeamName"] + "</h2>");
-                name_container.append("<a href='team/" + teamID + "' class='button'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M483.175 776q12.825 0 21.325-8.625T513 746V566q0-12.75-8.675-21.375-8.676-8.625-21.5-8.625-12.825 0-21.325 8.625T453 566v180q0 12.75 8.675 21.375 8.676 8.625 21.5 8.625Zm-3.193-314q14.018 0 23.518-9.2T513 430q0-14.45-9.482-24.225-9.483-9.775-23.5-9.775-14.018 0-23.518 9.775T447 430q0 13.6 9.482 22.8 9.483 9.2 23.5 9.2Zm.284 514q-82.734 0-155.5-31.5t-127.266-86q-54.5-54.5-86-127.341Q80 658.319 80 575.5q0-82.819 31.5-155.659Q143 347 197.5 293t127.341-85.5Q397.681 176 480.5 176q82.819 0 155.659 31.5Q709 239 763 293t85.5 127Q880 493 880 575.734q0 82.734-31.5 155.5T763 858.316q-54 54.316-127 86Q563 976 480.266 976Zm.234-60Q622 916 721 816.5t99-241Q820 434 721.188 335 622.375 236 480 236q-141 0-240.5 98.812Q140 433.625 140 576q0 141 99.5 240.5t241 99.5Zm-.5-340Z\"/></svg></div>Details</a>");
-                name_container.append("<a href='https://www.op.gg/multisearch/euw?summoners=" + players_string + "' target='_blank' class='button op-gg'><div class='svg-wrapper op-gg'>"+opgg_logo_svg+"</div><span class='player-amount'>(" + team_data["players"].length + " Spieler)</span></a>");
-                name_container.append("<a href='https://play.toornament.com/de/tournaments/" + team_data['team']['TournamentID'] + "/participants/" + teamID + "/info' target='_blank' class='button'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M180 936q-24 0-42-18t-18-42V276q0-24 18-42t42-18h249q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T429 276H180v600h600V627q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T840 627v249q0 24-18 42t-42 18H180Zm181.13-241.391Q353 686 352.5 674q-.5-12 8.5-21l377-377H549q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T549 216h261q12.75 0 21.375 8.625T840 246v261q0 12.75-8.675 21.375-8.676 8.625-21.5 8.625-12.825 0-21.325-8.625T780 507V319L403 696q-8.442 8-20.721 8t-21.149-9.391Z\"/></svg></div></a>");
+                name_container.append(`<h2>${team_data["team"]["TeamName"]}</h2>`);
+                name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Details</a>`);
+                name_container.append(`<a href='https://www.op.gg/multisearch/euw?summoners=${players_string}' target='_blank' class='button op-gg'><div class='svg-wrapper op-gg'>${opgg_logo_svg}</div><span class='player-amount'>(${team_data["players"].length} Spieler)</span></a>`);
+                name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='button'>${get_material_icon("open_in_new")}</a>`);
                 if (team_data["team"]["avg_rank_tier"] !== null && team_data["team"]["avg_rank_tier"] !== "") {
                     team_data["team"]["avg_rank_tier"] = team_data["team"]["avg_rank_tier"][0].toUpperCase() + team_data["team"]["avg_rank_tier"].substring(1).toLowerCase();
                     popup.append("<div class='team-avg-rank'>Teams avg. Rang: <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/" + team_data["team"]["avg_rank_tier"].toLowerCase() + ".svg' alt=''><span>" + team_data["team"]["avg_rank_tier"] + " " + team_data["team"]["avg_rank_div"] + "</span></div>");
@@ -477,35 +494,17 @@ async function popup_team(teamID) {
                 let card_container = $('div.summoner-card-container');
 
                 for (let i = 0; i < team_data["players"].length; i++) {
-                    card_container.append("<div class='summoner-card-wrapper placeholder p"+i+"'></div>");
+                    card_container.append(`<div class='summoner-card-wrapper placeholder p${i}'></div>`);
                 }
 
-                /*
-                let player_counter = 0;
-                for (let i = 0; i < team_data["players"].length; i++) {
-                    let player_id = team_data["players"][i]["PlayerID"];
-                    let summonercard_request = new XMLHttpRequest();
-                    summonercard_request.onreadystatechange = async function() {
-                        if (this.readyState === 4 && this.status === 200) {
-                            card_container.find(".placeholder.p"+i).replaceWith(this.responseText);
-                            //card_container.append(this.responseText);
-                            player_counter++;
-                            if (player_counter >= team_data["players"].length) {
-                                let popup_loader = $('.popup-loading-indicator');
-                                popup_loader.css("opacity","0");
-                                await new Promise(r => setTimeout(r, 210));
-                                popup_loader.remove();
-                            }
-                        }
+                fetch(`ajax-functions/summoner-card-ajax.php`, {
+                    method: "GET",
+                    headers: {
+                        teamid: teamID,
                     }
-                    summonercard_request.open("GET","ajax-functions/summoner-card-ajax.php?player="+player_id);
-                    summonercard_request.send();
-                }
-                */
-                let summonercard_request = new XMLHttpRequest();
-                summonercard_request.onreadystatechange = async function() {
-                    if (this.readyState === 4 && this.status === 200) {
-                        let card_results = JSON.parse(this.responseText);
+                })
+                    .then(res => res.json())
+                    .then(async card_results => {
                         for (let i = 0; i < card_results.length; i++) {
                             card_container.find(".placeholder.p" + i).replaceWith(card_results[i]);
                         }
@@ -513,15 +512,11 @@ async function popup_team(teamID) {
                         popup_loader.css("opacity", "0");
                         await new Promise(r => setTimeout(r, 210));
                         popup_loader.remove();
-                    }
-                }
-                summonercard_request.open("GET","ajax-functions/summoner-card-ajax.php?team="+teamID);
-                summonercard_request.send();
+                    })
+                    .catch(error => console.error(error));
             }
-        }
-    }
-    team_request.open("GET","ajax-functions/get-DB-AJAX.php?type=team-and-players&team="+teamID);
-    team_request.send();
+        })
+        .catch(error => console.error(error));
 }
 async function close_popup_team(event) {
     let popupbg = $('.team-popup-bg');
@@ -587,26 +582,41 @@ function switch_elo_view(tournamentID,view) {
 
 function jump_to_league_elo(div_num) {
     event.preventDefault();
-    let league = $('.teams-elo-list h3.liga'+div_num);
+    let league = $(`.teams-elo-list h3.liga${div_num}`);
     $('html').stop().animate({scrollTop: league[0].offsetTop-40}, 300, 'swing');
 }
 
+let elo_list_fetch_control = null;
 function add_elo_team_list(area,tournamentID,type) {
     let displaytype = "none";
     if (type === "div" || type === "group") {
         displaytype = ""
     }
-    let list_request = new XMLHttpRequest();
-    list_request.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            let list = this.responseText;
+
+    if (elo_list_fetch_control !== null) elo_list_fetch_control.abort();
+    elo_list_fetch_control = new AbortController();
+
+    fetch(`ajax-functions/elo-list-ajax.php`, {
+        method: "GET",
+        headers: {
+            "TournamentID": tournamentID,
+            "type": type,
+        },
+        signal: elo_list_fetch_control.signal,
+    })
+        .then(res => res.text())
+        .then(list => {
             area.empty();
             area.append(list);
             $('.jump-button-wrapper').css("display",displaytype);
-        }
-    }
-    list_request.open("GET","ajax-functions/elo-list-ajax.php?tournament="+ tournamentID + "&type=" + type);
-    list_request.send();
+        })
+        .catch(error => {
+            if (error.name === "AbortError") {
+                console.warn(error)
+            } else {
+                console.error(error)
+            }
+        });
 }
 
 function color_elo_list() {
@@ -658,8 +668,8 @@ function search_teams_elo() {
     for (let i=0; i < teams_list.length; i++) {
         let indexOf = teams_list[i][0].toUpperCase().indexOf(input_value);
         if (indexOf > -1) {
-            ac.append($("<div>" + teams_list[i][0].substring(0,indexOf) + "<strong>" + teams_list[i][0].substring(indexOf,indexOf+input_value.length) + "</strong>" + teams_list[i][0].substring(indexOf+input_value.length)
-                + "<input type='hidden' value='" + teams_list[i][1] + "'></div>").click(function() {
+            ac.append($(`<div>${teams_list[i][0].substring(0,indexOf)}<strong>${teams_list[i][0].substring(indexOf,indexOf+input_value.length)}</strong>${teams_list[i][0].substring(indexOf+input_value.length)}
+                    <input type='hidden' value='${teams_list[i][1]}'></div>`).click(function() {
                 $('html').stop().animate({scrollTop: this.getElementsByTagName("input")[0].value-300}, 400, 'swing');
                 $('.search-wrapper .searchbar .autocomplete-items').empty();
                 $('.search-wrapper .searchbar input').val("");
@@ -821,14 +831,14 @@ async function unset_prev_sorticon(header_cell_prev) {
     header_cell_prev.find("div.sort-direction").css("transition","transform 200ms");
     header_cell_prev.find("div.sort-direction").css("transform","rotateX(90deg)");
     await new Promise(r => setTimeout(r, 120));
-    header_cell_prev.find("div.sort-direction").html("<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M310 606q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T310 546h340q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T650 606H310Z\"/></svg>");
+    header_cell_prev.find("div.sort-direction").html(get_material_icon("check_indeterminate_small",true));
     header_cell_prev.find("div.sort-direction").css("transform","");
     header_cell_prev.find("div.sort-direction").css("transition","");
 }
 async function set_current_sorticon(header_cell_current) {
     header_cell_current.find("div.sort-direction").css("transition","transform 0s");
     header_cell_current.find("div.sort-direction").css("transform","rotateX(90deg)");
-    header_cell_current.find("div.sort-direction").html("<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 699q-6 0-11-2t-10-7L261 492q-8-8-7.5-21.5T262 449q10-10 21.5-8.5T304 450l176 176 176-176q8-8 21.5-9t21.5 9q10 8 8.5 21t-9.5 22L501 690q-5 5-10 7t-11 2Z\"/></svg>");
+    header_cell_current.find("div.sort-direction").html(get_material_icon("expand_more",true));
     await new Promise(r => setTimeout(r, 10));
     header_cell_current.find("div.sort-direction").css("transition","transform 200ms");
     header_cell_current.find("div.sort-direction").css("transform","");
@@ -842,13 +852,13 @@ function expand_collapse_table() {
         table.removeClass("collapsed");
         table.addClass("expanded");
         let rows = $(table.find('tr')[5]).nextUntil('tr.expand-table');
-        rows.find('td').wrapInner('<div style="display: none;"/>').parent().find('td>div').slideDown("fast",function () {
+        rows.find('td').wrapInner("<div style='display: none;'/>").parent().find('td>div').slideDown("fast",function () {
             let $set = $(this);
             $set.replaceWith($set.contents());
         });
     } else if (table.hasClass("expanded")) {
         let rows = $(table.find('tr')[5]).nextUntil('tr.expand-table');
-        rows.find('td').wrapInner('<div style="display: block;"/>').parent().find('td>div').slideUp("fast",function () {
+        rows.find('td').wrapInner("<div style='display: block;'/>").parent().find('td>div').slideUp("fast",function () {
             table.removeClass("expanded");
             table.addClass("collapsed");
             let $set = $(this);
@@ -866,7 +876,7 @@ function collapse_all_tables() {
         let table = $(expand_button).parent().parent();
         if (table.hasClass("expanded")) {
             let rows = $(table.find('tr')[5]).nextUntil('tr.expand-table');
-            rows.find('td').wrapInner('<div style="display: block;"/>').parent().find('td>div').slideUp("fast",function () {
+            rows.find('td').wrapInner("<div style='display: block;'/>").parent().find('td>div').slideUp("fast",function () {
                 table.removeClass("expanded");
                 table.addClass("collapsed");
                 let $set = $(this);
@@ -883,7 +893,7 @@ function expand_all_tables() {
             table.removeClass("collapsed");
             table.addClass("expanded");
             let rows = $(table.find('tr')[5]).nextUntil('tr.expand-table');
-            rows.find('td').wrapInner('<div style="display: none;"/>').parent().find('td>div').slideDown("fast",function () {
+            rows.find('td').wrapInner("<div style='display: none;'/>").parent().find('td>div').slideDown("fast",function () {
                 let $set = $(this);
                 $set.replaceWith($set.contents());
             });
@@ -898,7 +908,7 @@ $(document).ready(function () {
 function mark_champ_in_table() {
     let tr_selector = $('.stattables .table tr');
     let champ = $(this).find('img').attr('alt');
-    let activate = tr_selector.has('td img[alt='+champ+']');
+    let activate = tr_selector.has(`td img[alt=${champ}]`);
     tr_selector.removeClass('temp-markedrow');
     activate.addClass('temp-markedrow');
     tr_selector.each(function (i,e) {
@@ -912,7 +922,7 @@ function hard_mark_champ_in_table() {
     let tr_selector = $('.stattables .table tr');
     if ($(this).find('th').length === 0 && !$(this).hasClass("expand-table")) {
         let champ = $(this).find('img').attr('alt');
-        let activate = tr_selector.has('td img[alt=' + champ + ']');
+        let activate = tr_selector.has(`td img[alt=${champ}]`);
         if (activate.hasClass("markedrow")) {
             activate.removeClass("markedrow");
         } else {
@@ -962,13 +972,13 @@ async function toggle_darkmode() {
     if (body.hasClass("light")) {
         body.removeClass("light");
         await new Promise(r => setTimeout(r, 1));
-        $('.settings-option.toggle-mode').html("<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 936q-150 0-255-105T120 576q0-135 79.5-229T408 226q41-8 56 14t-1 60q-9 23-14 47t-5 49q0 90 63 153t153 63q25 0 48.5-4.5T754 595q43-16 64 1.5t11 59.5q-27 121-121 200.5T480 936Zm0-60q109 0 190-67.5T771 650q-25 11-53.667 16.5Q688.667 672 660 672q-114.689 0-195.345-80.655Q384 510.689 384 396q0-24 5-51.5t18-62.5q-98 27-162.5 109.5T180 576q0 125 87.5 212.5T480 876Zm-4-297Z\"/></svg></div>");
-        document.cookie = "lightmode=0; expires="+cookie_expiry+"; path=/"
+        $('.settings-option.toggle-mode').html(get_material_icon("dark_mode"));
+        document.cookie = `lightmode=0; expires=${cookie_expiry}; path=/`;
     } else {
         body.addClass("light");
         await new Promise(r => setTimeout(r, 1));
-        $('.settings-option.toggle-mode').html("<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M479.765 716Q538 716 579 675.235q41-40.764 41-99Q620 518 579.235 477q-40.764-41-99-41Q422 436 381 476.765q-41 40.764-41 99Q340 634 380.765 675q40.764 41 99 41Zm.235 60q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM70 606q-12.75 0-21.375-8.675Q40 588.649 40 575.825 40 563 48.625 554.5T70 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T170 606H70Zm720 0q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T790 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T890 606H790ZM479.825 296Q467 296 458.5 287.375T450 266V166q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 166v100q0 12.75-8.675 21.375-8.676 8.625-21.5 8.625Zm0 720q-12.825 0-21.325-8.62-8.5-8.63-8.5-21.38V886q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 886v100q0 12.75-8.675 21.38-8.676 8.62-21.5 8.62ZM240 378l-57-56q-9-9-8.629-21.603.37-12.604 8.526-21.5 8.896-8.897 21.5-8.897Q217 270 226 279l56 57q8 9 8 21t-8 20.5q-8 8.5-20.5 8.5t-21.5-8Zm494 495-56-57q-8-9-8-21.375T678.5 774q8.5-9 20.5-9t21 9l57 56q9 9 8.629 21.603-.37 12.604-8.526 21.5-8.896 8.897-21.5 8.897Q743 882 734 873Zm-56-495q-9-9-9-21t9-21l56-57q9-9 21.603-8.629 12.604.37 21.5 8.526 8.897 8.896 8.897 21.5Q786 313 777 322l-57 56q-8 8-20.364 8-12.363 0-21.636-8ZM182.897 873.103q-8.897-8.896-8.897-21.5Q174 839 183 830l57-56q8.8-9 20.9-9 12.1 0 20.709 9Q291 783 291 795t-9 21l-56 57q-9 9-21.603 8.629-12.604-.37-21.5-8.526ZM480 576Z\"/></svg></div>");
-        document.cookie = "lightmode=1; expires="+cookie_expiry+"; path=/"
+        $('.settings-option.toggle-mode').html(get_material_icon("light_mode"));
+        document.cookie = `lightmode=1; expires=${cookie_expiry}; path=/`;
     }
     await new Promise(r => setTimeout(r, 10));
     document.getElementsByTagName("body")[0].style.transition = null;
@@ -983,12 +993,12 @@ function toggle_admin_buttons() {
     let body = $('body');
     if (body.hasClass("admin_li")) {
         body.removeClass("admin_li");
-        $('.settings-option.toggle-admin-b-vis').html("Buttons<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480.118 726Q551 726 600.5 676.382q49.5-49.617 49.5-120.5Q650 485 600.382 435.5q-49.617-49.5-120.5-49.5Q409 386 359.5 435.618q-49.5 49.617-49.5 120.5Q310 627 359.618 676.5q49.617 49.5 120.5 49.5Zm-.353-58Q433 668 400.5 635.265q-32.5-32.736-32.5-79.5Q368 509 400.735 476.5q32.736-32.5 79.5-32.5Q527 444 559.5 476.735q32.5 32.736 32.5 79.5Q592 603 559.265 635.5q-32.736 32.5-79.5 32.5ZM480 856q-138 0-251.5-75T53.145 582.923Q50 578 48.5 570.826 47 563.652 47 556t1.5-14.826Q50 534 53.145 529.077 115 406 228.5 331T480 256q138 0 251.5 75t175.355 198.077Q910 534 911.5 541.174 913 548.348 913 556t-1.5 14.826q-1.5 7.174-4.645 12.097Q845 706 731.5 781T480 856Zm0-300Zm-.169 240Q601 796 702.5 730.5 804 665 857 556q-53-109-154.331-174.5-101.332-65.5-222.5-65.5Q359 316 257.5 381.5 156 447 102 556q54 109 155.331 174.5 101.332 65.5 222.5 65.5Z\"/></svg></div>");
-        document.cookie = "admin_btns=0; expires="+cookie_expiry+"; path=/";
+        $('.settings-option.toggle-admin-b-vis').html(`Buttons${get_material_icon("visibility")}`);
+        document.cookie = `admin_btns=0; expires=${cookie_expiry}; path=/`;
     } else {
         body.addClass("admin_li");
-        $('.settings-option.toggle-admin-b-vis').html("Buttons<div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"m629 637-44-44q26-71-27-118t-115-24l-44-44q17-11 38-16t43-5q71 0 120.5 49.5T650 556q0 22-5.5 43.5T629 637Zm129 129-40-40q49-36 85.5-80.5T857 556q-50-111-150-175.5T490 316q-42 0-86 8t-69 19l-46-47q35-16 89.5-28T485 256q135 0 249 74t174 199q3 5 4 12t1 15q0 8-1 15.5t-4 12.5q-26 55-64 101t-86 81Zm36 204L648 827q-35 14-79 21.5t-89 7.5q-138 0-253-74T52 583q-3-6-4-12.5T47 556q0-8 1.5-15.5T52 528q21-45 53.5-87.5T182 360L77 255q-9-9-9-21t9-21q9-9 21.5-9t21.5 9l716 716q8 8 8 19.5t-8 20.5q-8 10-20.5 10t-21.5-9ZM223 402q-37 27-71.5 71T102 556q51 111 153.5 175.5T488 796q33 0 65-4t48-12l-64-64q-11 5-27 7.5t-30 2.5q-70 0-120-49t-50-121q0-15 2.5-30t7.5-27l-97-97Zm305 142Zm-116 58Z\"/></svg></div>");
-        document.cookie = "admin_btns=1; expires="+cookie_expiry+"; path=/";
+        $('.settings-option.toggle-admin-b-vis').html(`Buttons${get_material_icon("visibility_off")}`);
+        document.cookie = `admin_btns=1; expires=${cookie_expiry}; path=/`;
     }
 }
 $(document).ready(function () {
@@ -1015,7 +1025,7 @@ async function select_dropdown_option() {
     let selection = $(this);
     let button = selection.parent().parent().find("a.button-dropdown");
     let icon_div = button.find('div.material-symbol')[0].innerHTML;
-    button.html(this.innerText + "<div class='material-symbol'>" + icon_div + "</div>");
+    button.html(this.innerText + `<div class='material-symbol'>${icon_div}</div>`);
     selection.parent().find("a.dropdown-selection-item").removeClass('selected-item');
     selection.addClass('selected-item');
     let entTable = $(".champstattables.entire");
@@ -1042,9 +1052,9 @@ function select_player_table() {
     let summoner = this.innerText.split(" ");
     summoner.pop();
     summoner = summoner.join(" ");
-    let table = $('.playerstable h4:contains('+summoner+')').parent();
+    let table = $(`.playerstable h4:contains(${summoner})`).parent();
     if (!current_is){
-        let marked_elsewhere = buttonJ.parent().parent().parent().find(".role-playername.selected-player-table:contains("+summoner+")");
+        let marked_elsewhere = buttonJ.parent().parent().parent().find(`.role-playername.selected-player-table:contains(${summoner})`);
         marked_elsewhere.removeClass('selected-player-table');
         buttonJ.addClass('selected-player-table');
         let ind = 0;
@@ -1058,7 +1068,7 @@ function select_player_table() {
             table.removeClass(("role"+i));
         }
         for (let i = ind; i >= 0; i--) {
-            let next_table = $('.playertable.role'+i);
+            let next_table = $(`.playertable.role${i}`);
             if (next_table.length > 0) {
                 next_table.last().after(table);
                 break;
@@ -1085,12 +1095,12 @@ function expand_collapse_summonercard() {
     cookie_expiry.setFullYear(cookie_expiry.getFullYear()+1);
     if (sc.hasClass("collapsed")) {
         sc.removeClass("collapsed");
-        collapse_button.html("<div class=\"svg-wrapper\"><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 467q-5 0-10.5-2t-10.5-7L322 321q-9-9-9-22t9-22q9-9 21-9t21 9l116 116 116-116q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L501 458q-5 5-10 7t-11 2ZM322 874q-9-9-9-21.5t9-21.5l137-137q5-5 10.5-7t10.5-2q6 0 11 2t10 7l138 138q9 9 9 21t-9 21q-9 9-22 9t-22-9L480 759 365 874q-9 9-21.5 9t-21.5-9Z\"/></svg></div>Stats aus");
-        document.cookie = "preference_sccollapsed=0; expires="+cookie_expiry+"; path=/";
+        collapse_button.html(`${get_material_icon("unfold_less")}Stats aus`);
+        document.cookie = `preference_sccollapsed=0; expires=${cookie_expiry}; path=/`;
     } else {
         sc.addClass("collapsed");
-        collapse_button.html("<div class=\"svg-wrapper\"><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M322 422q-9-9-9-22t9-22l137-137q5-5 10-7t11-2q5 0 10.5 2t10.5 7l137 137q9 9 9 22t-9 22q-9 9-22 9t-22-9L480 308 366 422q-9 9-22 9t-22-9Zm158 502q-5 0-10.5-2t-10.5-7L322 778q-9-9-9-22t9-22q9-9 22-9t22 9l114 114 114-114q9-9 22-9t22 9q9 9 9 22t-9 22L501 915q-5 5-10 7t-11 2Z\"/></svg></div>Stats ein");
-        document.cookie = "preference_sccollapsed=1; expires="+cookie_expiry+"; path=/";
+        collapse_button.html(`${get_material_icon("unfold_more")}Stats ein`);
+        document.cookie = `preference_sccollapsed=1; expires=${cookie_expiry}; path=/`;
     }
 }
 
@@ -1098,9 +1108,10 @@ $(document).ready(function () {
     $('.player-cards a.exp_coll_sc').on("click",expand_collapse_summonercard);
 });
 
-let player_search_request = new XMLHttpRequest();
+let player_search_controller = null;
 function search_players() {
-    player_search_request.abort();
+    if (player_search_controller !== null) player_search_controller.abort();
+    player_search_controller = new AbortController();
 
     let searchbar = $('.search-wrapper .searchbar');
     let input = $('input.search-players')[0];
@@ -1120,16 +1131,26 @@ function search_players() {
     }
     searchbar.append("<div class='search-loading-indicator'></div>");
 
-    player_search_request.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
+    fetch(`ajax-functions/player-overview-card-ajax.php`, {
+        method: "GET",
+        signal: player_search_controller.signal,
+        headers: {
+            search: input_value,
+        }
+    })
+        .then(res => res.text())
+        .then(cards => {
             $('.search-loading-indicator').remove();
             recents_list.css("display","none");
-            player_list.html(this.responseText);
-        }
-    }
-    player_search_request.open("GET","ajax-functions/player-overview-card-ajax.php?search="+input_value);
-    player_search_request.send();
-
+            player_list.html(cards);
+        })
+        .catch(error => {
+            if (error.name === "AbortError") {
+                console.log(error)
+            } else {
+                console.error(error)
+            }
+        });
 }
 async function reload_recent_players(initial=false) {
     let player_list = $('.recent-players-list');
@@ -1138,22 +1159,25 @@ async function reload_recent_players(initial=false) {
         player_list.html("");
         return;
     }
-    let rprequest = new XMLHttpRequest();
-    rprequest.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
+
+    fetch(`ajax-functions/player-overview-card-ajax.php`, {
+        method: "GET",
+        headers: {
+            "puuids": localStorage.getItem("searched_players_PUUIDS"),
+        },
+    })
+        .then(res => res.text())
+        .then(async player_cards => {
             $('.search-loading-indicator').remove();
             if (initial) {
                 player_list.hide();
             }
-            player_list.html("<span>"+get_material_icon("history")+"Zuletzt gesucht:</span>"+this.responseText);
+            player_list.html(`<span>${get_material_icon("history")}Zuletzt gesucht:</span>${player_cards}`);
             if (initial) {
                 player_list.fadeIn(200);
             }
-        }
-    }
-    rprequest.open("GET","ajax-functions/player-overview-card-ajax.php",true);
-    rprequest.setRequestHeader("data-puuids",localStorage.getItem("searched_players_PUUIDS"));
-    rprequest.send();
+        })
+        .catch(error => console.error(error))
 }
 function remove_recent_player(puuid) {
     event.preventDefault();
@@ -1188,7 +1212,7 @@ async function popup_player(PUUID, add_to_recents = false) {
     let popup = $('.player-popup');
 
     if (popup.length === 0) {
-        $("header").after("<div class=\"player-popup-bg\" onclick=\"close_popup_player(event)\"><div class=\"player-popup\"></div></div>")
+        $("header").after(`<div class="player-popup-bg" onclick="close_popup_player(event)"><div class="player-popup"></div></div>`)
     }
     popup = $('.player-popup');
     let popupbg = $('.player-popup-bg');
@@ -1226,7 +1250,7 @@ async function popup_player(PUUID, add_to_recents = false) {
     current_player_in_popup = PUUID;
     popup.empty();
 
-    popup.append("<div class='close-button' onclick='closex_popup_player()'><div class='material-symbol'><svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"></path></svg></div></div>");
+    popup.append(`<div class='close-button' onclick='closex_popup_player()'>${get_material_icon("close")}</div>`);
     popup.append("<div class='close-button-space'><div class='popup-loading-indicator'></div></div>");
 
     popupbg.css("opacity","0");
@@ -1239,11 +1263,14 @@ async function popup_player(PUUID, add_to_recents = false) {
         popup.append("Für diesen Spieler wurden keine weiteren Profile gefunden")
     }
 
-    let player_overview_request = new XMLHttpRequest();
-    player_overview_request.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            let content = this.responseText;
-
+    fetch(`ajax-functions/player-overview-ajax.php`, {
+        method: "GET",
+        headers: {
+            puuid: PUUID,
+        }
+    })
+        .then(res => res.text())
+        .then(async content => {
             if (current_player_in_popup === PUUID) {
                 popup.append(content);
                 let popup_loader = $('.popup-loading-indicator');
@@ -1251,11 +1278,8 @@ async function popup_player(PUUID, add_to_recents = false) {
                 await new Promise(r => setTimeout(r, 210));
                 popup_loader.remove();
             }
-        }
-    }
-    player_overview_request.open("GET","ajax-functions/player-overview-ajax.php?puuid="+PUUID);
-    player_overview_request.send();
-
+        })
+        .catch(error => console.error(error));
 }
 async function close_popup_player(event) {
     let popupbg = $('.player-popup-bg');
@@ -1334,91 +1358,106 @@ function user_update_group(button) {
 
     let loading_width = 0;
 
-    const last_update_xhr = new XMLHttpRequest();
-    last_update_xhr.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            await uug_start(this);
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "user-update-timer",
+            itemid: group_ID,
+            updatetype: "0",
         }
-    }
-    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+group_ID+"&utype=0");
-    last_update_xhr.send();
+    })
+        .then(res => res.text())
+        .then(async result => {
+            await uug_start(result);
+        })
+        .catch(error => console.error(error));
 
     async function uug_start(result) {
-        let timestamp = Date.parse(result.responseText);
+        let timestamp = Date.parse(result);
         let current = Date.now();
         let diff = new Date(current - timestamp);
 
         if (current - timestamp < 300000) {
             let rest = new Date(300000 - (current-timestamp));
-            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
+            window.alert(`Das letzte Update wurde vor ${format_time_minsec(diff)} durchgeführt. Versuche es in ${format_time_minsec(rest)} noch einmal`);
             await new Promise(r => setTimeout(r, 1000));
             $(button).removeClass("user_updating");
             button.disabled = false;
             user_update_running = false;
         } else {
-            const set_update_time_xhr = new XMLHttpRequest();
-            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+group_ID, true);
-            set_update_time_xhr.send();
+            await fetch(`ajax-functions/user-update-functions.php`, {
+                method: "POST",
+                headers: {
+                    type: "update_start_time",
+                    itemid: group_ID,
+                }
+            })
 
             loading_width = 1;
-            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+            button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-            const update_standings_xhr = new XMLHttpRequest();
-            update_standings_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    await uug_standings();
+            fetch(`ajax-functions/user-update-functions.php`, {
+                method: "GET",
+                headers: {
+                    type: "teams_in_group",
+                    groupid: group_ID,
                 }
-            }
-            update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&id="+group_ID, true);
-            update_standings_xhr.send();
+            })
+                .then(() => {
+                    uug_standings();
+                })
         }
     }
 
-    async function uug_standings() {
+    function uug_standings() {
         loading_width = 20;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_matches_xhr = new XMLHttpRequest();
-        update_matches_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uug_matches();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "matches_from_group",
+                groupid: group_ID,
             }
-        }
-        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&id="+group_ID, true);
-        update_matches_xhr.send();
+        })
+            .then(() => {
+                uug_matches();
+            })
     }
 
     let matchresults_gotten = 0;
-    async function uug_matches() {
+    function uug_matches() {
         loading_width = 40;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const get_matches_xhr = new XMLHttpRequest();
-        get_matches_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                let matchids = JSON.parse(this.responseText);
-
-                for (const match of matchids) {
-
-                    const update_matches_xhr = new XMLHttpRequest();
-                    update_matches_xhr.onreadystatechange = async function() {
-                        if (this.readyState === 4 && this.status === 200) {
-                            await uug_matchresults(this, matchids.length);
-                        }
-                    }
-                    update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match, true);
-                    update_matches_xhr.send();
-                }
+        fetch(`ajax-functions/get-DB-AJAX.php`, {
+            method: "GET",
+            headers: {
+                type: "matchids-by-group",
+                groupid: group_ID,
             }
-        }
-        get_matches_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=matchids-by-group&group="+group_ID, true);
-
-        get_matches_xhr.send();
+        })
+            .then(res => res.json())
+            .then(matchids => {
+                for (const match of matchids) {
+                    fetch(`ajax-functions/user-update-functions.php`, {
+                        method: "GET",
+                        headers: {
+                            type: "matchresult",
+                            matchid: match,
+                        }
+                    })
+                        .then(() => {
+                            uug_matchresults(matchids.length);
+                        });
+                }
+            })
+            .catch(error => console.error(error));
     }
 
-    async function uug_matchresults(result, max_matches) {
+    function uug_matchresults(max_matches) {
         loading_width = loading_width + 60/max_matches;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
         matchresults_gotten++;
         if (max_matches <= matchresults_gotten) {
@@ -1433,27 +1472,37 @@ function user_update_group(button) {
     }
 
     function update_page() {
-        const standings_xhr = new XMLHttpRequest();
-        standings_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                $("div.standings").replaceWith(this.responseText);
+        fetch(`ajax-functions/create-page-elements.php`, {
+            method: "GET",
+            headers: {
+                type: "standings",
+                groupid: group_ID,
             }
-        }
-        standings_xhr.open("GET", "ajax-functions/create-page-elements.php?type=standings&group="+group_ID);
-        standings_xhr.send();
+        })
+            .then(res => res.text())
+            .then(standings => {
+                $("div.standings").replaceWith(standings);
+            })
+            .catch(error => console.error(error));
 
         let matchbuttons = $("div.match-button-wrapper");
         for (const matchbutton of matchbuttons) {
             let match_ID = matchbutton.getAttribute("data-matchid");
             let matchtype = matchbutton.getAttribute("data-matchtype")
-            const match_xhr = new XMLHttpRequest();
-            match_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    $(matchbutton).replaceWith(this.responseText);
+
+            fetch(`ajax-functions/create-page-elements.php`, {
+                method: "GET",
+                headers: {
+                    type: "matchbutton",
+                    matchid: match_ID,
+                    matchtype: matchtype,
                 }
-            }
-            match_xhr.open("GET", "ajax-functions/create-page-elements.php?type=matchbutton&match="+match_ID+"&mtype="+matchtype);
-            match_xhr.send();
+            })
+                .then(res => res.text())
+                .then(matchbutton => {
+                    $(matchbutton).replaceWith(matchbutton);
+                })
+                .catch(error => console.error(error));
         }
     }
 }
@@ -1471,119 +1520,143 @@ function user_update_team(button) {
 
     let loading_width = 0;
 
-    const last_update_xhr = new XMLHttpRequest();
-    last_update_xhr.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            await uut_start(this);
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "user-update-timer",
+            itemid: team_ID,
+            updatetype: "0",
         }
-    }
-    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+team_ID+"&utype=0");
-    last_update_xhr.send();
+    })
+        .then(res => res.text())
+        .then(async time => {
+            await uut_start(time);
+        })
+        .catch(e => console.error(e));
 
     async function uut_start(result) {
-        let timestamp = Date.parse(result.responseText);
+        let timestamp = Date.parse(result);
         let current = Date.now();
         let diff = new Date(current - timestamp);
 
-        if (current - timestamp < 300000) {
+        if (current - timestamp < 3000) {
             let rest = new Date(300000 - (current-timestamp));
-            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
+            window.alert(`Das letzte Update wurde vor ${format_time_minsec(diff)} durchgeführt. Versuche es in ${format_time_minsec(rest)} noch einmal`);
             await new Promise(r => setTimeout(r, 1000));
             $(button).removeClass("user_updating");
             button.disabled = false;
             user_update_running = false;
         } else {
-            const set_update_time_xhr = new XMLHttpRequest();
-            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+team_ID, true);
-            set_update_time_xhr.send();
+            await fetch(`ajax-functions/user-update-functions.php`, {
+                method: "POST",
+                headers: {
+                    type: "update_start_time",
+                    itemid: team_ID,
+                }
+            })
+                .catch(e => console.error(e));
 
             loading_width = 1;
-            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+            button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-            const update_players_xhr = new XMLHttpRequest();
-            update_players_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    await uut_calc_stats();
+            fetch(`ajax-functions/user-update-functions.php`, {
+                method: "GET",
+                headers: {
+                    type: "players_in_team",
+                    teamid: team_ID,
                 }
-            }
-            update_players_xhr.open("GET", "ajax-functions/user-update-functions.php?type=players_in_team&id="+team_ID, true);
-            update_players_xhr.send();
+            })
+                .then(() => {
+                    uut_calc_stats();
+                })
+                .catch(e => console.error(e));
         }
     }
 
-    async function uut_calc_stats() {
+    function uut_calc_stats() {
         loading_width = 15;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_stats_xhr = new XMLHttpRequest();
-        update_stats_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uut_standings();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "recalc_team_stats",
+                teamid: team_ID,
             }
-        }
-        update_stats_xhr.open("GET", "ajax-functions/user-update-functions.php?type=recalc_team_stats&id="+team_ID, true);
-        update_stats_xhr.send();
+        })
+            .then(() => {
+                uut_standings();
+            })
+            .catch(e => console.error(e));
     }
 
-    async function uut_standings() {
+    function uut_standings() {
         loading_width = 30;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_standings_xhr = new XMLHttpRequest();
-        update_standings_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uut_matches();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "teams_in_group",
+                teamid: team_ID,
             }
-        }
-        update_standings_xhr.open("GET", "ajax-functions/user-update-functions.php?type=teams_in_group&teamid="+team_ID, true);
-        update_standings_xhr.send();
+        })
+            .then( () => {
+                uut_matches();
+            })
+            .catch(e => console.error(e));
     }
 
-    async function uut_matches() {
+    function uut_matches() {
         loading_width = 45;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_matches_xhr = new XMLHttpRequest();
-        update_matches_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uut_matchresults();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "matches_from_group",
+                teamid: team_ID,
             }
-        }
-        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matches_from_group&teamid="+team_ID, true);
-        update_matches_xhr.send();
+        })
+            .then(() => {
+                uut_matchresults();
+            })
+            .catch(e => console.error(e));
     }
 
     let matchresults_gotten = 0;
-    async function uut_matchresults() {
+    function uut_matchresults() {
         loading_width = 60;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const get_matches_xhr = new XMLHttpRequest();
-        get_matches_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                let matchids = JSON.parse(this.responseText);
-
-                for (const match of matchids) {
-
-                    const update_matches_xhr = new XMLHttpRequest();
-                    update_matches_xhr.onreadystatechange = async function() {
-                        if (this.readyState === 4 && this.status === 200) {
-                            await uut_finished(this, matchids.length);
-                        }
-                    }
-                    update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match, true);
-                    update_matches_xhr.send();
-                }
+        fetch(`ajax-functions/get-DB-AJAX.php`, {
+            method: "GET",
+            headers: {
+                type: "matchids-by-team",
+                teamid: team_ID,
             }
-        }
-        get_matches_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=matchids-by-team&team="+team_ID, true);
-
-        get_matches_xhr.send();
+        })
+            .then(res => res.json())
+            .then(matchids => {
+                for (const match of matchids) {
+                    fetch(`ajax-functions/user-update-functions.php`, {
+                        method: "GET",
+                        headers: {
+                            type: "matchresult",
+                            matchid: match,
+                        }
+                    })
+                        .then(() => {
+                            uut_finished(matchids.length);
+                        })
+                }
+            })
+            .catch(e => console.error(e));
     }
 
-    async function uut_finished(result, max_matches) {
+    function uut_finished(max_matches) {
         loading_width = loading_width + 40/max_matches;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
         matchresults_gotten++;
         if (max_matches <= matchresults_gotten) {
@@ -1598,37 +1671,50 @@ function user_update_team(button) {
     }
 
     function update_page() {
-        const players_xhr = new XMLHttpRequest();
-        players_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                $("div.summoner-card-container").replaceWith(this.responseText);
+        fetch(`ajax-functions/create-page-elements.php`, {
+            method: "GET",
+            headers: {
+                type: "summoner-card-container",
+                teamid: team_ID,
             }
-        }
-        players_xhr.open("GET","ajax-functions/create-page-elements.php?type=summoner-card-container")
-        players_xhr.setRequestHeader("data-teamid",team_ID);
-        players_xhr.send();
+        })
+            .then(res => res.text())
+            .then(summonercards => {
+                $("div.summoner-card-container").replaceWith(summonercards);
+            })
+            .catch(e => console.error(e));
 
-        const standings_xhr = new XMLHttpRequest();
-        standings_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                $("div.standings").replaceWith(this.responseText);
+        fetch(`ajax-functions/create-page-elements.php`, {
+            method: "GET",
+            headers: {
+                type: "standings",
+                teamid: team_ID,
             }
-        }
-        standings_xhr.open("GET", "ajax-functions/create-page-elements.php?type=standings&team="+team_ID);
-        standings_xhr.send();
+        })
+            .then(res => res.text())
+            .then(standings => {
+                $("div.standings").replaceWith(standings);
+            })
+            .catch(e => console.error(e));
 
         let matchbuttons = $("div.match-button-wrapper");
         for (const matchbutton of matchbuttons) {
             let match_ID = matchbutton.getAttribute("data-matchid");
-            let matchtype = matchbutton.getAttribute("data-matchtype")
-            const match_xhr = new XMLHttpRequest();
-            match_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    $(matchbutton).replaceWith(this.responseText);
+            let matchtype = matchbutton.getAttribute("data-matchtype");
+            fetch(`ajax-functions/create-page-elements.php`, {
+                method: "GET",
+                headers: {
+                    type: "matchbutton",
+                    matchid: match_ID,
+                    matchtype: matchtype,
+                    teamid: team_ID,
                 }
-            }
-            match_xhr.open("GET", "ajax-functions/create-page-elements.php?type=matchbutton&match="+match_ID+"&mtype="+matchtype);
-            match_xhr.send();
+            })
+                .then(res => res.text())
+                .then(new_matchbutton => {
+                    $(matchbutton).replaceWith(new_matchbutton);
+                })
+                .catch(e => console.error(e));
         }
     }
 }
@@ -1648,14 +1734,19 @@ function user_update_match(button) {
 
     let loading_width = 0;
 
-    const last_update_xhr = new XMLHttpRequest();
-    last_update_xhr.onreadystatechange = async function() {
-        if (this.readyState === 4 && this.status === 200) {
-            await uum_start(this);
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "user-update-timer",
+            itemID: match_ID,
+            updatetype: "1",
         }
-    }
-    last_update_xhr.open("GET", "ajax-functions/get-DB-AJAX.php?type=user-update-timer&id="+match_ID+"&utype=1");
-    last_update_xhr.send();
+    })
+        .then(res => res.text())
+        .then(async time => {
+            await uum_start(time);
+        })
+        .catch(e => console.error(e));
 
     async function uum_start(result) {
         let timestamp = Date.parse(result.responseText);
@@ -1664,80 +1755,106 @@ function user_update_match(button) {
 
         if (current - timestamp < 300000) {
             let rest = new Date(300000 - (current-timestamp));
-            window.alert("Das letzte Update wurde vor "+format_time_minsec(diff)+" durchgeführt. Versuche es in "+format_time_minsec(rest)+" noch einmal");
+            window.alert(`Das letzte Update wurde vor ${format_time_minsec(diff)} durchgeführt. Versuche es in ${format_time_minsec(rest)} noch einmal`);
             await new Promise(r => setTimeout(r, 1000));
             $(button).removeClass("user_updating");
             button.disabled = false;
             user_update_running = false;
         } else {
-            const set_update_time_xhr = new XMLHttpRequest();
-            set_update_time_xhr.open("POST", "ajax-functions/user-update-functions.php?type=update_start_time&id="+match_ID+"&utype=1", true);
-            set_update_time_xhr.send();
+            fetch(`ajax-functions/user-update-functions.php`, {
+                method: "POST",
+                headers: {
+                    type: "update_start_time",
+                    itemID: match_ID,
+                    updatetype: "1",
+                }
+            })
+                .catch(e => console.error(e));
 
             loading_width = 1;
-            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+            button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-            const update_matchresults_xhr = new XMLHttpRequest();
-            update_matchresults_xhr.onreadystatechange = async function() {
-                if (this.readyState === 4 && this.status === 200) {
-                    await uum_games();
+            fetch(`ajax-functions/user-update-functions.php`, {
+                method: "GET",
+                headers: {
+                    type: "matchresult",
+                    matchID: match_ID,
+                    format: format,
                 }
-            }
-            update_matchresults_xhr.open("GET", "ajax-functions/user-update-functions.php?type=matchresult&id="+match_ID+"&format="+format, true);
-            update_matchresults_xhr.send();
+            })
+                .then(() => {
+                    uum_games();
+                })
+                .catch(e => console.error(e));
         }
     }
-    async function uum_games() {
+    function uum_games() {
         loading_width = 20;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_games_xhr = new XMLHttpRequest();
-        update_games_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uum_gamedata_sort();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "games_for_match",
+                matchID: match_ID,
+                format: format,
             }
-        }
-        update_games_xhr.open("GET", "ajax-functions/user-update-functions.php?type=games_for_match&id="+match_ID+"format="+format, true);
-        update_games_xhr.send();
+        })
+            .then(async () => {
+                await uum_gamedata_sort();
+            })
+            .catch(e => console.error(e));
     }
 
     async function uum_gamedata_sort() {
         loading_width = 50;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_matches_xhr = new XMLHttpRequest();
-        update_matches_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uum_calc_stats();
+        let gamedata_loading = true;
+
+        fetch(`ajax-functions/user-update-functions.php?type=gamedata_for_match&id=${match_ID}format=${format}`, {
+            method: "GET",
+            headers: {
+                type: "gamedata_for_match",
+                matchID: match_ID,
+                format: format,
+                sort: "true",
             }
-        }
-        update_matches_xhr.open("GET", "ajax-functions/user-update-functions.php?type=gamedata_for_match&id="+match_ID+"format="+format, true);
-        update_matches_xhr.send();
-        while (update_matches_xhr.readyState < 4 && loading_width < 80) {
+        })
+            .then(() => {
+                gamedata_loading = false;
+                uum_calc_stats();
+            })
+            .catch(e => {gamedata_loading = false; console.error(e);});
+
+        while (gamedata_loading && loading_width < 80) {
             await new Promise(r => setTimeout(r, 6000));
             if (loading_width === 0) break;
             loading_width += 2;
-            button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+            button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
         }
     }
 
-    async function uum_calc_stats() {
+    function uum_calc_stats() {
         loading_width = 90;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
-        const update_stats_xhr = new XMLHttpRequest();
-        update_stats_xhr.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                await uum_finished();
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "recalc_team_stats",
+                teamID: team_ID,
             }
-        }
-        update_stats_xhr.open("GET", "ajax-functions/user-update-functions.php?type=recalc_team_stats&id="+team_ID, true);
-        update_stats_xhr.send();
+        })
+            .then(() => {
+                uum_finished()
+            })
+            .catch(e => console.error(e));
     }
 
-    async function uum_finished() {
+    function uum_finished() {
         loading_width = 100;
-        button.style.setProperty("--update-loading-bar-width", loading_width+"%");
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
         $(button).removeClass("user_updating");
         button.disabled = false;
@@ -1749,13 +1866,16 @@ function user_update_match(button) {
     }
 
     function update_page() {
-        let match_request = new XMLHttpRequest();
-        match_request.open("GET","ajax-functions/get-DB-AJAX.php?type=match-games-teams-by-matchid&match="+match_ID);
-        match_request.onreadystatechange = async function() {
-            if (this.readyState === 4 && this.status === 200) {
-                let data = JSON.parse(this.responseText);
+        fetch(`ajax-functions/get-DB-AJAX.php`, {
+            method: "GET",
+            headers: {
+                type: "match-games-teams-by-matchid",
+                matchID: match_ID,
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
                 let games = data['games'];
-
                 let popup = $('.mh-popup');
 
                 if (games.length > 0) {
@@ -1765,32 +1885,33 @@ function user_update_match(button) {
                 let game_counter = 0;
                 for (const [i,game] of games.entries()) {
                     if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
-                        popup.append("<div class='game game"+i+"'></div>");
+                        popup.append(`<div class='game game${i}'></div>`);
                     }
                     let gameID = game['RiotMatchID'];
-                    let game_request = new XMLHttpRequest();
-                    game_request.onreadystatechange = async function() {
-                        // noinspection JSPotentiallyInvalidUsageOfThis
-                        if (this.readyState === 4 && this.status === 200) {
+
+                    let fetchheaders = new Headers({
+                        gameid: gameID
+                    });
+                    if (team_ID !== null) {
+                        fetchheaders.append("teamid",team_ID)
+                    }
+                    fetch(`ajax-functions/game-AJAX.php`, {
+                        method: "GET",
+                        headers: fetchheaders,
+                    })
+                        .then(res => res.text())
+                        .then(data => {
                             let game_wrap = popup.find('.game'+i);
                             if (current_match_in_popup === game['MatchID'] || current_match_in_popup === game['PLMatchID']) {
                                 game_wrap.empty();
-                                // noinspection JSPotentiallyInvalidUsageOfThis
-                                game_wrap.append(this.responseText);
+                                game_wrap.append(data);
                                 game_counter++;
                             }
-                        }
-                    }
-                    if (team_ID === null) {
-                        game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID);
-                    } else {
-                        game_request.open("GET", "ajax-functions/game-AJAX.php?gameID="+gameID+"&teamID="+team_ID);
-                    }
-                    game_request.send();
+                        })
+                        .catch(e => console.error(e));
                 }
-            }
-        }
-        match_request.send();
+            })
+            .catch(e => console.error(e));
     }
 }
 $(document).ready(function () {
@@ -1799,12 +1920,24 @@ $(document).ready(function () {
     });
 });
 
-function get_material_icon(name) {
-    let res = "<div class='material-symbol'>";
+function get_material_icon(name,nowrap=false) {
+    let res = "";
+    if (!nowrap) res = "<div class='material-symbol'>";
     if (name === "close") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 618 270 828q-9 9-21 9t-21-9q-9-9-9-21t9-21l210-210-210-210q-9-9-9-21t9-21q9-9 21-9t21 9l210 210 210-210q9-9 21-9t21 9q9 9 9 21t-9 21L522 576l210 210q9 9 9 21t-9 21q-9 9-21 9t-21-9L480 618Z\"/></svg>";
     if (name === "history") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 -960 960 960\" width=\"48\"><path d=\"M477-120q-142 0-243.5-95.5T121-451q-1-12 7.5-21t21.5-9q12 0 20.5 8.5T181-451q11 115 95 193t201 78q127 0 215-89t88-216q0-124-89-209.5T477-780q-68 0-127.5 31T246-667h75q13 0 21.5 8.5T351-637q0 13-8.5 21.5T321-607H172q-13 0-21.5-8.5T142-637v-148q0-13 8.5-21.5T172-815q13 0 21.5 8.5T202-785v76q52-61 123.5-96T477-840q75 0 141 28t115.5 76.5Q783-687 811.5-622T840-482q0 75-28.5 141t-78 115Q684-177 618-148.5T477-120Zm34-374 115 113q9 9 9 21.5t-9 21.5q-9 9-21 9t-21-9L460-460q-5-5-7-10.5t-2-11.5v-171q0-13 8.5-21.5T481-683q13 0 21.5 8.5T511-653v159Z\"/></svg>";
     if (name === "sync") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 -960 960 960\" width=\"48\"><path d=\"M220-477q0 63 23.5 109.5T307-287l30 21v-94q0-13 8.5-21.5T367-390q13 0 21.5 8.5T397-360v170q0 13-8.5 21.5T367-160H197q-13 0-21.5-8.5T167-190q0-13 8.5-21.5T197-220h100l-15-12q-64-51-93-111t-29-134q0-94 49.5-171.5T342-766q11-5 21 0t14 16q5 11 0 22.5T361-710q-64 34-102.5 96.5T220-477Zm520-6q0-48-23.5-97.5T655-668l-29-26v94q0 13-8.5 21.5T596-570q-13 0-21.5-8.5T566-600v-170q0-13 8.5-21.5T596-800h170q13 0 21.5 8.5T796-770q0 13-8.5 21.5T766-740H665l15 14q60 56 90 120t30 123q0 93-48 169.5T623-195q-11 6-22.5 1.5T584-210q-5-11 0-22.5t16-17.5q65-33 102.5-96T740-483Z\"/></svg>";
     if (name === "manage_search") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M110 436q-12.75 0-21.375-8.675Q80 418.649 80 405.825 80 393 88.625 384.5T110 376h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 436H110Zm0 210q-12.75 0-21.375-8.675Q80 628.649 80 615.825 80 603 88.625 594.5T110 586h140q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T250 646H110Zm707 189L678 696q-26 20-56 30t-62 10q-83 0-141.5-58.5T360 536q0-83 58.5-141.5T560 336q83 0 141.5 58.5T760 536q0 32-10 62t-30 56l139 139q9 9 9 21t-9 21q-9 9-21 9t-21-9ZM559.765 676Q618 676 659 635.235q41-40.764 41-99Q700 478 659.235 437q-40.764-41-99-41Q502 396 461 436.765q-41 40.764-41 99Q420 594 460.765 635q40.764 41 99 41ZM110 856q-12.75 0-21.375-8.675Q80 838.649 80 825.825 80 813 88.625 804.5T110 796h340q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T450 856H110Z\"/></svg>";
-    res += "</div>";
+    if (name === "info") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M483.175 776q12.825 0 21.325-8.625T513 746V566q0-12.75-8.675-21.375-8.676-8.625-21.5-8.625-12.825 0-21.325 8.625T453 566v180q0 12.75 8.675 21.375 8.676 8.625 21.5 8.625Zm-3.193-314q14.018 0 23.518-9.2T513 430q0-14.45-9.482-24.225-9.483-9.775-23.5-9.775-14.018 0-23.518 9.775T447 430q0 13.6 9.482 22.8 9.483 9.2 23.5 9.2Zm.284 514q-82.734 0-155.5-31.5t-127.266-86q-54.5-54.5-86-127.341Q80 658.319 80 575.5q0-82.819 31.5-155.659Q143 347 197.5 293t127.341-85.5Q397.681 176 480.5 176q82.819 0 155.659 31.5Q709 239 763 293t85.5 127Q880 493 880 575.734q0 82.734-31.5 155.5T763 858.316q-54 54.316-127 86Q563 976 480.266 976Zm.234-60Q622 916 721 816.5t99-241Q820 434 721.188 335 622.375 236 480 236q-141 0-240.5 98.812Q140 433.625 140 576q0 141 99.5 240.5t241 99.5Zm-.5-340Z\"/></svg>";
+    if (name === "open_in_new") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M180 936q-24 0-42-18t-18-42V276q0-24 18-42t42-18h249q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T429 276H180v600h600V627q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T840 627v249q0 24-18 42t-42 18H180Zm181.13-241.391Q353 686 352.5 674q-.5-12 8.5-21l377-377H549q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T549 216h261q12.75 0 21.375 8.625T840 246v261q0 12.75-8.675 21.375-8.676 8.625-21.5 8.625-12.825 0-21.325-8.625T780 507V319L403 696q-8.442 8-20.721 8t-21.149-9.391Z\"/></svg>";
+    if (name === "check_indeterminate_small") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M310 606q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T310 546h340q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T650 606H310Z\"/></svg>";
+    if (name === "expand_less") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M262 689q-9-9-9.5-21t8.5-21l198-198q5-5 10-7t11-2q6 0 11 2t10 7l198 197q9 8 9 20.5t-9 21.5q-9 9-21.5 9t-21.5-9L480 513 304 690q-8 9-20.5 8.5T262 689Z\"/></svg>";
+    if (name === "expand_more") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 699q-6 0-11-2t-10-7L261 492q-8-8-7.5-21.5T262 449q10-10 21.5-8.5T304 450l176 176 176-176q8-8 21.5-9t21.5 9q10 8 8.5 21t-9.5 22L501 690q-5 5-10 7t-11 2Z\"/></svg>";
+    if (name === "dark_mode") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 936q-150 0-255-105T120 576q0-135 79.5-229T408 226q41-8 56 14t-1 60q-9 23-14 47t-5 49q0 90 63 153t153 63q25 0 48.5-4.5T754 595q43-16 64 1.5t11 59.5q-27 121-121 200.5T480 936Zm0-60q109 0 190-67.5T771 650q-25 11-53.667 16.5Q688.667 672 660 672q-114.689 0-195.345-80.655Q384 510.689 384 396q0-24 5-51.5t18-62.5q-98 27-162.5 109.5T180 576q0 125 87.5 212.5T480 876Zm-4-297Z\"/></svg>";
+    if (name === "light_mode") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M479.765 716Q538 716 579 675.235q41-40.764 41-99Q620 518 579.235 477q-40.764-41-99-41Q422 436 381 476.765q-41 40.764-41 99Q340 634 380.765 675q40.764 41 99 41Zm.235 60q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM70 606q-12.75 0-21.375-8.675Q40 588.649 40 575.825 40 563 48.625 554.5T70 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T170 606H70Zm720 0q-12.75 0-21.375-8.675-8.625-8.676-8.625-21.5 0-12.825 8.625-21.325T790 546h100q12.75 0 21.375 8.675 8.625 8.676 8.625 21.5 0 12.825-8.625 21.325T890 606H790ZM479.825 296Q467 296 458.5 287.375T450 266V166q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 166v100q0 12.75-8.675 21.375-8.676 8.625-21.5 8.625Zm0 720q-12.825 0-21.325-8.62-8.5-8.63-8.5-21.38V886q0-12.75 8.675-21.375 8.676-8.625 21.5-8.625 12.825 0 21.325 8.625T510 886v100q0 12.75-8.675 21.38-8.676 8.62-21.5 8.62ZM240 378l-57-56q-9-9-8.629-21.603.37-12.604 8.526-21.5 8.896-8.897 21.5-8.897Q217 270 226 279l56 57q8 9 8 21t-8 20.5q-8 8.5-20.5 8.5t-21.5-8Zm494 495-56-57q-8-9-8-21.375T678.5 774q8.5-9 20.5-9t21 9l57 56q9 9 8.629 21.603-.37 12.604-8.526 21.5-8.896 8.897-21.5 8.897Q743 882 734 873Zm-56-495q-9-9-9-21t9-21l56-57q9-9 21.603-8.629 12.604.37 21.5 8.526 8.897 8.896 8.897 21.5Q786 313 777 322l-57 56q-8 8-20.364 8-12.363 0-21.636-8ZM182.897 873.103q-8.897-8.896-8.897-21.5Q174 839 183 830l57-56q8.8-9 20.9-9 12.1 0 20.709 9Q291 783 291 795t-9 21l-56 57q-9 9-21.603 8.629-12.604-.37-21.5-8.526ZM480 576Z\"/></svg>";
+    if (name === "visibility") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480.118 726Q551 726 600.5 676.382q49.5-49.617 49.5-120.5Q650 485 600.382 435.5q-49.617-49.5-120.5-49.5Q409 386 359.5 435.618q-49.5 49.617-49.5 120.5Q310 627 359.618 676.5q49.617 49.5 120.5 49.5Zm-.353-58Q433 668 400.5 635.265q-32.5-32.736-32.5-79.5Q368 509 400.735 476.5q32.736-32.5 79.5-32.5Q527 444 559.5 476.735q32.5 32.736 32.5 79.5Q592 603 559.265 635.5q-32.736 32.5-79.5 32.5ZM480 856q-138 0-251.5-75T53.145 582.923Q50 578 48.5 570.826 47 563.652 47 556t1.5-14.826Q50 534 53.145 529.077 115 406 228.5 331T480 256q138 0 251.5 75t175.355 198.077Q910 534 911.5 541.174 913 548.348 913 556t-1.5 14.826q-1.5 7.174-4.645 12.097Q845 706 731.5 781T480 856Zm0-300Zm-.169 240Q601 796 702.5 730.5 804 665 857 556q-53-109-154.331-174.5-101.332-65.5-222.5-65.5Q359 316 257.5 381.5 156 447 102 556q54 109 155.331 174.5 101.332 65.5 222.5 65.5Z\"/></svg>";
+    if (name === "visibility_off") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"m629 637-44-44q26-71-27-118t-115-24l-44-44q17-11 38-16t43-5q71 0 120.5 49.5T650 556q0 22-5.5 43.5T629 637Zm129 129-40-40q49-36 85.5-80.5T857 556q-50-111-150-175.5T490 316q-42 0-86 8t-69 19l-46-47q35-16 89.5-28T485 256q135 0 249 74t174 199q3 5 4 12t1 15q0 8-1 15.5t-4 12.5q-26 55-64 101t-86 81Zm36 204L648 827q-35 14-79 21.5t-89 7.5q-138 0-253-74T52 583q-3-6-4-12.5T47 556q0-8 1.5-15.5T52 528q21-45 53.5-87.5T182 360L77 255q-9-9-9-21t9-21q9-9 21.5-9t21.5 9l716 716q8 8 8 19.5t-8 20.5q-8 10-20.5 10t-21.5-9ZM223 402q-37 27-71.5 71T102 556q51 111 153.5 175.5T488 796q33 0 65-4t48-12l-64-64q-11 5-27 7.5t-30 2.5q-70 0-120-49t-50-121q0-15 2.5-30t7.5-27l-97-97Zm305 142Zm-116 58Z\"/></svg>";
+    if (name === "unfold_less") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M480 467q-5 0-10.5-2t-10.5-7L322 321q-9-9-9-22t9-22q9-9 21-9t21 9l116 116 116-116q9-9 21.5-9t21.5 9q9 9 9 21.5t-9 21.5L501 458q-5 5-10 7t-11 2ZM322 874q-9-9-9-21.5t9-21.5l137-137q5-5 10.5-7t10.5-2q6 0 11 2t10 7l138 138q9 9 9 21t-9 21q-9 9-22 9t-22-9L480 759 365 874q-9 9-21.5 9t-21.5-9Z\"/></svg>";
+    if (name === "unfold_more") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M322 422q-9-9-9-22t9-22l137-137q5-5 10-7t11-2q5 0 10.5 2t10.5 7l137 137q9 9 9 22t-9 22q-9 9-22 9t-22-9L480 308 366 422q-9 9-22 9t-22-9Zm158 502q-5 0-10.5-2t-10.5-7L322 778q-9-9-9-22t9-22q9-9 22-9t22 9l114 114 114-114q9-9 22-9t22 9q9 9 9 22t-9 22L501 915q-5 5-10 7t-11 2Z\"/></svg>";
+    if (!nowrap) res += "</div>";
     return res;
 }

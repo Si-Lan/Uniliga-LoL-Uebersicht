@@ -354,6 +354,11 @@ a.button.exp_coll_sc {
     padding: 10px 20px 10px 14px;
     gap: 2px;
 }
+a.button.exp_coll_sc .material-symbol,
+a.button.exp_coll_sc .material-symbol svg {
+    width: 30px;
+    height: 30px;
+}
 .material-symbol {
     width: 24px;
     height: 24px;

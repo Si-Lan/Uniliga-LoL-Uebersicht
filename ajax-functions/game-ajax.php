@@ -5,12 +5,11 @@ include(dirname(__FILE__).'/../game.php');
 
 $dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 
-if ($dbcn -> connect_error){
-	echo "<span style='color: orangered'>Database Connection failed</span>";
-} else {
-	if (isset($_GET['gameID'])) {
-		$gameID = $_GET['gameID'];
-		$teamID = $_GET['teamID'] ?? NULL;
-		create_game($dbcn,$gameID,$teamID);
-	}
-}
+if ($dbcn -> connect_error) exit("Database Connection failed");
+
+$gameID = $_SERVER['HTTP_GAMEID'] ?? $_GET['gameID'] ?? NULL;
+if ($gameID === NULL) exit("no game found");
+$teamID = $_SERVER['HTTP_TEAMID'] ?? $_GET['teamID'] ?? NULL;
+create_game($dbcn, $gameID, $teamID);
+
+$dbcn->close();

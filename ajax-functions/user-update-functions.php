@@ -1,17 +1,16 @@
 <?php
-include_once(dirname(__FILE__).'/../admin/scrapeToornament.php');
-include_once(dirname(__FILE__).'/../admin/riot-api-access/get-RGAPI-data.php');
-$type = $_REQUEST["type"] ?? NULL;
-
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;
-include('../DB-info.php');
+include(dirname(__FILE__).'/../DB-info.php');
+include(dirname(__FILE__).'/../admin/scrapeToornament.php');
+include(dirname(__FILE__).'/../admin/riot-api-access/get-RGAPI-data.php');
 
-//error_reporting(0);
+$type = $_SERVER['HTTP_TYPE'] ?? $_REQUEST["type"] ?? NULL;
 
 if ($type == "update_start_time") {
-	$item_ID = $_REQUEST['id'];
-	$update_type = $_REQUEST['utype'] ?? 0;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	$item_ID = $_SERVER['HTTP_ITEMID'] ?? $_REQUEST['id'] ?? NULL;
+	if ($item_ID == NULL) exit;
+	$update_type = $_SERVER['HTTP_UPDATETYPE'] ?? $_REQUEST['utype'] ?? 0;
 	$lastupdate = $dbcn->execute_query("SELECT * FROM userupdates WHERE ItemID = ? AND update_type = ?", [$item_ID, $update_type])->fetch_assoc();
 	$t = date('Y-m-d H:i:s');
 	if ($lastupdate == NULL) {
@@ -19,63 +18,55 @@ if ($type == "update_start_time") {
 	} else {
 		$dbcn->execute_query("UPDATE userupdates SET last_update = '$t' WHERE ItemID = ? AND update_type = ?", [$item_ID, $update_type]);
 	}
+	exit("1");
 }
-
-
 if ($type == "teams_in_group") {
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
-	if (isset($_REQUEST['teamid'])) {
-		$team_ID = $_REQUEST['teamid'];
+	$team_ID = $_SERVER['HTTP_TEAMID'] ?? $_REQUEST['teamid'] ?? NULL;
+	if ($team_ID != NULL) {
 		$groupID = $dbcn->execute_query("SELECT GroupID FROM teamsingroup WHERE TeamID = ?", [$team_ID])->fetch_column();
 	} else {
-		$groupID = $_REQUEST['id'];
+		$groupID = $_SERVER['HTTP_GROUPID'] ?? $_REQUEST['id'] ?? NULL;
 	}
 	$delete = FALSE;
-	if (isset($_REQUEST["delete"])) {
+	if (isset($_SERVER['HTTP_DELETETEAMS']) || isset($_REQUEST["delete"])) {
 		$delete = TRUE;
 	}
-	if ($dbcn -> connect_error){
-		echo -1;
-	} else {
-		$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$groupID])->fetch_assoc();
-		$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
-		if ($div["format"] == "Groups") {
-			$scrape_result = scrape_toornaments_teams_in_groups($div["TournamentID"], $div["DivID"], $groupID, FALSE, $delete);
-			echo ($scrape_result["writes"] + $scrape_result["updates"]);
-		} elseif ($div["format"] == "Swiss") {
-			$scrape_result = scrape_toornaments_teams_in_groups_swiss($div["TournamentID"], $div["DivID"], $groupID);
-			echo ($scrape_result["writes"] + $scrape_result["updates"]);
-		}
+
+	$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$groupID])->fetch_assoc();
+	$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
+	if ($div["format"] == "Groups") {
+		$scrape_result = scrape_toornaments_teams_in_groups($div["TournamentID"], $div["DivID"], $groupID, FALSE, $delete);
+		echo($scrape_result["writes"] + $scrape_result["updates"]);
+	} elseif ($div["format"] == "Swiss") {
+		$scrape_result = scrape_toornaments_teams_in_groups_swiss($div["TournamentID"], $div["DivID"], $groupID);
+		echo($scrape_result["writes"] + $scrape_result["updates"]);
 	}
 }
 
 if ($type == "matches_from_group") {
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
-	if (isset($_REQUEST['teamid'])) {
-		$team_ID = $_REQUEST['teamid'];
+	$team_ID = $_SERVER['HTTP_TEAMID'] ?? $_REQUEST['teamid'] ?? NULL;
+	if ($team_ID != NULL) {
 		$groupID = $dbcn->execute_query("SELECT GroupID FROM teamsingroup WHERE TeamID = ?", [$team_ID])->fetch_column();
 	} else {
-		$groupID = $_REQUEST['id'];
+		$groupID = $_SERVER['HTTP_GROUPID'] ?? $_REQUEST['id'] ?? NULL;
 	}
 
-	if ($dbcn -> connect_error){
-		echo -1;
-	} else {
-		$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$groupID])->fetch_assoc();
-		$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
-		if ($div["format"] == "Groups") {
-			$scrape_result = scrape_toornament_matches_from_group($div["TournamentID"], $div["DivID"], $groupID);
-			echo ($scrape_result["writes"] + $scrape_result["changes"]);
-		} elseif ($div["format"] == "Swiss") {
-			$scrape_result = scrape_toornament_matches_from_swiss($div["TournamentID"],$div["DivID"], $groupID);
-			echo ($scrape_result["writes"] + $scrape_result["changes"]);
-		}
+	$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$groupID])->fetch_assoc();
+	$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
+	if ($div["format"] == "Groups") {
+		$scrape_result = scrape_toornament_matches_from_group($div["TournamentID"], $div["DivID"], $groupID);
+		echo($scrape_result["writes"] + $scrape_result["changes"][0]);
+	} elseif ($div["format"] == "Swiss") {
+		$scrape_result = scrape_toornament_matches_from_swiss($div["TournamentID"], $div["DivID"], $groupID);
+		echo($scrape_result["writes"] + $scrape_result["changes"][0]);
 	}
 }
 
 if ($type == "matchresult") {
-	$match_ID = $_REQUEST['id'] ?? NULL;
-	$format = $_REQUEST['format'] ?? "groups";
+	$match_ID = $_SERVER['HTTP_MATCHID'] ?? $_REQUEST['id'] ?? NULL;
+	$format = $_SERVER['HTTP_FORMAT'] ?? $_REQUEST['format'] ?? "groups";
 
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
@@ -98,7 +89,7 @@ if ($type == "matchresult") {
 }
 
 if ($type == "players_in_team") {
-	$team_ID = $_REQUEST['id'] ?? NULL;
+	$team_ID = $_SERVER['HTTP_TEAMID'] ?? $_REQUEST['id'] ?? NULL;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
 		echo -1;
@@ -111,8 +102,8 @@ if ($type == "players_in_team") {
 }
 
 if ($type == "games_for_match") {
-	$match_ID = $_REQUEST['id'] ?? NULL;
-	$format = $_REQUEST['format'] ?? "groups";
+	$match_ID = $_SERVER['HTTP_MATCHID'] ?? $_REQUEST['id'] ?? NULL;
+	$format = $_SERVER['HTTP_FORMAT'] ?? $_REQUEST['format'] ?? "groups";
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
 		echo -1;
@@ -144,9 +135,9 @@ if ($type == "games_for_match") {
 }
 
 if ($type == "gamedata_for_match") {
-	$match_ID = $_REQUEST['id'] ?? NULL;
-	$format = $_REQUEST['format'] ?? "groups";
-	$sort = $_REQUEST['sort'] ?? "true";
+	$match_ID = $_SERVER['HTTP_MATCHID'] ?? $_REQUEST['id'] ?? NULL;
+	$format = $_SERVER['HTTP_FORMAT'] ?? $_REQUEST['format'] ?? "groups";
+	$sort = $_SERVER['HTTP_SORT'] ?? $_REQUEST['sort'] ?? "true";
 	if ($sort == "true") {
 		$sort = TRUE;
 	} else {
@@ -192,7 +183,7 @@ if ($type == "gamedata_for_match") {
 }
 
 if ($type == "recalc_team_stats") {
-	$team_ID = $_REQUEST['id'] ?? NULL;
+	$team_ID = $_SERVER['HTTP_TEAMID'] ?? $_REQUEST['id'] ?? NULL;
 	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 	if ($dbcn -> connect_error){
 		echo -1;
@@ -202,3 +193,5 @@ if ($type == "recalc_team_stats") {
 	get_played_positions_for_players($team_ID);
 	calculate_teamstats($dbcn,$team_ID);
 }
+
+if (isset($dbcn)) $dbcn->close();
