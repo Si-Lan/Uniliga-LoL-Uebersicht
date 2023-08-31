@@ -1539,7 +1539,7 @@ function user_update_team(button) {
         let current = Date.now();
         let diff = new Date(current - timestamp);
 
-        if (current - timestamp < 3000) {
+        if (current - timestamp < 300000) {
             let rest = new Date(300000 - (current-timestamp));
             window.alert(`Das letzte Update wurde vor ${format_time_minsec(diff)} durchgeführt. Versuche es in ${format_time_minsec(rest)} noch einmal`);
             await new Promise(r => setTimeout(r, 1000));
@@ -1619,6 +1619,23 @@ function user_update_team(button) {
             }
         })
             .then(() => {
+                uut_playoffmatches();
+            })
+            .catch(e => console.error(e));
+    }
+
+    function uut_playoffmatches() {
+        loading_width = 60;
+        button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
+
+        fetch(`ajax-functions/user-update-functions.php`, {
+            method: "GET",
+            headers: {
+                type: "matches_from_playoff",
+                teamid: team_ID,
+            }
+        })
+            .then(() => {
                 uut_matchresults();
             })
             .catch(e => console.error(e));
@@ -1626,36 +1643,53 @@ function user_update_team(button) {
 
     let matchresults_gotten = 0;
     function uut_matchresults() {
-        loading_width = 60;
+        loading_width = 75;
         button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
         fetch(`ajax-functions/get-DB-AJAX.php`, {
             method: "GET",
             headers: {
-                type: "matchids-by-team",
+                type: "matchids-by-team-with-playoffs",
                 teamid: team_ID,
             }
         })
             .then(res => res.json())
-            .then(matchids => {
-                for (const match of matchids) {
+            .then(async matchids => {
+                let match_amount = matchids["groups"].length + matchids["playoffs"].length;
+                for (const match of matchids["groups"]) {
                     fetch(`ajax-functions/user-update-functions.php`, {
                         method: "GET",
                         headers: {
                             type: "matchresult",
                             matchid: match,
+                            format: "groups",
                         }
                     })
                         .then(() => {
-                            uut_finished(matchids.length);
+                            uut_finished(match_amount);
                         })
+                }
+                for (const match of matchids["playoffs"]) {
+                    fetch(`ajax-functions/user-update-functions.php`, {
+                        method: "GET",
+                        headers: {
+                            type: "matchresult",
+                            matchid: match,
+                            format: "playoffs",
+                        }
+                    })
+                        .then(() => {
+                            uut_finished(match_amount);
+                        })
+                        .catch(e => console.error(e));
+                    await new Promise(r => setTimeout(r, 500));
                 }
             })
             .catch(e => console.error(e));
     }
 
     function uut_finished(max_matches) {
-        loading_width = loading_width + 40/max_matches;
+        loading_width = loading_width + 25/max_matches;
         button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
 
         matchresults_gotten++;
@@ -1749,7 +1783,7 @@ function user_update_match(button) {
         .catch(e => console.error(e));
 
     async function uum_start(result) {
-        let timestamp = Date.parse(result.responseText);
+        let timestamp = Date.parse(result);
         let current = Date.now();
         let diff = new Date(current - timestamp);
 
@@ -1812,7 +1846,7 @@ function user_update_match(button) {
 
         let gamedata_loading = true;
 
-        fetch(`ajax-functions/user-update-functions.php?type=gamedata_for_match&id=${match_ID}format=${format}`, {
+        fetch(`ajax-functions/user-update-functions.php`, {
             method: "GET",
             headers: {
                 type: "gamedata_for_match",

@@ -186,6 +186,25 @@ if ($type == "matchids-by-team") {
 	$result = preg_replace("/(\d{19,})/",'"$1"',$result);
 	echo $result;
 }
+if ($type == "matchids-by-team-with-playoffs") {
+	$teamID = $_SERVER["HTTP_TEAMID"] ?? $_REQUEST["team"] ?? NULL;
+	$matches_nested = $dbcn->execute_query("SELECT MatchID FROM matches WHERE Team1ID = ? OR Team2ID = ?",[$teamID,$teamID])->fetch_all();
+	$matches = array();
+	foreach ($matches_nested as $match) {
+		$matches[] = $match[0];
+	}
+	$plmatches_nested = $dbcn->execute_query("SELECT MatchID FROM playoffmatches WHERE Team1ID = ? OR Team2ID = ?",[$teamID,$teamID])->fetch_all();
+	$plmatches = array();
+	foreach ($plmatches_nested as $match) {
+		$plmatches[] = $match[0];
+	}
+	$result = array(
+		"groups" => $matches,
+		"playoffs" => $plmatches
+	);
+	$result = preg_replace("/(\d{19,})/",'"$1"',json_encode($result));
+	echo $result;
+}
 
 // update timers
 if ($type == "user-update-timer") {

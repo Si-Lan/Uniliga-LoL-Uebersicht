@@ -63,6 +63,27 @@ if ($type == "matches_from_group") {
 		echo($scrape_result["writes"] + $scrape_result["changes"][0]);
 	}
 }
+if ($type == "matches_from_playoff") {
+	$dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
+	$team_ID = $_SERVER['HTTP_TEAMID'] ?? $_REQUEST['teamid'] ?? NULL;
+	if ($team_ID != NULL) {
+		$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM teams WHERE TeamID = ?", [$team_ID])->fetch_column();
+		$divNum = $dbcn->execute_query("SELECT Number FROM divisions WHERE DivID = (SELECT DivID FROM `groups` WHERE GroupID = (SELECT GroupID FROM teamsingroup WHERE TeamID = ?))", [$team_ID])->fetch_column();
+		$playoffIDs = $dbcn->execute_query("SELECT PlayoffID FROM playoffs WHERE TournamentID = ? AND (Number1 = ? OR Number2 = ?)", [$tournamentID, $divNum, $divNum])->fetch_all();
+		$playoffID = array();
+		foreach ($playoffIDs as $id_nested) {
+			$playoffID[] = $id_nested[0];
+		}
+	} else {
+		$playoffID = $_SERVER['HTTP_PLAYOFFID'] ?? $_REQUEST['id'] ?? NULL;
+		$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM playoffs WHERE PlayoffID = ?", [$playoffID])->fetch_column();
+		$playoffID = [$playoffID];
+	}
+	foreach ($playoffID as $id) {
+		$scrape_result = scrape_toornament_matchups_from_playoffs($tournamentID,$id);
+		echo($scrape_result["writes"] + $scrape_result["changes"][0]);
+	}
+}
 
 if ($type == "matchresult") {
 	$match_ID = $_SERVER['HTTP_MATCHID'] ?? $_REQUEST['id'] ?? NULL;
@@ -73,17 +94,15 @@ if ($type == "matchresult") {
 		echo -1;
 	} else {
 		if ($format == "groups") {
-			$match = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?", [$match_ID])->fetch_assoc();
+			$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM divisions WHERE DivID = (SELECT DivID FROM `groups` WHERE GroupID = (SELECT GroupID FROM matches WHERE MatchID = ?))", [$match_ID])->fetch_column();
 			$playoffs = FALSE;
 		} elseif ($format == "playoffs") {
-			$match = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?", [$match_ID])->fetch_assoc();
+			$tournamentID = $dbcn->execute_query("SELECT TournamentID FROM playoffs WHERE PlayoffID = (SELECT PlayoffID FROM playoffmatches WHERE MatchID = ?)", [$match_ID])->fetch_column();
 			$playoffs = TRUE;
 		} else {
 			exit();
 		}
-		$group = $dbcn->execute_query("SELECT * FROM `groups` WHERE GroupID = ?", [$match['GroupID']])->fetch_assoc();
-		$div = $dbcn->execute_query("SELECT * FROM divisions WHERE DivID = ?", [$group["DivID"]])->fetch_assoc();
-		$scrape_result = scrape_toornament_matches($div["TournamentID"], $match_ID, $playoffs);
+		$scrape_result = scrape_toornament_matches($tournamentID, $match_ID, $playoffs);
 		echo ($scrape_result["changes"][0]);
 	}
 }
