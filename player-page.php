@@ -42,7 +42,7 @@ echo "<div><h2>Spielersuche</h2>Suche nach Spielernamen oder Summonernamen</div>
 echo "<div class='search-wrapper'>
                 <span class='searchbar'>
                     <input class=\"search-players deletable-search\" placeholder='Spieler suchen' type='text'>
-                    <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
+                    <a class='material-symbol' href='#' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</a>
                 </span>
               </div>";
 echo "
@@ -59,4 +59,5 @@ echo "</div>";
 	echo "<title>Error</title></head>";
 }
 ?>
+</body>
 </html>

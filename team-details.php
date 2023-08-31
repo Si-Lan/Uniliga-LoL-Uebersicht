@@ -64,6 +64,9 @@ try {
 			$curr_matchData = $dbcn->execute_query("SELECT * FROM matches WHERE MatchID = ?",[$curr_matchID])->fetch_assoc();
 			if ($curr_matchData == NULL) {
 				$curr_matchData = $dbcn->execute_query("SELECT * FROM playoffmatches WHERE MatchID = ?",[$curr_matchID])->fetch_assoc();
+				$curr_matchFormat = "playoffs";
+			} else {
+				$curr_matchFormat = "groups";
 			}
 			if ($curr_matchData != NULL) {
 				echo "<body class='team$lightmode$adminbtnbody' style='overflow: hidden'>";
@@ -108,17 +111,11 @@ try {
                     <div class='title'>
                         <h3>Spieler</h3>
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
-			if (isset($_COOKIE["preference_sccollapsed"])) {
-				if ($_COOKIE["preference_sccollapsed"] === "1") {
-					$collapsed = TRUE;
-					echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
-				} else {
-					$collapsed = FALSE;
-					echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
-				}
-			} else {
-				$collapsed = TRUE;
+			$collapsed = summonercards_collapsed();
+			if ($collapsed) {
 				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+			} else {
+				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
 			}
 			echo "
                      </div>";
@@ -177,9 +174,23 @@ try {
         }
         arsort($players_gamecount_by_id);
 
+		$last_user_update = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=0", [$teamID])->fetch_column();
+		$last_cron_update = $dbcn->execute_query("SELECT last_update FROM cron_updates WHERE TournamentID = ?", [$div["TournamentID"]])->fetch_column();
+		$last_manual_updates  = $dbcn->execute_query("SELECT standings, matches, matchresults FROM manual_updates WHERE TournamentID = ?", [$div["TournamentID"]])->fetch_row();
+
+		$last_update = latest_update($last_user_update,$last_cron_update,$last_manual_updates);
+
+		if ($last_update == NULL) {
+			$updatediff = "unbekannt";
+		} else {
+			$last_update = strtotime($last_update);
+			$currtime = time();
+			$updatediff = max_time_from_timestamp($currtime-$last_update);
+		}
+
         create_header($dbcn,"team",$tournament["TournamentID"],$group["GroupID"],$teamID);
         create_tournament_overview_nav_buttons($dbcn,$tournament['TournamentID'],"",$div['DivID'],$group['GroupID']);
-		create_team_nav_buttons($tournament["TournamentID"],$team,"details");
+		create_team_nav_buttons($tournament["TournamentID"],$team,"details",$updatediff);
 
         echo "<div class='main-content'>";
         echo "
@@ -187,17 +198,11 @@ try {
                     <div class='title'>
                         <h3>Spieler</h3>
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
-		if (isset($_COOKIE["preference_sccollapsed"])) {
-			if ($_COOKIE["preference_sccollapsed"] === "1") {
-				$collapsed = TRUE;
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
-			} else {
-				$collapsed = FALSE;
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
-			}
-		} else {
-			$collapsed = TRUE;
+		$collapsed = summonercards_collapsed();
+		if ($collapsed) {
 			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+		} else {
+			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
 		}
         echo "
                      </div>";
@@ -231,12 +236,29 @@ try {
 			$curr_games = $dbcn->execute_query("SELECT * FROM games WHERE MatchID = ? OR PLMatchID = ? ORDER BY RiotMatchID", [$curr_matchID,$curr_matchID])->fetch_all(MYSQLI_ASSOC);
 			$curr_team1 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?", [$curr_matchData['Team1ID']])->fetch_assoc();
 			$curr_team2 = $dbcn->execute_query("SELECT * FROM teams WHERE TeamID = ?", [$curr_matchData['Team2ID']])->fetch_assoc();
+
+			$last_user_update_match = $dbcn->execute_query("SELECT last_update FROM userupdates WHERE ItemID = ? AND update_type=1", [$curr_matchID])->fetch_column();
+			$last_manual_updates_match  = $dbcn->execute_query("SELECT matchresults, gamedata, gamesort FROM manual_updates WHERE TournamentID = ?", [$div["TournamentID"]])->fetch_row();
+
+			$last_update_match = latest_update($last_user_update_match,$last_cron_update,$last_manual_updates_match);
+
+			if ($last_update_match == NULL) {
+				$updatediff_match = "unbekannt";
+			} else {
+				$last_update_match = strtotime($last_update_match);
+				$currtime = time();
+				$updatediff_match = max_time_from_timestamp($currtime-$last_update_match);
+			}
+
 			echo "
                     <div class='mh-popup-bg' onclick='close_popup_match(event)' style='display: block; opacity: 1;'>
                         <div class='mh-popup'>
                             <div class='close-button' onclick='closex_popup_match()'><div class='material-symbol'>". file_get_contents("icons/material/close.svg") ."</div></div>
                             <div class='close-button-space'></div>
-                            <a class='button' href='team/$teamID/matchhistory#{$curr_matchID}'><div class='material-symbol'>". file_get_contents("icons/material/manage_search.svg") ."</div>in Matchhistory ansehen</a>";
+                            <div class='mh-popup-buttons'>
+	                            <a class='button' href='team/$teamID/matchhistory#{$curr_matchID}'><div class='material-symbol'>". file_get_contents("icons/material/manage_search.svg") ."</div>in Matchhistory ansehen</a>
+	                            <div class='updatebuttonwrapper'><button type='button' class='icononly user_update_match update_data' data-match='$curr_matchID' data-matchformat='$curr_matchFormat' data-team='$teamID'><div class='material-symbol'>". file_get_contents("icons/material/sync.svg") ."</div></button><span>letztes Update:<br>$updatediff_match</span></div>
+	                        </div>";
 			if ($curr_matchData['Winner'] == 1) {
 				$team1score = "win";
 				$team2score = "loss";

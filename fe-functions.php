@@ -217,7 +217,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 		$datetime = date_create($match['plannedDate']);
 		$date = date_format($datetime, 'd M');
 		$time = date_format($datetime, 'H:i');
-		echo "<div class='match-button-wrapper'>
+		echo "<div class='match-button-wrapper' data-matchid='$match_id' data-matchtype='$type'>
                             <a class='button match nolink sideext-right'>
                                 <div class='teams'>
                                     <div class='team 1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div></div>
@@ -230,7 +230,7 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 		}
 		echo "</a>
                           <a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>
-                            <div class='material-symbol'>". file_get_contents("icons/material/open_in_new.svg") ."</div>
+                            <div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg") ."</div>
                           </a>
                         </div>";
 	} else {
@@ -250,11 +250,11 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 			$state1 = "draw";
 			$state2 = "draw";
 		}
-		echo "<div class='match-button-wrapper'>";
+		echo "<div class='match-button-wrapper' data-matchid='$match_id' data-matchtype='$type'>";
 		if ($team_id != NULL) {
-			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",\"{$team_id}\")'>";
+			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",\"{$team_id}\",\"$type\")'>";
 		} else {
-			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\")'>";
+			echo "<a class='button match sideext-right' href='$pageurl' onclick='popup_match(\"{$match['MatchID']}\",null,\"$type\")'>";
 		}
 		echo "<div class='teams score'>
 				<div class='team 1 $state1$current1'><div class='name'>{$teams[$match['Team1ID']]['TeamName']}</div><div class='score'>{$t1score}</div></div>
@@ -262,13 +262,13 @@ function create_matchbutton(mysqli $dbcn,$tournament_id,$match_id,$type,$team_id
 			  </div>
 			</a>
 			<a class='sidebutton-match' href='$toor_tourn_url{$tournament_id}/matches/{$match['MatchID']}' target='_blank'>
-				<div class='material-symbol'>". file_get_contents("icons/material/open_in_new.svg") ."</div>
+				<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/open_in_new.svg") ."</div>
 			</a>
 		</div>";
 	}
 }
 
-function is_logged_in() {
+function is_logged_in(): bool {
 	include_once(dirname(__FILE__)."/admin/admin-pass.php");
 	$admin_pass = get_admin_pass();
 	if (isset($_COOKIE['write-login'])) {
@@ -278,17 +278,24 @@ function is_logged_in() {
 	}
 	return FALSE;
 }
-function logged_in_buttons_hidden() {
+function logged_in_buttons_hidden(): bool {
 	if (isset($_COOKIE['admin_btns']) && $_COOKIE['admin_btns'] === "0") {
 		return TRUE;
 	}
 	return FALSE;
 }
-function is_light_mode() {
+function is_light_mode(): bool {
 	if (isset($_COOKIE['lightmode']) && $_COOKIE['lightmode'] === "1") {
 		return TRUE;
 	}
 	return FALSE;
+}
+function summonercards_collapsed(): bool {
+	if (isset($_COOKIE["preference_sccollapsed"]) && $_COOKIE["preference_sccollapsed"] === "1") {
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=NULL) {
@@ -410,7 +417,7 @@ function create_tournament_overview_nav_buttons($dbcn,$tournament_id,$active="",
 	echo "<div class='divider bot-space'></div>";
 }
 
-function create_team_nav_buttons($tournament_id,$team,$active) {
+function create_team_nav_buttons($tournament_id,$team,$active,$updatediff="unbekannt") {
 	$details_a = $matchhistory_a = $stats_a = "";
 	if ($active == "details") {
 		$details_a = " active";
@@ -438,6 +445,11 @@ function create_team_nav_buttons($tournament_id,$team,$active) {
            	<a href='team/$team_id/matchhistory' class='button$matchhistory_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/manage_search.svg") ."</div>Match-History</a>
             <a href='team/$team_id/stats' class='button$stats_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/monitoring.svg") ."</div>Statistiken</a>
         </div>";
+	echo "
+				<div class='updatebuttonwrapper'>
+           			<button type='button' class='icononly user_update_team update_data' data-team='$team_id'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
+					<span>letztes Update:<br>$updatediff</span>
+				</div>";
 	echo "</div>";
 }
 
@@ -646,4 +658,65 @@ function create_playercard($player_data, $detail_stats=NULL) {
 
 	$result .= "</div>";
 	return $result;
+}
+
+function max_time_from_timestamp($timestamp) {
+	$days = floor($timestamp/86400);
+	if ($days == 0) {
+		if ($timestamp < 30) return "vor ein paar Sekunden";
+		if ($timestamp < 60) return "vor $timestamp Sekunden";
+		if ($timestamp < 120) return "vor 1 Minute";
+		if ($timestamp < 3600) return "vor ".floor($timestamp/60)." Minuten";
+		if ($timestamp < 7200) return "vor 1 Stunde";
+		if ($timestamp < 86400) return "vor ".floor($timestamp/3600)." Stunden";
+	}
+	if ($days == 1) return "Gestern";
+	if ($days < 7) return "vor $days Tagen";
+	if ($days < 31) return "vor ".ceil($days/7)." Wochen";
+	if ($days < 60) return "letzten Monat";
+
+	$years = intval(date("Y",$timestamp)) - 1970;
+	$months = intval(date("m",$timestamp)) - 1;
+	if ($years > 0) {
+		if ($years == 1) {
+			return "letztes Jahr";
+		} else {
+			return "vor $years Jahren";
+		}
+	}
+	if ($months > 0) {
+		if ($months == 1) {
+			return "letzen Monat";
+		} else {
+			return "vor $months Monate";
+		}
+	}
+	return "unbekannt";
+}
+
+function latest_update($user_update,$cron_update,$manual_update): ?string {
+	$timestamps = array();
+	if ($manual_update != NULL) {
+		$manual_timestamps = array();
+		foreach ($manual_update as $update_time) {
+			if ($update_time != NULL) {
+				$manual_timestamps[] = strtotime($update_time);
+			}
+		}
+		if (count($manual_timestamps) > 0) {
+			$timestamps[] = max($manual_timestamps);
+		}
+	}
+	if ($user_update != NULL) {
+		$timestamps[] = strtotime($user_update);
+	}
+	if ($cron_update != NULL) {
+		$timestamps[] = strtotime($cron_update);
+	}
+
+	if (count($timestamps) == 0) {
+		return NULL;
+	}
+	$latest_update = max($timestamps);
+	return date('Y-m-d H:i:s',$latest_update);
 }

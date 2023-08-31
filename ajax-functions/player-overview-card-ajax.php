@@ -5,14 +5,19 @@ include(dirname(__FILE__).'/../fe-functions.php');
 
 $dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 
-if ($dbcn -> connect_error){
-	echo "<span style='color: orangered'>Database Connection failed</span>";
-} else {
-	if (isset($_GET['search'])) {
-		$search = $_GET['search'];
-		create_player_overview_cards_from_search($dbcn,$search);
-	} elseif (isset($_SERVER['HTTP_DATA_PUUIDS'])) {
-		$puuids = json_decode($_SERVER['HTTP_DATA_PUUIDS']);
-		create_player_overview_cards($dbcn,$puuids,true);
-	}
+if ($dbcn -> connect_error)	exit("Database Connection failed");
+
+$search = $_SERVER['HTTP_SEARCH'] ?? $_GET['search'] ?? NULL;
+if ($search != NULL) {
+	create_player_overview_cards_from_search($dbcn, $search);
+	exit;
 }
+
+$puuids = $_SERVER['HTTP_PUUIDS'] ?? $_GET['puuids'] ?? NULL;
+if ($puuids != NULL) {
+	$puuids = json_decode($puuids);
+	create_player_overview_cards($dbcn, $puuids,true);
+	exit;
+}
+
+$dbcn->close();

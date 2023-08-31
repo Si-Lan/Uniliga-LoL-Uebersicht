@@ -46,7 +46,7 @@ if (isset($_GET['login'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="">
+<html lang="de">
 <head>
     <?php
     create_html_head_elements("home");

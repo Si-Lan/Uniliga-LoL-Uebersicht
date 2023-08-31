@@ -230,6 +230,10 @@ function get_teams_in_groups(tournID, del=false) {
         xmlhttp.open("GET", "scrapeToor-ajax.php?type=teams-in-groups&id=" + tournID + "&delete", true);
     }
     xmlhttp.send();
+
+    const timerxhr = new XMLHttpRequest();
+    timerxhr.open("POST", "scrapeToor-ajax.php?type=update-timers&Tid="+tournID+"&table=standings");
+    timerxhr.send();
 }
 
 function get_matches_from_groups(tournID) {
@@ -309,6 +313,10 @@ function get_matches_from_groups(tournID) {
     };
     xmlhttpDivs.open("GET", "../ajax-functions/get-DB-ajax.php?type=divisions&Tid=" + tournID, true);
     xmlhttpDivs.send();
+
+    const timerxhr = new XMLHttpRequest();
+    timerxhr.open("POST", "scrapeToor-ajax.php?type=update-timers&Tid="+tournID+"&table=matches");
+    timerxhr.send();
 }
 
 function get_matches(tournID, all = true, playoffs = false) {
@@ -391,6 +399,10 @@ function get_matches(tournID, all = true, playoffs = false) {
         }
     }
     xmlhttpM.send();
+
+    const timerxhr = new XMLHttpRequest();
+    timerxhr.open("POST", "scrapeToor-ajax.php?type=update-timers&Tid="+tournID+"&table=matchresults");
+    timerxhr.send();
 }
 
 function get_playoffs(tournID) {

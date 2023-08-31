@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="de">
 <head>
 <?php
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;
@@ -50,7 +50,7 @@ try {
         echo "<div class='search-wrapper'>
                 <span class='searchbar'>
                     <input class=\"search-teams $tournID deletable-search\" onkeyup='search_teams(\"$tournID\")' placeholder=\"Teams durchsuchen\" type=\"text\">
-                    <div class='material-symbol' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</div>
+                    <a class='material-symbol' href='#' onclick='clear_searchbar()'>". file_get_contents("icons/material/close.svg") ."</a>
                 </span>
               </div>";
 

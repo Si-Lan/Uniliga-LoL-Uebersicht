@@ -17,7 +17,7 @@ if (isset($_COOKIE['write-login'])) {
     if (password_verify($password,$_COOKIE['write-login'])) {
         ?>
         <!DOCTYPE html>
-        <html lang="">
+        <html lang="de">
         <head>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <link rel="icon" href="https://silence.lol/favicon-dark.ico" media="(prefers-color-scheme: dark)"/>
