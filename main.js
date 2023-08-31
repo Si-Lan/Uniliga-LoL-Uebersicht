@@ -1438,7 +1438,7 @@ function user_update_group(button) {
             }
         })
             .then(res => res.json())
-            .then(matchids => {
+            .then(async matchids => {
                 for (const match of matchids) {
                     fetch(`ajax-functions/user-update-functions.php`, {
                         method: "GET",
@@ -1449,7 +1449,9 @@ function user_update_group(button) {
                     })
                         .then(() => {
                             uug_matchresults(matchids.length);
-                        });
+                        })
+                        .catch(e => console.error(e));
+                    await new Promise(r => setTimeout(r, 500));
                 }
             })
             .catch(error => console.error(error));
@@ -1499,8 +1501,8 @@ function user_update_group(button) {
                 }
             })
                 .then(res => res.text())
-                .then(matchbutton => {
-                    $(matchbutton).replaceWith(matchbutton);
+                .then(new_matchbutton => {
+                    $(matchbutton).replaceWith(new_matchbutton);
                 })
                 .catch(error => console.error(error));
         }
