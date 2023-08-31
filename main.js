@@ -1392,6 +1392,8 @@ function user_update_group(button) {
                     itemid: group_ID,
                 }
             })
+                .then(() => $("div.updatebuttonwrapper span").html("letztes Update:<br>vor ein paar Sekunden"))
+                .catch(e => console.error(e));
 
             loading_width = 1;
             button.style.setProperty("--update-loading-bar-width", `${loading_width}%`);
@@ -1468,7 +1470,6 @@ function user_update_group(button) {
             user_update_running = false;
             loading_width = 0;
             button.style.setProperty("--update-loading-bar-width", "0");
-            $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
             update_page();
         }
     }
@@ -1556,6 +1557,7 @@ function user_update_team(button) {
                     itemid: team_ID,
                 }
             })
+                .then(() => $("div.updatebuttonwrapper span").html("letztes Update:<br>vor ein paar Sekunden"))
                 .catch(e => console.error(e));
 
             loading_width = 1;
@@ -1701,7 +1703,6 @@ function user_update_team(button) {
             user_update_running = false;
             loading_width = 0;
             button.style.setProperty("--update-loading-bar-width", "0");
-            $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
             update_page();
         }
     }
@@ -1805,6 +1806,7 @@ function user_update_match(button) {
                     updatetype: "1",
                 }
             })
+                .then(() => $("div.updatebuttonwrapper span").html("letztes Update:<br>vor ein paar Sekunden"))
                 .catch(e => console.error(e));
 
             loading_width = 1;
@@ -1898,7 +1900,6 @@ function user_update_match(button) {
         update_page();
         loading_width = 0;
         button.style.setProperty("--update-loading-bar-width", "0");
-        $("div.updatebuttonwrapper span").html("letzes Update<br>vor ein paar Sekunden");
     }
 
     function update_page() {

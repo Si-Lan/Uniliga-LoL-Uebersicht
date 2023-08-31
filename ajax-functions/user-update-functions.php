@@ -133,8 +133,8 @@ if ($type == "games_for_match") {
 	} else {
 		$teams = $dbcn->execute_query("SELECT Team1ID, Team2ID FROM matches WHERE MatchID = ?", [$match_ID])->fetch_row();
 	}
-	$players1 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[0]])->fetch_all(MYSQLI_ASSOC);
-	$players2 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ?", [$teams[1]])->fetch_all(MYSQLI_ASSOC);
+	$players1 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ? AND PUUID IS NOT NULL", [$teams[0]])->fetch_all(MYSQLI_ASSOC);
+	$players2 = $dbcn->execute_query("SELECT PlayerID FROM players WHERE TeamID = ? AND PUUID IS NOT NULL", [$teams[1]])->fetch_all(MYSQLI_ASSOC);
 	function cut_players(array $playerlist):array {
 		$newlength = count($playerlist);
 		if (count($playerlist) >= 5) {
