@@ -5,3 +5,7 @@ RewriteRule ^(content-add-ajax.php|scrapeToor-ajax.php|scrapeToornament.php)$ - 
 <Files .htaccess>
   Require all denied
 </Files>
+
+# enable opening php files without .php ending
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^.]+)$ $1.php [NC,L]

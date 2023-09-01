@@ -1016,33 +1016,63 @@ $(document).ready(function () {
     $('header .settings-option.toggle-admin-b-vis').on("click",toggle_admin_buttons);
 });
 
-function open_table_selection() {
+function open_dropdown_selection() {
     event.preventDefault();
-    $('div.table-wrapper a.button-dropdown').toggleClass('open-selection');
+    $(this).toggleClass('open-selection');
 }
 async function select_dropdown_option() {
     event.preventDefault();
     let selection = $(this);
-    let button = selection.parent().parent().find("a.button-dropdown");
-    let icon_div = button.find('div.material-symbol')[0].innerHTML;
-    button.html(this.innerText + `<div class='material-symbol'>${icon_div}</div>`);
-    selection.parent().find("a.dropdown-selection-item").removeClass('selected-item');
+    let button = selection.parent().parent().find(".button-dropdown");
+    let icon_div = button.find('.material-symbol')[0].innerHTML;
+    button.html(this.innerText + `<span class='material-symbol'>${icon_div}</span>`);
+    selection.parent().find(".dropdown-selection-item").removeClass('selected-item');
     selection.addClass('selected-item');
-    let entTable = $(".champstattables.entire");
-    let singTable = $(".champstattables.singles");
-    if (selection.text() === "Gesamt-Tabelle") {
-        entTable.css("display","flex");
-        singTable.css("display","none");
-    } else if (selection.text() === "Einzel-Tabellen") {
-        singTable.css("display","flex");
-        entTable.css("display","none");
-    }
+    handle_dropdown_selection(button[0].getAttribute("data-dropdowntype"), selection[0].getAttribute("data-selection"));
     await new Promise(r => setTimeout(r, 1));
     button.removeClass("open-selection");
 }
+let patch_view_fetch_control = null;
+function handle_dropdown_selection(type, selection) {
+    if (type === "stat-tables") {
+        let entTable = $(".champstattables.entire");
+        let singTable = $(".champstattables.singles");
+        if (selection === "all") {
+            entTable.css("display","flex");
+            singTable.css("display","none");
+        } else if (selection === "single") {
+            singTable.css("display","flex");
+            entTable.css("display","none");
+        }
+    }
+    if (type === "get-patches") {
+        let element = $('dialog.add-patch-popup .add-patches-display');
+        let loading_indicator = $('dialog.add-patch-popup .popup-loading-indicator');
+        loading_indicator.css("display","");
+        if (patch_view_fetch_control !== null) patch_view_fetch_control.abort();
+        patch_view_fetch_control = new AbortController();
+        fetch(`ajax-functions/ddragon-update-ajax.php`, {
+            method: "GET",
+            headers: {
+                type: "add-patch-view",
+                view: selection,
+                limit: 10,
+            },
+            signal: patch_view_fetch_control.signal,
+        })
+            .then(res => res.text())
+            .then(patches => {
+                loading_indicator.css("display","none");
+                element.html(patches);
+                $(".add_patch").on("click", function () {
+                    add_new_patch(this);
+                });
+            })
+    }
+}
 $(document).ready(function () {
-    $('div.dropdown-selection a.dropdown-selection-item').on("click",select_dropdown_option);
-    $('a.button-dropdown').on("click",open_table_selection);
+    $('div.dropdown-selection .dropdown-selection-item').on("click",select_dropdown_option);
+    $('.button-dropdown').on("click",open_dropdown_selection);
 });
 
 function select_player_table() {
@@ -1956,6 +1986,136 @@ $(document).ready(function () {
         user_update_match(this);
     });
 });
+
+function sync_patches_to_db(button) {
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "sync_patches_to_db"
+        }
+    })
+        .then(res => res.json())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            $('dialog.patch-result-popup .dialog-content').html("deleted Patches: "+updates["deleted"]+"<br>changed Patches: "+updates["updated"].length);
+            $('dialog.patch-result-popup')[0].showModal();
+            update_patchdata_status();
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".sync_patches").on("click", function () {
+        sync_patches_to_db(this);
+    });
+});
+function download_ddragon_data(button) {
+    let patch = button.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "jsons_for_patch",
+            "patch": patch,
+        }
+    })
+        .then(res => res.text())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            update_patchdata_status(patch);
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".patch-update.json").on("click", function () {
+        download_ddragon_data(this);
+    });
+});
+function add_new_patch(button) {
+    let patch = button.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "add_new_patch",
+            "patch": patch,
+        }
+    })
+        .then(res => res.text())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            //neue patch-row generieren
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".add_patch").on("click", function () {
+        add_new_patch(this);
+    });
+});
+function download_ddragon_images(patch,type) {
+
+}
+function delete_old_ddragon_pngs(patch) {
+
+}
+function update_patchdata_status(patch= "all") {
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            "type": "local_patch_info",
+            patch: patch,
+        }
+    })
+        .then(res => res.json())
+        .then(patches => {
+            for (const patch of patches) {
+                let buttons = $(`.patchdata-status[data-patch="${patch["Patch"]}"]`);
+                for (const button of buttons) {
+                    if (button.classList.contains("json")) {
+                        (patch["data"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("all-img")) {
+                        (patch["champion_webp"] && patch["item_webp"] && patch["item_webp"] && patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("champion-img")) {
+                        (patch["champion_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("item-img")) {
+                        (patch["item_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("spell-img")) {
+                        (patch["item_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("runes-img")) {
+                        (patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                }
+            }
+        })
+}
+$(document).ready(function () {
+    $('button.patch-more-options').on('click', function() {
+        let patch = this.getAttribute("data-patch");
+        $(`dialog.patch-more-popup[data-patch="${patch}"]`)[0].showModal();
+    });
+    $('button.open_add_patch_popup').on('click', function() {
+        $('dialog.add-patch-popup')[0].showModal();
+    });
+
+    $('dialog.dismissable-popup').on('click', function (event) {
+        if (event.target === this) {
+            this.close();
+        }
+    });
+});
+
 
 function get_material_icon(name,nowrap=false) {
     let res = "";

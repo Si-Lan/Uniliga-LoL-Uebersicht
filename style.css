@@ -136,12 +136,12 @@ button[disabled]:hover {
 button.icononly {
     padding: 12px 16px;
 }
-button.icononly div.material-symbol,
-button.icononly div.material-symbol svg {
+button.icononly .material-symbol,
+button.icononly .material-symbol svg {
     height: 30px;
     width: 30px;
 }
-button.user_updating div.material-symbol {
+button.user_updating .material-symbol {
     animation: ease_rotating 2s infinite;
 }
 @keyframes ease_rotating {
@@ -795,30 +795,30 @@ a.button.totop {
     box-shadow: 3px 3px 6px 2px rgb(0 0 0 / 0.2);
     transition: opacity 200ms;
 }
-a.button.totop div.material-symbol {
+a.button.totop .material-symbol {
     height: 36px;
     width: 36px;
 }
-a.button.totop div.material-symbol svg {
+a.button.totop .material-symbol svg {
     height: 36px;
     width: 36px;
 }
-a.button.button-dropdown {
+button.button-dropdown {
     padding: 15px 20px;
     justify-content: space-between;
+    min-width: 210px;
 }
-a.button.button-dropdown div.material-symbol {
+button.button-dropdown .material-symbol {
     transition: transform 400ms;
 }
-a.button.button-dropdown.open-selection div.material-symbol {
+button.button-dropdown.open-selection .material-symbol {
     transform: rotateX(180deg);
 }
-a.button.button-dropdown.open-selection.open-selection {
+button.button-dropdown.open-selection.open-selection {
     border-radius: 6px 6px 0 0;
 }
 div.dropdown-selection {
     display: none;
-    justify-content: center;
     position: absolute;
     top: 100%;
     left: 0;
@@ -827,21 +827,35 @@ div.dropdown-selection {
     border-radius: 0 0 6px 6px;
     border-top: var(--divider-color-nobg-button) solid 1px;
     box-sizing: border-box;
+    box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+    overflow: auto;
+    z-index: 1;
+    max-height: 35vh;
+}
+div.dropdown-selection .dropdown-selection-item:first-child {
+    border-top: var(--divider-color-nobg-button) solid 1px;
 }
 div.dropdown-selection .dropdown-selection-item  {
     padding: 15px 20px;
     width: 100%;
     text-align: center;
+    background-color: var(--autocomplete-bg);
+    border-radius: 0;
+    border-top: var(--divider-color-light) solid 1px;
+    box-shadow: none;
 }
 div.dropdown-selection .dropdown-selection-item.selected-item  {
     display: none;
 }
-a.button.button-dropdown.open-selection~div.dropdown-selection {
+button.button-dropdown.open-selection~div.dropdown-selection {
     display: flex;
+    flex-direction: column;
 }
 div.button-dropdown-wrapper {
     position: relative;
     min-width: 210px;
+    display: flex;
+    flex-direction: column;
 }
 
 a.button.player-button {
@@ -1394,11 +1408,11 @@ div.playerstable table tr.expand-table td {
 div.playerstable table tr.expand-table td:hover {
     background-color: var(--nobg-button-hover);
 }
-div.playerstable table tr.expand-table td div.material-symbol {
+div.playerstable table tr.expand-table td .material-symbol {
     margin: 0 auto;
     transition: transform 400ms;
 }
-div.playerstable table.collapsed tr.expand-table td div.material-symbol {
+div.playerstable table.collapsed tr.expand-table td .material-symbol {
     transform: rotateX(180deg);
 }
 div.playerstable table.collapsed tr:nth-child(n+7):not(:last-child) {
@@ -1561,11 +1575,11 @@ div.match-button-wrapper a.sidebutton-match {
 div.match-button-wrapper a.sidebutton-match:hover {
     background-color: var(--main-button-hover);
 }
-div.match-button-wrapper a.sidebutton-match div.material-symbol {
+div.match-button-wrapper a.sidebutton-match .material-symbol {
     height: 20px;
     width: 20px;
 }
-div.match-button-wrapper a.sidebutton-match div.material-symbol svg {
+div.match-button-wrapper a.sidebutton-match .material-symbol svg {
     height: 20px;
     width: 20px;
 }
@@ -2264,7 +2278,6 @@ div.clear-button {
     text-align: center;
     padding: 5px 15px 5px 15px;
     margin-bottom: 5px;
-    width: -moz-fit-content;
     width: fit-content;
     align-self: center;
     transition: background-color 0.2s linear;
@@ -2320,6 +2333,10 @@ a.button.write.loading-data:hover {
     border: 4px solid;
     border-color: var(--text-color) transparent;
     animation: lds-dual-ring 3s linear infinite;
+}
+.add-patch-popup .popup-loading-indicator {
+    height: 15px;
+    transform: translateY(-80%) scale(0.75);
 }
 .search-loading-indicator {
     transition: opacity 200ms;
@@ -2796,6 +2813,142 @@ button.update_data::before {
     transition: width 200ms ease;
 }
 
+.patch-table {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.patch-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.patch-header,
+.patch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+span.patch-name {
+    text-align: center;
+    font-size: 1.5em;
+    width: 3.5em;
+}
+.patchdata-status {
+    width: 24px;
+    height: 48px;
+    background-color: #3f3f3f;
+    border-radius: 5px 0 0 5px;
+}
+.patch-updatebutton-wrapper {
+    display: flex;
+}
+.patch-row button {
+    height: 48px;
+}
+button.patch-update {
+    border-radius: 0 5px 5px 0;
+}
+.patchdata-status[data-status="true"] {
+    background-color: green;
+}
+.patchdata-status[data-status="false"] {
+    background-color: darkred;
+}
+dialog.patch-more-popup .dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+.dialog-content .patch-row {
+    flex-wrap: wrap;
+}
+.dialog-content span.patch-name {
+    width: unset;
+}
+
+button.patch-updating[disabled]:hover {
+    background-color: transparent;
+}
+button.patch-updating {
+    position: relative;
+    background-color: transparent;
+    overflow: hidden;
+}
+button.patch-updating::before {
+    position: absolute;
+    content: '';
+    --border-size: 3px;
+    background-image:
+            linear-gradient(var(--main-button-color),var(--main-button-color));
+    background-size: calc(100% - (var(--border-size) * 2)) calc(100% - (var(--border-size) * 2)), cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    inset: 0;
+    z-index: -1;
+}
+button.patch-updating::after {
+    position: absolute;
+    content: '';
+    --border-angle: 0turn;
+    background-image:
+            conic-gradient(from var(--border-angle), var(--main-button-color) 80%, #999, #999);
+    background-size: 400px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    animation: bg-spin 3s linear infinite;
+    inset: 0;
+    z-index: -2;
+}
+@keyframes bg-spin {
+    to {
+        --border-angle: 1turn;
+    }
+}
+/*noinspection CssInvalidAtRule*/
+@property --border-angle {
+    syntax: "<angle>";
+    inherits: true;
+    initial-value: 0turn;
+}
+
+.add-patches-display {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+dialog.add-patch-popup .dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 25px 50px;
+    align-items: center;
+}
+.add-patches-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+
+dialog .dialog-content {
+    padding: 25px;
+}
+dialog {
+    padding: 0;
+    background-color: var(--main-bg-color);
+    border: none;
+    border-radius: 15px;
+    box-shadow: 2px 2px 5px rgb(0 0 0 / 0.2);
+}
+dialog::backdrop {
+    background: rgba(0,0,0,0.5);
+}
+
 @media screen and (min-width: 1185px) {
     a.button.totop {
         right: calc((100vw - 900px) / 2 - 120px);
@@ -3036,11 +3189,11 @@ button.update_data::before {
         padding: 15px 15px;
         gap: 5px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol {
+    div.team.title .team-titlebutton-wrapper a .material-symbol {
         height: 18px;
         width: 18px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol svg {
+    div.team.title .team-titlebutton-wrapper a .material-symbol svg {
         height: 18px;
         width: 18px;
     }
@@ -3075,11 +3228,11 @@ button.update_data::before {
         font-size: 12px;
         padding: 10px 15px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol {
+    div.team.title .team-titlebutton-wrapper a .material-symbol {
         height: 16px;
         width: 16px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol svg {
+    div.team.title .team-titlebutton-wrapper a .material-symbol svg {
         height: 16px;
         width: 16px;
     }
@@ -3089,11 +3242,11 @@ button.update_data::before {
         font-size: 12px;
         padding: 10px 15px;
     }
-    div.turnier-bonus-buttons>a.button div.material-symbol {
+    div.turnier-bonus-buttons>a.button .material-symbol {
         height: 18px;
         width: 18px;
     }
-    div.turnier-bonus-buttons>a.button div.material-symbol svg {
+    div.turnier-bonus-buttons>a.button .material-symbol svg {
         height: 18px;
         width: 18px;
     }
@@ -3101,11 +3254,11 @@ button.update_data::before {
         font-size: 12px;
         padding: 10px 15px;
     }
-    div.turnier-nav-buttons a.button div.material-symbol {
+    div.turnier-nav-buttons a.button .material-symbol {
         height: 18px;
         width: 18px;
     }
-    div.turnier-nav-buttons a.button div.material-symbol svg {
+    div.turnier-nav-buttons a.button .material-symbol svg {
         height: 18px;
         width: 18px;
     }
@@ -3124,11 +3277,11 @@ button.update_data::before {
     div.team.title .team-titlebutton-wrapper a {
         font-size: 10px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol {
+    div.team.title .team-titlebutton-wrapper a .material-symbol {
         height: 14px;
         width: 14px;
     }
-    div.team.title .team-titlebutton-wrapper a div.material-symbol svg {
+    div.team.title .team-titlebutton-wrapper a .material-symbol svg {
         height: 14px;
         width: 14px;
     }
@@ -3136,11 +3289,11 @@ button.update_data::before {
         font-size: 12px;
         padding: 10px 10px;
     }
-    div.turnier-nav-buttons a.button div.material-symbol {
+    div.turnier-nav-buttons a.button .material-symbol {
         height: 16px;
         width: 16px;
     }
-    div.turnier-nav-buttons a.button div.material-symbol svg {
+    div.turnier-nav-buttons a.button .material-symbol svg {
         height: 16px;
         width: 16px;
     }

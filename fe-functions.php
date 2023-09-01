@@ -19,6 +19,9 @@ function create_html_head_elements($type,$loggedin=FALSE) {
 	if ($type==="home") {
 		echo "<title>Uniliga LoL - Übersicht</title>";
 	}
+	if ($type==="admin_dd") {
+		echo "<title>Uniliga LoL - DDragon Updates</title>";
+	}
 }
 
 function generate_elo_list($dbcn,$view,$teams,$tournamentID,$division,$group) {
@@ -336,6 +339,9 @@ function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=N
 		echo "<h1>$tournament_name</h1>";
 		echo "<a href='$toor_tourn_url$tournament_id' target='_blank' class='toorlink'><div class='material-symbol'>$outlinkicon</div></a>";
 	}
+	if ($type == "admin_dd") {
+		echo "<h1>Uniliga LoL - DDragon Updates</h1>";
+	}
 	echo "</div>";
 	echo "<a class='settings-button' href='$pageurl'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/tune.svg") ."</div></a>";
 	if ($loggedin) {
@@ -350,6 +356,7 @@ function create_header($dbcn,$type,$tournament_id=NULL,$group_id=NULL,$team_id=N
 				<a class='settings-option toggle-admin-b-vis' href='$pageurl'>Buttons<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/visibility$admin_button_state.svg") ."</div></a>
 				<a class='settings-option toor-write' href='/uniliga/admin'>Admin<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/edit_square.svg") ."</div></a>
 				<a class='settings-option rgapi-write' href='/uniliga/admin/riot-api-access'>RGAPI<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/videogame_asset.svg") ."</div></a>
+				<a class='settings-option ddragon-write' href='/uniliga/admin/ddragon-updates'>DDragon</a>
 				<a class='settings-option logout' href='?logout'>Logout<div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/logout.svg") ."</div></a>
 			</div>";
 	} else {
@@ -445,11 +452,13 @@ function create_team_nav_buttons($tournament_id,$team,$active,$updatediff="unbek
            	<a href='team/$team_id/matchhistory' class='button$matchhistory_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/manage_search.svg") ."</div>Match-History</a>
             <a href='team/$team_id/stats' class='button$stats_a'><div class='material-symbol'>". file_get_contents(dirname(__FILE__)."/icons/material/monitoring.svg") ."</div>Statistiken</a>
         </div>";
-	echo "
+	if ($active == "details") {
+		echo "
 				<div class='updatebuttonwrapper'>
            			<button type='button' class='icononly user_update_team update_data' data-team='$team_id'><div class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/sync.svg")."</div></button>
 					<span>letztes Update:<br>$updatediff</span>
 				</div>";
+	}
 	echo "</div>";
 }
 
@@ -719,4 +728,18 @@ function latest_update($user_update,$cron_update,$manual_update): ?string {
 	}
 	$latest_update = max($timestamps);
 	return date('Y-m-d H:i:s',$latest_update);
+}
+
+function create_dropdown(string $type, array $items):string {
+	$first_key = array_key_first($items);
+	$result = "<div class='button-dropdown-wrapper'>";
+	$result .= "<button type='button' class='button-dropdown' data-dropdowntype='$type'>{$items[$first_key]}<span class='material-symbol'>".file_get_contents(dirname(__FILE__)."/icons/material/expand_more.svg")."</span></button>";
+	$result .= "<div class='dropdown-selection'>";
+	foreach ($items as $data_name=>$name) {
+		$selected = ($data_name == $first_key) ? "selected-item" : "";
+		$result .= "<button type='button' class='dropdown-selection-item $selected' data-selection='$data_name'>$name</button>";
+	}
+    $result .= "</div>";
+	$result .=  "</div>"; // button-dropdown-wrapper
+	return $result;
 }
