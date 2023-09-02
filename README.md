@@ -24,16 +24,16 @@ Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun
   * **admin/admin-pass.php** (*.template* entfernen)
   * ```
     <?php
-    $RGAPI_Key = "Riot-API-Key"
+    function get_admin_pass(): string {
+        return "Admin-Passwort";
+    }
     ```
+    
 * Riot-API-Key in
   * **admin/riot-api-access/RGAPI-info.php** (*.template* entfernen)
   * ```
     <?php
-    function get_admin_pass(): string {
-        return "Admin-Passwort";
-    }
-
+    $RGAPI_Key = "Riot-API-Key"
     ```
 
 ### Datenbank:
@@ -45,24 +45,12 @@ Wenn ihr mich unterstützen wollt könnt ihr das gerne hier tun
 
 ### Toornament-Updates:
 1. Möglichkeit: Manuell
-   * Buttons im BE (/admin)
+   * Buttons im Backend (uniliga/admin)
 2. Möglichkeit: Automatisch
    * Cron-Jobs einrichten
       * *Dokumentation dazu folgt*
 
 ### bei neuen LoL-Patches:
 * Riots DataDragon Dateien updaten:
-  * *Muss bisher noch manuell erledigt werden, Automation ist geplant*
-> * https://ddragon.leagueoflegends.com/cdn/(patch)/data/en_US/summoner.json  
-> * https://ddragon.leagueoflegends.com/cdn/(patch)/data/en_US/runesReforged.json  
-> * https://ddragon.leagueoflegends.com/cdn/(patch)/data/en_US/champion.json  
-> * https://ddragon.leagueoflegends.com/cdn/dragontail-(patch).tgz  
->   * Aus der .tgz werden gebraucht:
->     * (patch)/img/champion  
->     * (patch)/img/item  
->     * (patch)/img/spell  
->     * img/perk-images
->   * (Patch 13.8.1 ist als Beispiel schon in /ddragon)
->
-> * Und hier können die Patches nachgeschaut werden:  
->   * https://ddragon.leagueoflegends.com/api/versions.json
+  * Unter uniliga/admin/ddragon-updates im Backend herunterladbar
+  * *Automation über cron-jobs geplant*

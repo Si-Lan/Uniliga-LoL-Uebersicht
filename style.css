@@ -2868,6 +2868,9 @@ dialog.patch-more-popup .dialog-content {
 .dialog-content span.patch-name {
     width: unset;
 }
+.get-patch-options {
+    margin: auto;
+}
 
 button.patch-updating[disabled]:hover {
     background-color: transparent;
@@ -2876,31 +2879,38 @@ button.patch-updating {
     position: relative;
     background-color: transparent;
     overflow: hidden;
+    --loading-bar-width: 0;
+    --border-angle: 0turn;
+    background-image:
+            conic-gradient(from var(--border-angle), var(--main-button-color) 80%, #999, #999);
+    animation: bg-spin 3s linear infinite;
+}
+button.patch-updating>span {
+    z-index: 2;
+}
+button.patch-updating::after {
+    content: '';
+    position: absolute;
+    --border-size: 3px;
+    width: calc(var(--loading-bar-width) - (var(--border-size) * 2));
+    height: calc(100% - (var(--border-size) * 2));
+    transform: translateX(var(--border-size));
+    left: 0;
+    background-color: #1e6391;
+    border-radius: 5px;
+    box-shadow: 1px 0 3px 0 #1e6391;
+    transition: width 200ms ease;
 }
 button.patch-updating::before {
     position: absolute;
     content: '';
     --border-size: 3px;
-    background-image:
-            linear-gradient(var(--main-button-color),var(--main-button-color));
-    background-size: calc(100% - (var(--border-size) * 2)) calc(100% - (var(--border-size) * 2)), cover;
-    background-position: center center;
-    background-repeat: no-repeat;
+    background-color: var(--main-button-color);
+    width: calc(100% - (var(--border-size) * 2));
+    height: calc(100% - (var(--border-size) * 2));
+    transform: translate(var(--border-size), var(--border-size));
+    border-radius: 5px;
     inset: 0;
-    z-index: -1;
-}
-button.patch-updating::after {
-    position: absolute;
-    content: '';
-    --border-angle: 0turn;
-    background-image:
-            conic-gradient(from var(--border-angle), var(--main-button-color) 80%, #999, #999);
-    background-size: 400px;
-    background-position: center center;
-    background-repeat: no-repeat;
-    animation: bg-spin 3s linear infinite;
-    inset: 0;
-    z-index: -2;
 }
 @keyframes bg-spin {
     to {
@@ -2926,6 +2936,7 @@ dialog.add-patch-popup .dialog-content {
     gap: 20px;
     padding: 25px 50px;
     align-items: center;
+    min-height: 200px;
 }
 .add-patches-row {
     display: flex;

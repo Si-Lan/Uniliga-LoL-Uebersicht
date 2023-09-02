@@ -2000,9 +2000,10 @@ function sync_patches_to_db(button) {
         .then(updates => {
             $(button).removeClass("patch-updating");
             button.disabled = false;
-            $('dialog.patch-result-popup .dialog-content').html("deleted Patches: "+updates["deleted"]+"<br>changed Patches: "+updates["updated"].length);
+            let added_patches = (updates["added"] === 0) ? "" : `<br>added Patches: ${updates["added"]}`;
+            $('dialog.patch-result-popup .dialog-content').html(`deleted Patches: ${updates["deleted"]}<br>changed Patches: ${updates["updated"].length}${added_patches}`);
             $('dialog.patch-result-popup')[0].showModal();
-            update_patchdata_status();
+            regenerate_patch_rows();
         })
         .catch(e => console.error(e));
 }
@@ -2050,7 +2051,8 @@ function add_new_patch(button) {
         .then(updates => {
             $(button).removeClass("patch-updating");
             button.disabled = false;
-            //neue patch-row generieren
+            $(button).parent().remove();
+            regenerate_patch_rows();
         })
         .catch(e => console.error(e));
 }
@@ -2059,17 +2061,136 @@ $(document).ready(function () {
         add_new_patch(this);
     });
 });
-function download_ddragon_images(patch,type) {
+function download_ddragon_images(button) {
+    let patch = button.getAttribute("data-patch");
+    let type = button.getAttribute("data-getimg");
+    let force = $('#force-overwrite-patch-img')[0].checked;
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","true");
 
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "GET",
+        headers: {
+            type: "get_image_data",
+            patch: patch,
+            imagetype: type,
+            onlymissing: (!force).toString(),
+        }
+    })
+        .then(res => res.json())
+        .then(async images => {
+            let loadingbar_width = 0;
+            let imgs_gotten = 0;
+            if (images.length === 0) {
+                $(button).removeClass("patch-updating");
+                button.disabled = false;
+                $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","");
+            } else {
+                loadingbar_width = 1;
+                button.style.setProperty("--loading-bar-width", `${loadingbar_width}%`);
+            }
+            for (const image of images) {
+                fetch(`ajax-functions/ddragon-update-ajax.php`, {
+                    method: "POST",
+                    headers: {
+                        type: "download_dd_img",
+                        imgsource: image["source"],
+                        targetdir: image["target_dir"],
+                        targetname: image["target_name"],
+                        forcedownload: force.toString(),
+                    }
+                })
+                    .then(res => res.text())
+                    .then(location => {
+                        loadingbar_width += 99 / images.length;
+                        button.style.setProperty("--loading-bar-width", `${loadingbar_width}%`);
+                        imgs_gotten++;
+                        //console.log(location);
+                        if (imgs_gotten >= images.length) {
+                            $(button).removeClass("patch-updating");
+                            button.disabled = false;
+                            $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","");
+                            loadingbar_width = 0;
+                            button.style.setProperty("--loading-bar-width", "0");
+                            fetch(`ajax-functions/ddragon-update-ajax.php`, {
+                                method: "POST",
+                                headers: {
+                                    type: "sync_patches_to_db",
+                                    patch: patch,
+                                }
+                            })
+                                .then(() => {
+                                    update_patchdata_status(patch);
+                                })
+                                .catch(e => console.error(e));
+                        }
+                    })
+                    .catch(e => console.error(e));
+                await new Promise(r => setTimeout(r, 500));
+            }
+        })
+        .catch(e => console.error(e));
 }
-function delete_old_ddragon_pngs(patch) {
+$(document).ready(function () {
+    $(".patch-update[data-getimg]").on("click", function () {
+        download_ddragon_images(this);
+    });
+});
+function delete_old_ddragon_pngs(button) {
+    let patch = button.parentElement.parentElement.parentElement.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
 
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            type: "delete_ddragon_pngs",
+            patch: patch,
+        }
+    })
+        .then(() => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".patch-remove-pngs").on("click", function () {
+        delete_old_ddragon_pngs(this);
+    });
+});
+function regenerate_patch_rows() {
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "GET",
+        headers: {
+            type: "get-patch-rows",
+        }
+    })
+        .then(res => res.text())
+        .then(rows => {
+            $('.patch-row').remove();
+            $('.patch-table').append(rows);
+            // set eventListeners for newly added elements
+            $(".patch-update.json").on("click", function () {download_ddragon_data(this)});
+            $(".patch-update[data-getimg]").on("click", function () {download_ddragon_images(this)});
+            $('button.patch-more-options').on('click', function() {
+                let patch = this.getAttribute("data-patch");
+                $(`dialog.patch-more-popup[data-patch="${patch}"]`)[0].showModal();
+            });
+            $('dialog.dismissable-popup').on('click', function (event) {
+                if (event.target === this) {
+                    this.close();
+                }
+            });
+        })
+        .catch(e => console.error(e));
 }
 function update_patchdata_status(patch= "all") {
     fetch(`ajax-functions/get-DB-AJAX.php`, {
         method: "GET",
         headers: {
-            "type": "local_patch_info",
+            type: "local_patch_info",
             patch: patch,
         }
     })
@@ -2082,7 +2203,7 @@ function update_patchdata_status(patch= "all") {
                         (patch["data"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
                     }
                     if (button.classList.contains("all-img")) {
-                        (patch["champion_webp"] && patch["item_webp"] && patch["item_webp"] && patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                        (patch["champion_webp"] && patch["item_webp"] && patch["spell_webp"] && patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
                     }
                     if (button.classList.contains("champion-img")) {
                         (patch["champion_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
@@ -2091,7 +2212,7 @@ function update_patchdata_status(patch= "all") {
                         (patch["item_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
                     }
                     if (button.classList.contains("spell-img")) {
-                        (patch["item_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                        (patch["spell_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
                     }
                     if (button.classList.contains("runes-img")) {
                         (patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
