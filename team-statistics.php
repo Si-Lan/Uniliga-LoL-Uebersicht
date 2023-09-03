@@ -50,8 +50,8 @@ if ($dbcn->connect_error) {
             $patches[] = $patch_dir->getFilename();
         }
     }
-    rsort($patches);
-    $latest_patch = $patches[0];
+	usort($patches, "version_compare");
+    $latest_patch = end($patches);
 
     $games_played = $teamstats['games_played'] ?? 0;
 
