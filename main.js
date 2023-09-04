@@ -483,9 +483,9 @@ async function popup_team(teamID) {
                     name_container.append(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`);
                 }
                 name_container.append(`<h2>${team_data["team"]["TeamName"]}</h2>`);
-                name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Details</a>`);
+                name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='toorlink'>${get_material_icon("open_in_new")}</a>`);
                 name_container.append(`<a href='https://www.op.gg/multisearch/euw?summoners=${players_string}' target='_blank' class='button op-gg'><div class='svg-wrapper op-gg'>${opgg_logo_svg}</div><span class='player-amount'>(${team_data["players"].length} Spieler)</span></a>`);
-                name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='button'>${get_material_icon("open_in_new")}</a>`);
+                name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Team-Übersicht</a>`);
                 if (team_data["team"]["avg_rank_tier"] !== null && team_data["team"]["avg_rank_tier"] !== "") {
                     team_data["team"]["avg_rank_tier"] = team_data["team"]["avg_rank_tier"][0].toUpperCase() + team_data["team"]["avg_rank_tier"].substring(1).toLowerCase();
                     popup.append("<div class='team-avg-rank'>Teams avg. Rang: <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/" + team_data["team"]["avg_rank_tier"].toLowerCase() + ".svg' alt=''><span>" + team_data["team"]["avg_rank_tier"] + " " + team_data["team"]["avg_rank_div"] + "</span></div>");

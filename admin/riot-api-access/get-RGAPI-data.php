@@ -348,6 +348,7 @@ function get_Rank_by_SummonerId($playerID) {
 			if ($data[$i]['queueType'] == "RANKED_SOLO_5x5") {
 				$data = $data[$i];
 				$solo_ranked = true;
+				break;
 			}
 		}
 		if ($solo_ranked) {

@@ -34,7 +34,6 @@ usort($patches, function ($a,$b) {
 	</dialog>
 	<div class="patch-table">
 		<div class="patch-header">
-			<div>Patches</div>
 			<button type="button" class="open_add_patch_popup"><span>Patch hinzufügen</span></button>
 			<button type="button" class="sync_patches"><span>Patches synchronisieren</span></button>
 			<dialog class="add-patch-popup dismissable-popup">

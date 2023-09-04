@@ -19,9 +19,21 @@ $team_id = $_SERVER['HTTP_TEAMID'] ?? $_GET['team'] ?? NULL;
 if ($team_id != NULL) {
 	$players = $dbcn->execute_query("SELECT * FROM players WHERE TeamID = ?", [$team_id])->fetch_all(MYSQLI_ASSOC);
 	$dbcn->close();
-	$cards = array();
+	$players_by_id = array();
+	$players_gamecount_by_id = array();
 	foreach ($players as $player) {
-		$cards[] = create_summonercard($player, FALSE, FALSE);
+		$players_by_id[$player['PlayerID']] = $player;
+		$played_games = 0;
+		foreach (json_decode($player['roles'],true) as $role_played_amount) {
+			$played_games += $role_played_amount;
+		}
+		$players_gamecount_by_id[$player['PlayerID']] = $played_games;
+	}
+	arsort($players_gamecount_by_id);
+	$cards = array();
+	foreach ($players_gamecount_by_id as $player_id=>$player_gamecount) {
+		$player = $players_by_id[$player_id];
+		$cards[] = create_summonercard($player,FALSE, FALSE);
 	}
 	echo json_encode($cards);
 	exit;

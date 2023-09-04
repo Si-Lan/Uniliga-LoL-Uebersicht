@@ -172,22 +172,26 @@ header.players div.title h1 {
 }
 header.tournament div.title h1,
 header.group div.title h1,
-header.team div.title h1 {
+header.team div.title h1,
+header.admin_dd div.title h1{
     font-size: clamp(1em,3.3vw,1.7em);
 }
-header div.title a.toorlink {
+a.toorlink {
     display: flex;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
     border-left: var(--divider-color-nobg-button) solid 1px;
     border-radius: 0 6px 6px 0;
-    height: 70%;
+    height: 40px;
     width: 40px;
     transition: background-color 200ms;
 }
-header div.title a.toorlink:hover {
+a.toorlink:hover {
     background-color: var(--button-header-hover);
+}
+header div.title a.toorlink {
+    height: 70%;
 }
 header a.homelink {
     display: flex;
@@ -260,7 +264,8 @@ header div.settings-menu a.settings-option:hover {
     }
     header.tournament div.title h1,
     header.group div.title h1,
-    header.team div.title h1 {
+    header.team div.title h1,
+    header.admin_dd div.title h1 {
         font-size: clamp(1em,5vw,1.7em);
     }
     header a.settings-button {
@@ -330,25 +335,9 @@ div.pagetitlewrapper.withupdatebutton {
 div.pagetitlewrapper h2.pagetitle {
     margin: 0;
 }
-div.pagetitlewrapper a.toorlink,
-div.team.title a.toorlink {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
-    border-left: var(--divider-color-nobg-button) solid 1px;
-    border-radius: 0 6px 6px 0;
-    height: 40px;
-    width: 40px;
-    transition: background-color 200ms;
-}
 div.team.title a.toorlink {
     height: 50px;
     width: 50px;
-}
-div.pagetitlewrapper a.toorlink:hover,
-div.team.title a.toorlink:hover {
-    background-color: var(--nobg-button-hover);
 }
 a.button.exp_coll_sc {
     padding: 10px 20px 10px 14px;
@@ -758,7 +747,16 @@ a.button img {
     max-height: 32px;
 }
 a.button.op-gg {
-    padding: 15px 20px;
+    padding: 13px 20px;
+    background-color: transparent;
+    box-sizing: border-box;
+    border: 2px solid var(--main-button-hover);
+}
+.team-popup a.button.op-gg {
+    padding: 18px 20px;
+}
+a.button.op-gg:hover {
+    background-color: var(--main-button-color);
 }
 a.button.op-gg img{
     max-height: 20px;
@@ -948,6 +946,7 @@ div.team-popup div.team-buttons{
     flex-wrap: wrap;
     gap: 20px;
     margin: 20px 0;
+    align-items: center;
 }
 div.list-player-overview h2 {
     font-size: 28px;
@@ -2487,6 +2486,9 @@ h2.round-title .team.loss {
 .team-popup-bg div.close-button-space {
     height: 30px;
 }
+.team-popup a.button {
+    padding: 18px 20px;
+}
 @media (max-width: 1280px) {
     .team-popup {
         overflow-x: auto;
@@ -2827,7 +2829,7 @@ button.update_data::before {
 .patch-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-evenly;
     gap: 15px;
 }
 span.patch-name {
@@ -2870,6 +2872,7 @@ dialog.patch-more-popup .dialog-content {
 }
 .get-patch-options {
     margin: auto;
+    text-align: center;
 }
 
 button.patch-updating[disabled]:hover {
@@ -2942,6 +2945,33 @@ dialog.add-patch-popup .dialog-content {
     display: flex;
     align-items: center;
     gap: 15px;
+}
+
+
+@media screen and (max-width: 540px) {
+    div.patch-row {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    div.patch-row::after {
+        content: '';
+        width: 90%;
+        height: 2px;
+        background-color: var(--divider-color-main);
+    }
+    .dialog-content div.patch-row::after {
+        content: none;
+    }
+}
+@media screen and (max-width: 450px) {
+    div.patch-header {
+        flex-direction: column;
+    }
+}
+@media screen and (max-width: 360px) {
+    div.patch-row {
+        flex-direction: column;
+    }
 }
 
 
