@@ -348,6 +348,7 @@ function get_Rank_by_SummonerId($playerID) {
 			if ($data[$i]['queueType'] == "RANKED_SOLO_5x5") {
 				$data = $data[$i];
 				$solo_ranked = true;
+				break;
 			}
 		}
 		if ($solo_ranked) {
@@ -591,8 +592,8 @@ function calculate_teamstats($dbcn,$teamID) {
 			$patches[] = $patch_dir->getFilename();
 		}
 	}
-	rsort($patches);
-	$latest_patch = $patches[0];
+	usort($patches, "version_compare");
+	$latest_patch = end($patches);
 	$champion_data = json_decode(file_get_contents(dirname(__FILE__)."/../../ddragon/$latest_patch/data/champion.json"),true)['data'];
 	$champions_by_key = [];
 	foreach ($champion_data as $champ) {

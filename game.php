@@ -175,12 +175,12 @@ function create_game($dbcn,$gameID,$curr_team=NULL) {
     }
 
 	$local_team_img = "img/team_logos/";
-    if ($team_blue['imgID'] == NULL) {
+    if ($team_blue['imgID'] == NULL || !file_exists("$local_team_img{$team_blue['imgID']}/logo_small.webp")) {
         $logo_blue = "";
     } else {
 		$logo_blue = "<img alt='' src='$local_team_img{$team_blue['imgID']}/logo_small.webp'>";
 	}
-	if ($team_red['imgID'] == NULL) {
+	if ($team_red['imgID'] == NULL || !file_exists("$local_team_img{$team_red['imgID']}/logo_small.webp")) {
 		$logo_red = "";
 	} else {
 		$logo_red = "<img alt='' src='$local_team_img{$team_red['imgID']}/logo_small.webp'>";

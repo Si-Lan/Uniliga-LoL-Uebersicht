@@ -480,12 +480,25 @@ async function popup_team(teamID) {
                 popup.append("<div class='team-buttons opgg-cards'></div>");
                 let name_container = $("div.team-buttons");
                 if (team_data["team"]["imgID"] !== null && team_data["team"]["imgID"] !== "") {
-                    name_container.append(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`);
+                    fetch(`img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp`, {method:"HEAD"})
+                        .then(res => {
+                            if (res.ok) {
+                                name_container.prepend(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`)
+                            }
+                        })
+                        .catch(e => console.error(e));
                 }
                 name_container.append(`<h2>${team_data["team"]["TeamName"]}</h2>`);
-                name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Details</a>`);
+                name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='toorlink'>${get_material_icon("open_in_new")}</a>`);
                 name_container.append(`<a href='https://www.op.gg/multisearch/euw?summoners=${players_string}' target='_blank' class='button op-gg'><div class='svg-wrapper op-gg'>${opgg_logo_svg}</div><span class='player-amount'>(${team_data["players"].length} Spieler)</span></a>`);
-                name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='button'>${get_material_icon("open_in_new")}</a>`);
+                name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Team-Übersicht</a>`);
+                let sc_collapsed = getCookie("preference_sccollapsed");
+                if (sc_collapsed === "1") {
+                    popup.append(`<button type="button" class="exp_coll_sc">${get_material_icon("unfold_more")}Stats ein</button>`)
+                } else {
+                    popup.append(`<button type="button" class="exp_coll_sc">${get_material_icon("unfold_less")}Stats aus</button>`)
+                }
+                $('button.exp_coll_sc').on("click",expand_collapse_summonercard);
                 if (team_data["team"]["avg_rank_tier"] !== null && team_data["team"]["avg_rank_tier"] !== "") {
                     team_data["team"]["avg_rank_tier"] = team_data["team"]["avg_rank_tier"][0].toUpperCase() + team_data["team"]["avg_rank_tier"].substring(1).toLowerCase();
                     popup.append("<div class='team-avg-rank'>Teams avg. Rang: <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/" + team_data["team"]["avg_rank_tier"].toLowerCase() + ".svg' alt=''><span>" + team_data["team"]["avg_rank_tier"] + " " + team_data["team"]["avg_rank_div"] + "</span></div>");
@@ -493,8 +506,9 @@ async function popup_team(teamID) {
                 popup.append("<div class='summoner-card-container'></div>");
                 let card_container = $('div.summoner-card-container');
 
+                let coll_class = (sc_collapsed === "1") ? "collapsed" : "";
                 for (let i = 0; i < team_data["players"].length; i++) {
-                    card_container.append(`<div class='summoner-card-wrapper placeholder p${i}'></div>`);
+                    card_container.append(`<div class='summoner-card-wrapper placeholder p${i} ${coll_class}'></div>`);
                 }
 
                 fetch(`ajax-functions/summoner-card-ajax.php`, {
@@ -1016,33 +1030,63 @@ $(document).ready(function () {
     $('header .settings-option.toggle-admin-b-vis').on("click",toggle_admin_buttons);
 });
 
-function open_table_selection() {
+function open_dropdown_selection() {
     event.preventDefault();
-    $('div.table-wrapper a.button-dropdown').toggleClass('open-selection');
+    $(this).toggleClass('open-selection');
 }
 async function select_dropdown_option() {
     event.preventDefault();
     let selection = $(this);
-    let button = selection.parent().parent().find("a.button-dropdown");
-    let icon_div = button.find('div.material-symbol')[0].innerHTML;
-    button.html(this.innerText + `<div class='material-symbol'>${icon_div}</div>`);
-    selection.parent().find("a.dropdown-selection-item").removeClass('selected-item');
+    let button = selection.parent().parent().find(".button-dropdown");
+    let icon_div = button.find('.material-symbol')[0].innerHTML;
+    button.html(this.innerText + `<span class='material-symbol'>${icon_div}</span>`);
+    selection.parent().find(".dropdown-selection-item").removeClass('selected-item');
     selection.addClass('selected-item');
-    let entTable = $(".champstattables.entire");
-    let singTable = $(".champstattables.singles");
-    if (selection.text() === "Gesamt-Tabelle") {
-        entTable.css("display","flex");
-        singTable.css("display","none");
-    } else if (selection.text() === "Einzel-Tabellen") {
-        singTable.css("display","flex");
-        entTable.css("display","none");
-    }
+    handle_dropdown_selection(button[0].getAttribute("data-dropdowntype"), selection[0].getAttribute("data-selection"));
     await new Promise(r => setTimeout(r, 1));
     button.removeClass("open-selection");
 }
+let patch_view_fetch_control = null;
+function handle_dropdown_selection(type, selection) {
+    if (type === "stat-tables") {
+        let entTable = $(".champstattables.entire");
+        let singTable = $(".champstattables.singles");
+        if (selection === "all") {
+            entTable.css("display","flex");
+            singTable.css("display","none");
+        } else if (selection === "single") {
+            singTable.css("display","flex");
+            entTable.css("display","none");
+        }
+    }
+    if (type === "get-patches") {
+        let element = $('dialog.add-patch-popup .add-patches-display');
+        let loading_indicator = $('dialog.add-patch-popup .popup-loading-indicator');
+        loading_indicator.css("display","");
+        if (patch_view_fetch_control !== null) patch_view_fetch_control.abort();
+        patch_view_fetch_control = new AbortController();
+        fetch(`ajax-functions/ddragon-update-ajax.php`, {
+            method: "GET",
+            headers: {
+                type: "add-patch-view",
+                view: selection,
+                limit: 10,
+            },
+            signal: patch_view_fetch_control.signal,
+        })
+            .then(res => res.text())
+            .then(patches => {
+                loading_indicator.css("display","none");
+                element.html(patches);
+                $(".add_patch").on("click", function () {
+                    add_new_patch(this);
+                });
+            })
+    }
+}
 $(document).ready(function () {
-    $('div.dropdown-selection a.dropdown-selection-item').on("click",select_dropdown_option);
-    $('a.button-dropdown').on("click",open_table_selection);
+    $('div.dropdown-selection .dropdown-selection-item').on("click",select_dropdown_option);
+    $('.button-dropdown').on("click",open_dropdown_selection);
 });
 
 function select_player_table() {
@@ -1090,7 +1134,7 @@ $(document).ready(function () {
 function expand_collapse_summonercard() {
     event.preventDefault();
     let sc = $(".summoner-card-wrapper .summoner-card");
-    let collapse_button = $('.player-cards a.exp_coll_sc');
+    let collapse_button = $('.player-cards .exp_coll_sc');
     let cookie_expiry = new Date();
     cookie_expiry.setFullYear(cookie_expiry.getFullYear()+1);
     if (sc.hasClass("collapsed")) {
@@ -1105,7 +1149,7 @@ function expand_collapse_summonercard() {
 }
 
 $(document).ready(function () {
-    $('.player-cards a.exp_coll_sc').on("click",expand_collapse_summonercard);
+    $('.player-cards .exp_coll_sc').on("click",expand_collapse_summonercard);
 });
 
 let player_search_controller = null;
@@ -1957,6 +2001,257 @@ $(document).ready(function () {
     });
 });
 
+function sync_patches_to_db(button) {
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "sync_patches_to_db"
+        }
+    })
+        .then(res => res.json())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            let added_patches = (updates["added"] === 0) ? "" : `<br>added Patches: ${updates["added"]}`;
+            $('dialog.patch-result-popup .dialog-content').html(`deleted Patches: ${updates["deleted"]}<br>changed Patches: ${updates["updated"].length}${added_patches}`);
+            $('dialog.patch-result-popup')[0].showModal();
+            regenerate_patch_rows();
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".sync_patches").on("click", function () {
+        sync_patches_to_db(this);
+    });
+});
+function download_ddragon_data(button) {
+    let patch = button.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "jsons_for_patch",
+            "patch": patch,
+        }
+    })
+        .then(res => res.text())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            update_patchdata_status(patch);
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".patch-update.json").on("click", function () {
+        download_ddragon_data(this);
+    });
+});
+function add_new_patch(button) {
+    let patch = button.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            "type": "add_new_patch",
+            "patch": patch,
+        }
+    })
+        .then(res => res.text())
+        .then(updates => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+            $(button).parent().remove();
+            regenerate_patch_rows();
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".add_patch").on("click", function () {
+        add_new_patch(this);
+    });
+});
+function download_ddragon_images(button) {
+    let patch = button.getAttribute("data-patch");
+    let type = button.getAttribute("data-getimg");
+    let force = $('#force-overwrite-patch-img')[0].checked;
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+    $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","true");
+
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "GET",
+        headers: {
+            type: "get_image_data",
+            patch: patch,
+            imagetype: type,
+            onlymissing: (!force).toString(),
+        }
+    })
+        .then(res => res.json())
+        .then(async images => {
+            let loadingbar_width = 0;
+            let imgs_gotten = 0;
+            if (images.length === 0) {
+                $(button).removeClass("patch-updating");
+                button.disabled = false;
+                $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","");
+            } else {
+                loadingbar_width = 1;
+                button.style.setProperty("--loading-bar-width", `${loadingbar_width}%`);
+            }
+            for (const image of images) {
+                fetch(`ajax-functions/ddragon-update-ajax.php`, {
+                    method: "POST",
+                    headers: {
+                        type: "download_dd_img",
+                        imgsource: image["source"],
+                        targetdir: image["target_dir"],
+                        targetname: image["target_name"],
+                        forcedownload: force.toString(),
+                    }
+                })
+                    .then(res => res.text())
+                    .then(location => {
+                        loadingbar_width += 99 / images.length;
+                        button.style.setProperty("--loading-bar-width", `${loadingbar_width}%`);
+                        imgs_gotten++;
+                        //console.log(location);
+                        if (imgs_gotten >= images.length) {
+                            $(button).removeClass("patch-updating");
+                            button.disabled = false;
+                            $(`button.patch-update[data-patch="${patch}"]`).prop("disabled","");
+                            loadingbar_width = 0;
+                            button.style.setProperty("--loading-bar-width", "0");
+                            fetch(`ajax-functions/ddragon-update-ajax.php`, {
+                                method: "POST",
+                                headers: {
+                                    type: "sync_patches_to_db",
+                                    patch: patch,
+                                }
+                            })
+                                .then(() => {
+                                    update_patchdata_status(patch);
+                                })
+                                .catch(e => console.error(e));
+                        }
+                    })
+                    .catch(e => console.error(e));
+                await new Promise(r => setTimeout(r, 500));
+            }
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".patch-update[data-getimg]").on("click", function () {
+        download_ddragon_images(this);
+    });
+});
+function delete_old_ddragon_pngs(button) {
+    let patch = button.parentElement.parentElement.parentElement.getAttribute("data-patch");
+    $(button).addClass("patch-updating");
+    button.disabled = true;
+
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "POST",
+        headers: {
+            type: "delete_ddragon_pngs",
+            patch: patch,
+        }
+    })
+        .then(() => {
+            $(button).removeClass("patch-updating");
+            button.disabled = false;
+        })
+        .catch(e => console.error(e));
+}
+$(document).ready(function () {
+    $(".patch-remove-pngs").on("click", function () {
+        delete_old_ddragon_pngs(this);
+    });
+});
+function regenerate_patch_rows() {
+    fetch(`ajax-functions/ddragon-update-ajax.php`, {
+        method: "GET",
+        headers: {
+            type: "get-patch-rows",
+        }
+    })
+        .then(res => res.text())
+        .then(rows => {
+            $('.patch-row').remove();
+            $('.patch-table').append(rows);
+            // set eventListeners for newly added elements
+            $(".patch-update.json").on("click", function () {download_ddragon_data(this)});
+            $(".patch-update[data-getimg]").on("click", function () {download_ddragon_images(this)});
+            $('button.patch-more-options').on('click', function() {
+                let patch = this.getAttribute("data-patch");
+                $(`dialog.patch-more-popup[data-patch="${patch}"]`)[0].showModal();
+            });
+            $('dialog.dismissable-popup').on('click', function (event) {
+                if (event.target === this) {
+                    this.close();
+                }
+            });
+        })
+        .catch(e => console.error(e));
+}
+function update_patchdata_status(patch= "all") {
+    fetch(`ajax-functions/get-DB-AJAX.php`, {
+        method: "GET",
+        headers: {
+            type: "local_patch_info",
+            patch: patch,
+        }
+    })
+        .then(res => res.json())
+        .then(patches => {
+            for (const patch of patches) {
+                let buttons = $(`.patchdata-status[data-patch="${patch["Patch"]}"]`);
+                for (const button of buttons) {
+                    if (button.classList.contains("json")) {
+                        (patch["data"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("all-img")) {
+                        (patch["champion_webp"] && patch["item_webp"] && patch["spell_webp"] && patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("champion-img")) {
+                        (patch["champion_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("item-img")) {
+                        (patch["item_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("spell-img")) {
+                        (patch["spell_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                    if (button.classList.contains("runes-img")) {
+                        (patch["runes_webp"]) ? button.setAttribute("data-status","true") : button.setAttribute("data-status","false");
+                    }
+                }
+            }
+        })
+}
+$(document).ready(function () {
+    $('button.patch-more-options').on('click', function() {
+        let patch = this.getAttribute("data-patch");
+        $(`dialog.patch-more-popup[data-patch="${patch}"]`)[0].showModal();
+    });
+    $('button.open_add_patch_popup').on('click', function() {
+        $('dialog.add-patch-popup')[0].showModal();
+    });
+
+    $('dialog.dismissable-popup').on('click', function (event) {
+        if (event.target === this) {
+            this.close();
+        }
+    });
+});
+
+
 function get_material_icon(name,nowrap=false) {
     let res = "";
     if (!nowrap) res = "<div class='material-symbol'>";
@@ -1977,4 +2272,20 @@ function get_material_icon(name,nowrap=false) {
     if (name === "unfold_more") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M322 422q-9-9-9-22t9-22l137-137q5-5 10-7t11-2q5 0 10.5 2t10.5 7l137 137q9 9 9 22t-9 22q-9 9-22 9t-22-9L480 308 366 422q-9 9-22 9t-22-9Zm158 502q-5 0-10.5-2t-10.5-7L322 778q-9-9-9-22t9-22q9-9 22-9t22 9l114 114 114-114q9-9 22-9t22 9q9 9 9 22t-9 22L501 915q-5 5-10 7t-11 2Z\"/></svg>";
     if (!nowrap) res += "</div>";
     return res;
+}
+
+function getCookie(cname) {
+    let name = cname + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for(let i = 0; i <ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }

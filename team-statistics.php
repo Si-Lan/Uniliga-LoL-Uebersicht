@@ -50,8 +50,8 @@ if ($dbcn->connect_error) {
             $patches[] = $patch_dir->getFilename();
         }
     }
-    rsort($patches);
-    $latest_patch = $patches[0];
+	usort($patches, "version_compare");
+    $latest_patch = end($patches);
 
     $games_played = $teamstats['games_played'] ?? 0;
 
@@ -226,13 +226,7 @@ if ($dbcn->connect_error) {
 
         echo "<div class='table-wrapper'>";
 
-        echo "<div class='button-dropdown-wrapper'>";
-        echo "<a href='$pageurl' class='button button-dropdown'>Gesamt-Tabelle<div class='material-symbol'>".file_get_contents("icons/material/expand_more.svg")."</div></a>";
-        echo "<div class='dropdown-selection'>
-                    <a class='dropdown-selection-item selected-item' href='$pageurl'>Gesamt-Tabelle</a>
-                    <a class='dropdown-selection-item' href='$pageurl'>Einzel-Tabellen</a>
-              </div>";
-        echo "</div>"; // button-dropdown-wrapper
+        echo create_dropdown("stat-tables",["all"=>"Gesamt-Tabelle","single"=>"Einzel-Tabellen"]);
 
 		echo "<div class='champstattables entire'>";
 		echo "<div class='table pickstable'><h3>Championstatistiken</h3><table>";
