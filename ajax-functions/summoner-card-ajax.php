@@ -2,6 +2,7 @@
 $dbservername = $dbdatabase = $dbusername = $dbpassword = $dbport = NULL;
 include(dirname(__FILE__).'/../DB-info.php');
 include(dirname(__FILE__).'/../summoner-card.php');
+include(dirname(__FILE__).'/../fe-functions.php');
 
 $dbcn = new mysqli($dbservername,$dbusername,$dbpassword,$dbdatabase,$dbport);
 
@@ -33,7 +34,7 @@ if ($team_id != NULL) {
 	$cards = array();
 	foreach ($players_gamecount_by_id as $player_id=>$player_gamecount) {
 		$player = $players_by_id[$player_id];
-		$cards[] = create_summonercard($player,FALSE, FALSE);
+		$cards[] = create_summonercard($player,summonercards_collapsed(), FALSE);
 	}
 	echo json_encode($cards);
 	exit;

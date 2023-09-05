@@ -480,12 +480,25 @@ async function popup_team(teamID) {
                 popup.append("<div class='team-buttons opgg-cards'></div>");
                 let name_container = $("div.team-buttons");
                 if (team_data["team"]["imgID"] !== null && team_data["team"]["imgID"] !== "") {
-                    name_container.append(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`);
+                    fetch(`img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp`, {method:"HEAD"})
+                        .then(res => {
+                            if (res.ok) {
+                                name_container.prepend(`<img class='list-overview-logo' src='img/team_logos/${team_data["team"]["imgID"]}/logo_small.webp' alt='Team-Logo'>`)
+                            }
+                        })
+                        .catch(e => console.error(e));
                 }
                 name_container.append(`<h2>${team_data["team"]["TeamName"]}</h2>`);
                 name_container.append(`<a href='https://play.toornament.com/de/tournaments/${team_data['team']['TournamentID']}/participants/${teamID}/info' target='_blank' class='toorlink'>${get_material_icon("open_in_new")}</a>`);
                 name_container.append(`<a href='https://www.op.gg/multisearch/euw?summoners=${players_string}' target='_blank' class='button op-gg'><div class='svg-wrapper op-gg'>${opgg_logo_svg}</div><span class='player-amount'>(${team_data["players"].length} Spieler)</span></a>`);
                 name_container.append(`<a href='team/${teamID}' class='button'>${get_material_icon("info")}Team-Übersicht</a>`);
+                let sc_collapsed = getCookie("preference_sccollapsed");
+                if (sc_collapsed === "1") {
+                    popup.append(`<button type="button" class="exp_coll_sc">${get_material_icon("unfold_more")}Stats ein</button>`)
+                } else {
+                    popup.append(`<button type="button" class="exp_coll_sc">${get_material_icon("unfold_less")}Stats aus</button>`)
+                }
+                $('button.exp_coll_sc').on("click",expand_collapse_summonercard);
                 if (team_data["team"]["avg_rank_tier"] !== null && team_data["team"]["avg_rank_tier"] !== "") {
                     team_data["team"]["avg_rank_tier"] = team_data["team"]["avg_rank_tier"][0].toUpperCase() + team_data["team"]["avg_rank_tier"].substring(1).toLowerCase();
                     popup.append("<div class='team-avg-rank'>Teams avg. Rang: <img class='rank-emblem-mini' src='ddragon/img/ranks/mini-crests/" + team_data["team"]["avg_rank_tier"].toLowerCase() + ".svg' alt=''><span>" + team_data["team"]["avg_rank_tier"] + " " + team_data["team"]["avg_rank_div"] + "</span></div>");
@@ -493,8 +506,9 @@ async function popup_team(teamID) {
                 popup.append("<div class='summoner-card-container'></div>");
                 let card_container = $('div.summoner-card-container');
 
+                let coll_class = (sc_collapsed === "1") ? "collapsed" : "";
                 for (let i = 0; i < team_data["players"].length; i++) {
-                    card_container.append(`<div class='summoner-card-wrapper placeholder p${i}'></div>`);
+                    card_container.append(`<div class='summoner-card-wrapper placeholder p${i} ${coll_class}'></div>`);
                 }
 
                 fetch(`ajax-functions/summoner-card-ajax.php`, {
@@ -1120,7 +1134,7 @@ $(document).ready(function () {
 function expand_collapse_summonercard() {
     event.preventDefault();
     let sc = $(".summoner-card-wrapper .summoner-card");
-    let collapse_button = $('.player-cards a.exp_coll_sc');
+    let collapse_button = $('.player-cards .exp_coll_sc');
     let cookie_expiry = new Date();
     cookie_expiry.setFullYear(cookie_expiry.getFullYear()+1);
     if (sc.hasClass("collapsed")) {
@@ -1135,7 +1149,7 @@ function expand_collapse_summonercard() {
 }
 
 $(document).ready(function () {
-    $('.player-cards a.exp_coll_sc').on("click",expand_collapse_summonercard);
+    $('.player-cards .exp_coll_sc').on("click",expand_collapse_summonercard);
 });
 
 let player_search_controller = null;
@@ -2258,4 +2272,20 @@ function get_material_icon(name,nowrap=false) {
     if (name === "unfold_more") res += "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"48\" viewBox=\"0 96 960 960\" width=\"48\"><path d=\"M322 422q-9-9-9-22t9-22l137-137q5-5 10-7t11-2q5 0 10.5 2t10.5 7l137 137q9 9 9 22t-9 22q-9 9-22 9t-22-9L480 308 366 422q-9 9-22 9t-22-9Zm158 502q-5 0-10.5-2t-10.5-7L322 778q-9-9-9-22t9-22q9-9 22-9t22 9l114 114 114-114q9-9 22-9t22 9q9 9 9 22t-9 22L501 915q-5 5-10 7t-11 2Z\"/></svg>";
     if (!nowrap) res += "</div>";
     return res;
+}
+
+function getCookie(cname) {
+    let name = cname + "=";
+    let decodedCookie = decodeURIComponent(document.cookie);
+    let ca = decodedCookie.split(';');
+    for(let i = 0; i <ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }

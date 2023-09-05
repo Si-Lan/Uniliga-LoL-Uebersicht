@@ -113,9 +113,9 @@ try {
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
 			$collapsed = summonercards_collapsed();
 			if ($collapsed) {
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+				echo "<button type='button' class='exp_coll_sc'><div class='material-symbol'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</button>";
 			} else {
-				echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
+				echo "<button type='button' class='exp_coll_sc'><div class='material-symbol'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</button>";
 			}
 			echo "
                      </div>";
@@ -200,9 +200,9 @@ try {
                         <a href='$opgglink' class='button op-gg' target='_blank'><div class='svg-wrapper op-gg'>$opgg_logo_svg</div><span class='player-amount'>({$player_amount} Spieler)</span></a>";
 		$collapsed = summonercards_collapsed();
 		if ($collapsed) {
-			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</a>";
+			echo "<button type='button' class='exp_coll_sc'><div class='material-symbol'>".file_get_contents("icons/material/unfold_more.svg")."</div>Stats ein</button>";
 		} else {
-			echo "<a href='$pageurl' class='button exp_coll_sc'><div class='svg-wrapper'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</a>";
+			echo "<button type='button' class='exp_coll_sc'><div class='material-symbol'>".file_get_contents("icons/material/unfold_less.svg")."</div>Stats aus</button>";
 		}
         echo "
                      </div>";

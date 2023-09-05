@@ -145,7 +145,7 @@ try {
                 }
             }
 
-            if ($currTeamImgID == NULL) {
+            if ($currTeamImgID == NULL || !file_exists("$local_img_path{$teams[$i_teams][1]}/logo_small.webp")) {
 				$currTeamImgID = "";
                 $img_url = "";
             } else {

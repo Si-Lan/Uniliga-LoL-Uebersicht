@@ -79,7 +79,7 @@ function generate_elo_list($dbcn,$view,$teams,$tournamentID,$division,$group) {
                         <div class='elo-list-pre league'>Liga {$team['Div_Num']}</div>
                         <a href='/uniliga/team/".$team['TeamID']."' onclick='popup_team(\"{$team['TeamID']}\")' class='elo-list-item-wrapper'>
                             <div class='elo-list-item team'>";
-		if ($team['imgID'] != NULL) {
+		if ($team['imgID'] != NULL && file_exists("$local_team_img{$team['imgID']}/logo_small.webp")) {
 			echo "
                                 <img src='$local_team_img{$team['imgID']}/logo_small.webp' alt='Teamlogo'>";
 		}
@@ -161,7 +161,7 @@ function create_standings(mysqli $dbcn,$tournament_id,$group_id,$team_id=NULL) {
 				<div class='standing-pre rank$same_rank_class'>{$currteam['Rank']}</div>
 				<a href='team/{$currteam['TeamID']}' class='standing-item-wrapper'>
 				<div class='standing-item team'>";
-		if ($currteam['imgID'] != NULL) {
+		if ($currteam['imgID'] != NULL && file_exists("$local_img_path{$currteam['imgID']}/logo_small.webp")) {
 			echo "<img src='$local_img_path{$currteam['imgID']}/logo_small.webp' alt=\"Teamlogo\">";
 		}
 		if ($currteam['avg_rank_tier'] != NULL) {
@@ -438,7 +438,7 @@ function create_team_nav_buttons($tournament_id,$team,$active,$updatediff="unbek
 	$team_id = $team['TeamID'];
 	echo "<div class='team title'>
 			<div class='team-name'>";
-	if ($team['imgID'] != NULL) {
+	if ($team['imgID'] != NULL && file_exists("$local_team_img{$team['imgID']}/logo_small.webp")) {
 		echo "<img alt src='$local_team_img{$team['imgID']}/logo_medium.webp'>";
 	}
 	echo "
@@ -581,7 +581,7 @@ function create_playercard($player_data, $detail_stats=NULL) {
 				</div>";
 	// Teamname
 	$result .= "<a class='player-card-div player-card-team' href='team/{$player_data["TeamID"]}'>";
-	if ($player_data["imgID"] != NULL) {
+	if ($player_data["imgID"] != NULL && file_exists("img/team_logos/{$player_data["imgID"]}/logo_medium.webp")) {
 		$result .= "<img alt='{$player_data["TeamName"]} Logo' src='img/team_logos/{$player_data["imgID"]}/logo_medium.webp'>";
 		$result .= "<span>{$player_data["TeamName"]}</span>";
 	} else {

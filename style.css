@@ -339,12 +339,15 @@ div.team.title a.toorlink {
     height: 50px;
     width: 50px;
 }
-a.button.exp_coll_sc {
+button.exp_coll_sc {
     padding: 10px 20px 10px 14px;
     gap: 2px;
 }
-a.button.exp_coll_sc .material-symbol,
-a.button.exp_coll_sc .material-symbol svg {
+.team-popup button.exp_coll_sc {
+    margin-bottom: 10px;
+}
+button.exp_coll_sc .material-symbol,
+button.exp_coll_sc .material-symbol svg {
     width: 30px;
     height: 30px;
 }
@@ -997,10 +1000,13 @@ div.summoner-card-container {
 }
 .summoner-card-wrapper.placeholder {
     width: 230px;
-    height: 295px;
+    height: 340px;
     border: var(--header-border) 1px solid;
     border-radius: 6px;
     box-sizing: border-box;
+}
+.summoner-card-wrapper.placeholder.collapsed {
+    height: 215px;
 }
 .summoner-card {
     width: 230px;
