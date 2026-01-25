@@ -1,4 +1,10 @@
 # Uniliga-LoL-Übersicht
+
+> **⚠️ Archiviert** — Dieses Repository ist archiviert und wird nicht mehr weiterentwickelt.
+> 
+> Die Uniliga spielt seit einigen Jahren auf **OPL** statt auf Toornament. Diese Seite funktioniert nur mit Toornament und ist daher nicht mehr in Verwendung.  
+Die neue Version für OPL findet ihr hier: https://github.com/Si-Lan/Uniliga-LoL-Uebersicht-OPL
+
 ## Webseite
 Meine Webseite, auf der dieses Projekt läuft findet ihr hier:  
 https://silence.lol/uniliga/
